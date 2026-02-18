@@ -1,0 +1,399 @@
+================================================================================
+BIGQUERY SETUP EXECUTION GUIDE - STEP-BY-STEP
+================================================================================
+Follow these steps IN ORDER. Check off each one as you complete it.
+
+Current Status: Ready to Begin Phase 2 (Google Cloud SDK Installation)
+
+================================================================================
+PHASE 1: GOOGLE CLOUD ACCOUNT SETUP
+================================================================================
+
+This phase requires manual steps in your web browser.
+Cannot be automated - you need to create/configure your Google Cloud account.
+
+□ STEP 1: Open Google Cloud Console
+  → URL: https://console.cloud.google.com/
+  → Sign in with your Google account
+  → If first time, accept Terms of Service
+
+□ STEP 2: Enable Free Trial (if available)
+  → Click "Try for Free" or "Get Started for Free"
+  → Enter billing information (card required, but NO charges for this project)
+  → You get $300 free credit (valid 90 days)
+  → This project costs ~$0.01, well within free tier
+
+□ STEP 3: Create New Project
+  → Click project dropdown (top left)
+  → Click "NEW PROJECT"
+  → Project name: "datacenter-forecasting" (or your choice)
+  → Click "CREATE"
+  → Wait for project creation (~30 seconds)
+
+□ STEP 4: Note Your Project ID
+  → In project dropdown, find your project
+  → Note the Project ID (format: datacenter-forecasting-XXXXX)
+  → WRITE IT DOWN - you'll need it later!
+  → Example: datacenter-forecasting-123456
+  
+  Your Project ID: _________________________________
+
+□ STEP 5: Enable BigQuery API
+  → Go to: https://console.cloud.google.com/apis/library/bigquery.googleapis.com
+  → Make sure your project is selected (top left)
+  → Click "ENABLE"
+  → Wait 10-20 seconds
+  → Should see "API enabled" with green checkmark
+
+□ STEP 6: Verify BigQuery Access
+  → Go to: https://console.cloud.google.com/bigquery
+  → Click "+ ADD" in Explorer panel (left)
+  → Select "Star a project by name"
+  → Enter: google.com:google-cluster-data
+  → Click "STAR"
+  → Expand the project → expand "powerdata_2019"
+  → You should see tables like: cella_pdu01, cella_pdu02, etc.
+  → This confirms the dataset is accessible
+
+□ PHASE 1 COMPLETE
+  ✓ Google Cloud account ready
+  ✓ Project created
+  ✓ BigQuery API enabled
+  ✓ Dataset accessible
+  ✓ Project ID recorded
+
+  → Ready for Phase 2!
+
+================================================================================
+PHASE 2: GOOGLE CLOUD SDK INSTALLATION & AUTHENTICATION
+================================================================================
+
+These steps are done on YOUR LOCAL COMPUTER in PowerShell.
+
+□ STEP 1: Download Google Cloud SDK
+  → Open this URL in browser:
+    https://cloud.google.com/sdk/docs/install-windows
+  
+  → Click "Download the Google Cloud CLI installer"
+  → Choose: "Windows 64-bit (x86_64)"
+  → File: GoogleCloudSDKInstaller.exe (~165 MB)
+  → Save to Downloads folder
+
+□ STEP 2: Install Google Cloud SDK
+  → Run GoogleCloudSDKInstaller.exe from Downloads
+  → If Windows asks "Do you want to allow?", click "Yes"
+  
+  Installation Options:
+    ✓ Install to: C:\Program Files\Google\Cloud SDK\ (default)
+    ✓ "Update PATH" - CHECK THIS BOX
+    ✗ "Run gcloud init" - UNCHECK (we'll do manually)
+  
+  → Click "Install"
+  → Wait 3-5 minutes
+  → Click "Finish"
+
+□ STEP 3: Verify SDK Installation
+  → CLOSE your current PowerShell windows
+  → Open NEW PowerShell window (to refresh PATH)
+  → Navigate to your project:
+    cd "C:\Users\ishan\OneDrive\Desktop\MTFC_Inventors"
+  
+  → Run verification:
+    gcloud --version
+  
+  → Should see output like:
+    Google Cloud SDK XXX.X.X
+    bq XXX.X.X
+    core XXX.X.X
+    ...
+  
+  → If you see "command not found", restart computer and try again
+
+□ STEP 4: Authenticate with Google Cloud
+  → In PowerShell, run:
+    gcloud auth application-default login
+  
+  → Browser window opens automatically
+  → Sign in with SAME Google account as Cloud Console
+  → Grant permissions when prompted
+  → Page shows: "You are now authenticated with gcloud"
+  → Return to PowerShell
+  → Should see: "Credentials saved to: [path]"
+
+□ STEP 5: Set Default Project
+  → In PowerShell, run (replace with YOUR project ID):
+    gcloud config set project YOUR-PROJECT-ID
+  
+  → Example:
+    gcloud config set project datacenter-forecasting-123456
+  
+  → Should see: "Updated property [core/project]"
+
+□ STEP 6: Verify Configuration
+  → Run:
+    gcloud config list
+  
+  → Should show:
+    [core]
+    account = your-email@gmail.com
+    project = your-project-id
+  
+  → Verify project ID matches what you noted in Phase 1
+
+□ PHASE 2 COMPLETE
+  ✓ Google Cloud SDK installed
+  ✓ Authenticated with Google account
+  ✓ Project ID configured
+  ✓ Ready to download data!
+
+  → Ready for Phase 3!
+
+================================================================================
+PHASE 3: DATA DOWNLOAD
+================================================================================
+
+Now we'll download the actual BigQuery data using Python scripts.
+
+□ STEP 1: Update Test Connection Script
+  → Open file: Model_Files\test_bigquery_connection.py
+  → Find line 89: PROJECT_ID = "YOUR_PROJECT_ID_HERE"
+  → Replace with YOUR actual project ID from Phase 1
+  → Save file
+
+□ STEP 2: Test BigQuery Connection
+  → In PowerShell, run:
+    .venv\Scripts\python.exe Model_Files\test_bigquery_connection.py
+  
+  → Expected output:
+    ========================================
+    TESTING BIGQUERY CONNECTION
+    ========================================
+    
+    [1/3] Creating BigQuery client...
+          ✅ Client created successfully
+    
+    [2/3] Testing query execution...
+          ✅ Query executed successfully
+    
+    [3/3] Retrieving results...
+          ✅ Data accessible! Table has X,XXX,XXX rows
+    
+    SUCCESS! BigQuery connection is working perfectly! ✅
+  
+  → If you see errors, read the troubleshooting section
+  → Do NOT proceed until this test passes
+
+□ STEP 3: Update Download Script
+  → Open file: Model_Files\download_bigquery_data.py
+  → Find line 29: PROJECT_ID = "YOUR_PROJECT_ID_HERE"
+  → Replace with YOUR actual project ID
+  → Save file
+
+□ STEP 4: Test Download (Single PDU)
+  → In PowerShell, run:
+    .venv\Scripts\python.exe Model_Files\download_bigquery_data.py
+  
+  → When prompted, enter: 3 (Single PDU test)
+  → Should download ~1000 rows in ~10 seconds
+  → Creates: Data_Sources\google_power_data_2019_sample.csv
+  → If successful, proceed to full download
+
+□ STEP 5: Full Data Download
+  → Choose download mode:
+    Option 1 - Sample (10K rows per PDU, ~2-3 min, good for testing)
+    Option 2 - Complete (all data, ~20-30 min, needed for final model)
+  
+  → For FINAL model, choose Option 2 (Complete)
+  → For TESTING first, choose Option 1 (Sample)
+  
+  → Run again:
+    .venv\Scripts\python.exe Model_Files\download_bigquery_data.py
+  
+  → Enter: 2 (for complete dataset)
+  
+  → Download progress will show:
+    Processing Cell A...
+      Downloading cella_pdu01... [XXXXX rows]
+      Downloading cella_pdu02... [XXXXX rows]
+      ...
+    Processing Cell B...
+      ...
+  
+  → Be patient - this takes 20-30 minutes!
+  → Do NOT close PowerShell window while downloading
+
+□ STEP 6: Verify Download Completed
+  → Check for these files in Data_Sources folder:
+    - google_power_data_2019_raw.csv (~50-100 MB)
+    - google_power_data_2019_hourly.csv (~10-20 MB)
+    - machine_to_pdu_mapping.csv (~1 MB)
+  
+  → If all three exist, download successful!
+
+□ STEP 7: Validate Data Quality
+  → Run validation script:
+    .venv\Scripts\python.exe Model_Files\validate_data.py
+  
+  → Should show:
+    DATA VALIDATION REPORT
+    ======================
+    [10 checks performed]
+    
+    VALIDATION SUMMARY
+    ✅ PASSED (X)
+    ⚠️  WARNINGS (X)
+    ❌ FAILED (0)
+    
+    OVERALL: ✅ DATA QUALITY EXCELLENT
+  
+  → If you see failures, review the report and re-download
+
+□ PHASE 3 COMPLETE
+  ✓ BigQuery connection tested
+  ✓ Power data downloaded
+  ✓ Data validated
+  ✓ Ready for model training!
+
+  → Ready for Phase 4!
+
+================================================================================
+PHASE 4: NEXT STEPS - MODEL TRAINING
+================================================================================
+
+Your data is now ready! Here's what comes next:
+
+□ Merge 2019 Training Data
+  → Combine power data with:
+    - CPU utilization (google_cluster_utilization_2019.csv)
+    - Temperature (ashburn_va_temperature_2019.csv)
+    - Grid data (pjm_grid_carbon_intensity_2019_full.csv)
+  → Create: processed_training_data_2019.csv
+
+□ Develop Forecasting Models
+  → SARIMAX (seasonal time series)
+  → LSTM (deep learning)
+  → XGBoost (gradient boosting)
+  → Ensemble meta-learner
+
+□ Research Virginia Datacenter Capacity
+  → Find 2024-2026 AI datacenter projections
+  → Document assumptions
+  → Create scenario inputs
+
+□ Generate 2024-2030 Forecasts
+  → Apply trained model to forecast data
+  → Multiple scenarios (AI growth rates)
+  → Confidence intervals
+
+□ Risk Analysis & Recommendations
+  → Grid stability metrics
+  → Carbon emission projections
+  → Policy recommendations
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PROBLEM: "gcloud: command not found"
+SOLUTION:
+  1. Close ALL PowerShell/terminal windows
+  2. Open NEW PowerShell window
+  3. Try again
+  4. If still fails, restart computer
+  5. Check PATH: $env:PATH -split ';' | Select-String "Google"
+
+PROBLEM: "Could not automatically determine credentials"
+SOLUTION:
+  1. Run: gcloud auth application-default login
+  2. Make sure browser login completes successfully
+  3. Try test connection script again
+
+PROBLEM: "Permission denied" or "Access denied"
+SOLUTION:
+  1. Verify BigQuery API is enabled:
+     https://console.cloud.google.com/apis/library/bigquery.googleapis.com
+  2. Check billing is enabled on your project
+  3. Make sure project ID is correct
+
+PROBLEM: Download very slow or timing out
+SOLUTION:
+  1. Check internet connection
+  2. Try sample mode first (Option 1)
+  3. Download during off-peak hours
+  4. Consider splitting into smaller batches
+
+PROBLEM: "Project not found"
+SOLUTION:
+  1. Run: gcloud config list
+  2. Verify project ID exactly matches (case-sensitive)
+  3. Update in both scripts:
+     - test_bigquery_connection.py (line 89)
+     - download_bigquery_data.py (line 29)
+
+PROBLEM: Validation shows failures
+SOLUTION:
+  1. Review specific failures in validation report
+  2. Re-run download if needed
+  3. Check for partial downloads (file size too small)
+  4. Verify date filters in queries
+
+================================================================================
+COST TRACKING
+================================================================================
+
+Monitor your costs (should be ~$0.01 total):
+
+1. Go to: https://console.cloud.google.com/billing
+2. Select your billing account
+3. View "Reports" tab
+4. Filter by project: datacenter-forecasting
+5. Should see:
+   - BigQuery: ~$0.01
+   - Total: < $0.05
+
+If costs exceed $0.10, something is wrong - STOP and investigate!
+
+================================================================================
+COMPLETED CHECKLIST
+================================================================================
+
+Phase 1: Google Cloud Setup
+□ Account created
+□ Project created and ID noted
+□ BigQuery API enabled
+□ Dataset accessible
+
+Phase 2: Local Setup
+□ Google Cloud SDK installed
+□ Authenticated successfully
+□ Project configured
+□ Connection tested
+
+Phase 3: Data Download
+□ Test connection passed
+□ Single PDU test successful
+□ Full download completed
+□ Data validated
+
+Phase 4: Ready for Modeling
+□ All 2019 data collected
+□ Data quality verified
+□ Ready to train models
+
+================================================================================
+CONGRATULATIONS! 🎉
+================================================================================
+
+If all checkboxes are complete, you have successfully:
+✅ Set up Google Cloud and BigQuery access
+✅ Downloaded Google datacenter power consumption data
+✅ Validated data quality
+✅ Prepared training dataset
+
+You're now ready to build your forecasting models!
+
+Total time: ~45-60 minutes
+Total cost: ~$0.01
+Next: Model development and training
+
+================================================================================

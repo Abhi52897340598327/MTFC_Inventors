@@ -1,0 +1,666 @@
+================================================================================
+COMPREHENSIVE BIGQUERY DATA ACQUISITION PLAN
+================================================================================
+Project: AI Datacenter Forecasting - Power Consumption Data Download
+Date: February 16, 2026
+Objective: Download Google datacenter power consumption data from BigQuery
+Estimated Time: 30-45 minutes
+Cost: ~$0.01 (covered by free tier)
+
+================================================================================
+PHASE 1: GOOGLE CLOUD ACCOUNT SETUP (15-20 minutes)
+================================================================================
+
+STEP 1.1: Create Google Cloud Account
+-------------------------------------
+Prerequisites: 
+- Valid Google account (Gmail or Google Workspace)
+- Credit/debit card (for verification only - no charges with free tier)
+
+Actions:
+1. Navigate to: https://console.cloud.google.com/
+2. Sign in with your Google account
+3. If first time:
+   - Click "Try for Free" or "Get Started for Free"
+   - Accept Terms of Service
+   - Choose "United States" as country
+   - Account type: "Individual"
+   - Enter billing information (required for verification)
+   - Note: You get $300 free credit, valid for 90 days
+   - This dataset costs ~$0.01, well within free tier
+
+Verification:
+✓ You should see the Google Cloud Console dashboard
+✓ Free trial banner should show "$300 credit available"
+
+Expected Result: Google Cloud account active with billing enabled
+
+
+STEP 1.2: Create a New Project
+------------------------------
+Why: BigQuery requires data to be queried within a project context
+
+Actions:
+1. In Google Cloud Console, click project dropdown (top left, near "Google Cloud")
+2. Click "NEW PROJECT"
+3. Project Details:
+   - Project name: "datacenter-forecasting" (or your choice)
+   - Organization: Leave as "No organization" (unless you have one)
+   - Location: Leave as default
+4. Click "CREATE"
+5. Wait 10-30 seconds for project creation
+6. Select the new project from dropdown
+
+IMPORTANT: Note your Project ID
+- Format: datacenter-forecasting-XXXXX (where XXXXX is a random number)
+- You'll need this exact ID for the Python script
+- Find it: Click project dropdown → Project ID column
+
+Verification:
+✓ New project name appears in top navigation bar
+✓ Project ID is visible and copied somewhere safe
+
+Expected Result: Project created with unique ID
+
+
+STEP 1.3: Enable BigQuery API
+-----------------------------
+Why: APIs are disabled by default to prevent accidental charges
+
+Actions:
+1. In Google Cloud Console, go to: 
+   https://console.cloud.google.com/apis/library/bigquery.googleapis.com
+2. Verify correct project is selected (top left)
+3. Click "ENABLE" button
+4. Wait 10-20 seconds for API to enable
+5. You should see "API Enabled" status
+
+Alternative Navigation:
+- From Console → Navigation Menu (☰) → APIs & Services → Library
+- Search for "BigQuery API"
+- Click on it → Enable
+
+Verification:
+✓ Page shows "API enabled" with green checkmark
+✓ "Manage" button is now visible instead of "Enable"
+
+Expected Result: BigQuery API enabled for your project
+
+
+STEP 1.4: Verify BigQuery Access
+--------------------------------
+Why: Confirm you can access BigQuery before setting up local tools
+
+Actions:
+1. Go to: https://console.cloud.google.com/bigquery
+2. You should see BigQuery Studio interface
+3. In Explorer panel (left side), click "+ ADD"
+4. Select "Public datasets" or "Star a project by name"
+5. Enter: google.com:google-cluster-data
+6. Click "STAR" or confirm
+7. Expand: google.com:google-cluster-data → powerdata_2019
+8. You should see tables: cella_pdu01, cella_pdu02, etc.
+
+Quick Test Query (optional but recommended):
+- Click "+" to open new query tab
+- Paste:
+  SELECT COUNT(*) as total_rows
+  FROM `google.com:google-cluster-data.powerdata_2019.cella_pdu01`
+  LIMIT 10
+- Click "RUN"
+- Should return a count (approximately 5-10 million rows)
+
+Verification:
+✓ Can see powerdata_2019 dataset
+✓ Can view table schemas
+✓ Test query runs successfully (if attempted)
+
+Expected Result: BigQuery access confirmed, dataset visible
+
+
+================================================================================
+PHASE 2: LOCAL ENVIRONMENT SETUP (10-15 minutes)
+================================================================================
+
+STEP 2.1: Install Google Cloud SDK
+----------------------------------
+Why: Provides gcloud CLI tool for authentication from local machine
+
+Download Location:
+https://cloud.google.com/sdk/docs/install-windows
+
+Installation Steps:
+1. Download GoogleCloudSDKInstaller.exe
+2. Run installer (may require administrator privileges)
+3. Installation Options:
+   ✓ Check "Run 'gcloud init' when installation completes"
+   ✓ Check "Update PATH"
+   ✓ Install location: Default (C:\Program Files\Google\Cloud SDK\)
+4. Click "Install"
+5. Wait 3-5 minutes for installation
+6. When prompted, allow through Windows Firewall
+
+Post-Installation:
+1. New PowerShell window should open automatically
+2. If gcloud init starts, press Ctrl+C to cancel (we'll do manual setup)
+3. Close PowerShell window
+4. Open NEW PowerShell window (to refresh PATH)
+
+Verification Commands (run in PowerShell):
+```powershell
+gcloud --version
+# Should show: Google Cloud SDK XXX.X.X
+# Plus component versions
+
+gcloud config list
+# Should show current configuration
+```
+
+Verification:
+✓ gcloud command recognized (not "command not found")
+✓ Version displays correctly
+✓ PATH updated (restart terminal if needed)
+
+Expected Result: Google Cloud SDK installed and accessible
+
+
+STEP 2.2: Authenticate with gcloud
+----------------------------------
+Why: Allows local Python scripts to access BigQuery using your credentials
+
+Authentication Method: Application Default Credentials (ADC)
+
+Actions:
+1. Open PowerShell in your project directory
+2. Run authentication command:
+   ```powershell
+   gcloud auth application-default login
+   ```
+
+3. Process:
+   - Browser window will open automatically
+   - Google login page appears
+   - Sign in with the SAME Google account used for Cloud Console
+   - Grant permissions when prompted:
+     ✓ "Google Auth Library" wants to access your Google Account
+     ✓ Click "Allow"
+   - Browser shows: "You are now authenticated with gcloud"
+   - Return to PowerShell
+
+4. Set default project:
+   ```powershell
+   gcloud config set project YOUR_PROJECT_ID
+   # Replace YOUR_PROJECT_ID with your actual project ID from Step 1.2
+   ```
+
+Verification Commands:
+```powershell
+gcloud auth application-default print-access-token
+# Should print a long token (means authentication works)
+
+gcloud config list
+# Should show your project ID under [core]
+```
+
+Verification:
+✓ Authentication successful message in browser
+✓ PowerShell confirms token saved
+✓ Project ID set correctly
+
+Expected Result: Local machine authenticated to access BigQuery
+
+
+STEP 2.3: Verify Python BigQuery Library
+----------------------------------------
+Why: Ensure Python can use the BigQuery client
+
+Already Completed: You have google-cloud-bigquery 3.40.1 installed in .venv
+
+Verification Command:
+```powershell
+.venv\Scripts\python.exe -c "from google.cloud import bigquery; print(f'✅ BigQuery version: {bigquery.__version__}')"
+```
+
+Expected Output:
+✅ BigQuery version: 3.40.1
+
+Verification:
+✓ No import errors
+✓ Version displays correctly
+
+Expected Result: Python BigQuery library ready
+
+
+STEP 2.4: Test BigQuery Connection from Python
+----------------------------------------------
+Why: Verify end-to-end setup before running full download script
+
+Test Script (I'll create this):
+```python
+from google.cloud import bigquery
+
+# This will use Application Default Credentials
+client = bigquery.Client(project='YOUR_PROJECT_ID')
+
+# Simple test query
+query = """
+SELECT COUNT(*) as count
+FROM `google.com:google-cluster-data.powerdata_2019.cella_pdu01`
+LIMIT 1
+"""
+
+result = client.query(query).result()
+for row in result:
+    print(f"✅ Connection successful! Row count: {row.count}")
+```
+
+Test Execution:
+1. Save test script as: test_bigquery_connection.py
+2. Update YOUR_PROJECT_ID with actual project ID
+3. Run: .venv\Scripts\python.exe test_bigquery_connection.py
+4. Should see row count (means connection works)
+
+Verification:
+✓ No authentication errors
+✓ Query executes successfully
+✓ Results returned
+
+Expected Result: Python can query BigQuery successfully
+
+
+================================================================================
+PHASE 3: DATA DOWNLOAD EXECUTION (5-10 minutes)
+================================================================================
+
+STEP 3.1: Update Download Script Configuration
+----------------------------------------------
+File: Model_Files\download_bigquery_data.py
+
+Changes Required:
+- Line 29: PROJECT_ID = "YOUR_PROJECT_ID_HERE"
+  Replace with: PROJECT_ID = "your-actual-project-id"
+
+Verification:
+✓ Project ID matches exactly (from gcloud config list)
+✓ Quotes around project ID
+✓ File saved
+
+Expected Result: Script configured with correct project ID
+
+
+STEP 3.2: Understand Data Structure
+-----------------------------------
+Dataset: google.com:google-cluster-data.powerdata_2019
+
+Tables (57 total across 8 cells):
+- Cell A: cella_pdu01 through cella_pdu10 (10 PDUs)
+- Cell B: cellb_pdu01 through cellb_pdu21 (21 PDUs)
+- Cell C: cellc_pdu01 through cellc_pdu15 (15 PDUs)
+- Cell D: celld_pdu01 through celld_pdu12 (12 PDUs)
+- Cell E: celle_pdu01 through celle_pdu16 (16 PDUs)
+- Cell F: cellf_pdu01 through cellf_pdu17 (17 PDUs)
+- Cell G: cellg_pdu01 through cellg_pdu14 (14 PDUs)
+- Cell H: cellh_pdu01 through cellh_pdu10 (10 PDUs)
+Total: 115 PDUs across 8 cells
+
+Time Period: May 2019 (entire month)
+Granularity: 5-minute intervals
+Fields per row:
+- time: Microseconds since May 1, 2019 00:00 PT - 600s offset
+- measured_power_util: Actual power meter reading (0.0-1.0)
+- production_power_util: Estimated production power (0.0-1.0)
+- bad_measurement_data: Boolean (filter out TRUE)
+- bad_production_power_data: Boolean (filter out TRUE)
+
+Expected Data Volume:
+- Per PDU: ~8,640 records (5-min intervals for 30 days)
+- Total: ~1 million records across all PDUs
+- CSV Size: ~50-100 MB
+
+Expected Result: Understanding of data structure
+
+
+STEP 3.3: Run Download Script (Sample Mode First)
+-------------------------------------------------
+Why: Test with small sample before downloading full dataset
+
+Actions:
+1. Open PowerShell in project directory
+2. Run sample download (10,000 rows per PDU):
+   ```powershell
+   .venv\Scripts\python.exe Model_Files\download_bigquery_data.py --sample
+   ```
+
+Expected Console Output:
+```
+Downloading Google Datacenter Power Data...
+Mode: SAMPLE (10,000 rows per PDU)
+
+Processing Cell A...
+  Downloading cella_pdu01... [10000 rows]
+  Downloading cella_pdu02... [10000 rows]
+  ...
+Processing Cell B...
+  ...
+
+Combining all data...
+Total records: ~XXXXXX rows
+Saving to: Data_Sources\google_power_2019_sample.csv
+✅ Download complete!
+```
+
+Time Estimate: 3-5 minutes
+Cost: ~$0.001 (less than 1 cent)
+
+Verification:
+✓ No authentication errors
+✓ All PDUs download successfully
+✓ CSV file created in Data_Sources folder
+✓ File size reasonable (~5-10 MB for sample)
+
+Expected Result: Sample data downloaded successfully
+
+
+STEP 3.4: Run Full Download
+---------------------------
+Actions:
+1. Once sample works, run full download:
+   ```powershell
+   .venv\Scripts\python.exe Model_Files\download_bigquery_data.py --full
+   ```
+
+Expected Console Output:
+```
+Downloading Google Datacenter Power Data...
+Mode: FULL (all data)
+
+Processing Cell A...
+  Downloading cella_pdu01... [XXXXX rows]
+  ...
+[Progress continues for all 115 PDUs]
+
+Processing data:
+- Converting timestamps...
+- Aggregating to hourly...
+- Calculating statistics...
+
+Saving to: Data_Sources\google_power_2019_full.csv
+✅ Download complete!
+
+Summary:
+- Total records: ~1,000,000
+- Date range: May 1-31, 2019
+- Cells processed: 8
+- PDUs processed: 115
+- Output file: google_power_2019_full.csv (50-100 MB)
+- Query cost: ~$0.01
+```
+
+Time Estimate: 8-12 minutes
+Cost: ~$0.01
+
+Verification:
+✓ All cells and PDUs processed
+✓ No errors or timeouts
+✓ CSV file created (50-100 MB)
+✓ Date range covers May 2019
+✓ Hourly aggregation completed
+
+Expected Result: Complete power consumption dataset downloaded
+
+
+================================================================================
+PHASE 4: DATA VALIDATION & VERIFICATION (5 minutes)
+================================================================================
+
+STEP 4.1: Verify Downloaded Data Quality
+----------------------------------------
+Validation Checks (I'll create a validation script):
+
+1. File Size Check:
+   - Expected: 50-100 MB
+   - If smaller: Incomplete download
+   - If larger: Unexpected (check for duplicates)
+
+2. Record Count:
+   - Expected: ~8,640 records per PDU (30 days × 24 hours × 12 five-min intervals)
+   - Total: 115 PDUs × 8,640 = ~993,600 records
+   - After hourly aggregation: ~86,400 records (115 PDUs × 30 days × 24 hours)
+
+3. Date Range:
+   - Start: 2019-05-01 00:00:00
+   - End: 2019-05-31 23:00:00
+   - No gaps in hourly sequence
+
+4. Value Ranges:
+   - power_util: 0.0 to 1.0 (0-100% utilization)
+   - All values should be non-negative
+   - No null/NaN in critical fields
+
+5. Cell/PDU Coverage:
+   - All 8 cells present
+   - All 115 PDUs present
+   - No missing combinations
+
+Validation Script Output:
+```
+Data Validation Report
+======================
+✓ File exists: Data_Sources\google_power_2019_full.csv
+✓ File size: 87.3 MB
+✓ Total records: 993,472
+✓ Date range: 2019-05-01 to 2019-05-31
+✓ Cells: 8 (a, b, c, d, e, f, g, h)
+✓ PDUs: 115
+✓ Power utilization range: 0.0 - 0.98
+✓ No missing values in critical fields
+✓ No duplicate timestamps per PDU
+
+✅ Data quality: EXCELLENT
+```
+
+Expected Result: Data validated and ready for modeling
+
+
+STEP 4.2: Create Data Summary Statistics
+----------------------------------------
+Generate summary report (I'll create script):
+
+Summary Statistics:
+- Average power utilization by cell
+- Peak power times
+- Daily/hourly patterns
+- Correlation with temperature (if merged with weather data)
+
+Output File: Data_Sources\google_power_2019_summary.txt
+
+Expected Result: Statistical summary of power data
+
+
+STEP 4.3: Merge with Existing 2019 Data
+---------------------------------------
+Combine datasets:
+1. google_power_2019_full.csv (just downloaded)
+2. google_cluster_utilization_2019.csv (already have)
+3. ashburn_va_temperature_2019.csv (already have)
+4. pjm_grid_carbon_intensity_2019_full.csv (already have)
+
+Merge Strategy:
+- Common key: timestamp (hour)
+- Filter all to May 2019 (common period)
+- Align on hourly intervals
+- Create: processed_training_data_2019.csv
+
+Expected Columns:
+- timestamp
+- power_util (target variable - what we're predicting)
+- cpu_util
+- temperature
+- carbon_intensity
+- generation_mix_*
+- hour_of_day
+- day_of_week
+- is_weekend
+
+Output: Data_Sources\processed_training_data_2019.csv
+
+Expected Result: Unified training dataset ready for model
+
+
+================================================================================
+PHASE 5: DOCUMENTATION & NEXT STEPS (5 minutes)
+================================================================================
+
+STEP 5.1: Document Data Provenance
+----------------------------------
+Create data documentation file:
+
+Contents:
+- Data source: Google BigQuery public dataset
+- Original location: google.com:google-cluster-data.powerdata_2019
+- Download date: [Today's date]
+- Download method: Python bigquery-client
+- Processing steps: Timestamp conversion, hourly aggregation
+- Data quality: [Results from validation]
+- Known limitations: May 2019 only, subset of Google datacenters
+
+Expected Result: Complete data documentation
+
+
+STEP 5.2: Update Project Status
+-------------------------------
+Update: Information_Docs\project_status.txt
+
+Completed:
+✓ 2024 forecast data downloaded (PJM grid, weather)
+✓ 2019 training data downloaded (all sources)
+✓ BigQuery access established
+✓ Data validation complete
+
+Next Steps:
+→ Data preprocessing and feature engineering
+→ Model training (SARIMAX, LSTM, XGBoost)
+→ Virginia datacenter capacity research
+→ 2024-2030 forecasting scenarios
+→ Risk analysis and recommendations
+
+Expected Result: Clear project roadmap
+
+
+STEP 5.3: Backup Data
+--------------------
+Why: Protect against accidental deletion, can re-use in future
+
+Backup Strategy:
+1. Compress: Data_Sources folder → Data_Sources_backup.zip
+2. Store externally: Google Drive, OneDrive, or USB drive
+3. Document backup location
+
+Expected Result: Data safely backed up
+
+
+================================================================================
+TROUBLESHOOTING GUIDE
+================================================================================
+
+ISSUE 1: "gcloud: command not found"
+Solution: 
+- Restart PowerShell after SDK installation
+- Check PATH: $env:PATH -split ';' | Select-String "Google"
+- Reinstall SDK if needed
+
+ISSUE 2: Authentication fails / browser doesn't open
+Solution:
+- Run: gcloud auth application-default login --no-browser
+- Follow instructions to manually copy authorization code
+
+ISSUE 3: "Permission denied" or "Access denied" errors
+Solution:
+- Verify correct Google account is logged in
+- Check project billing is enabled
+- Ensure BigQuery API is enabled
+
+ISSUE 4: Query timeout or connection errors
+Solution:
+- Check internet connection
+- Try smaller queries first (LIMIT 1000)
+- Increase timeout in script
+
+ISSUE 5: "Project ID not found"
+Solution:
+- Verify project ID exactly matches (case-sensitive)
+- Check: gcloud config list
+- Update in script: PROJECT_ID = "exact-project-id"
+
+ISSUE 6: High costs / unexpected charges
+Solution:
+- Monitor in Console: Billing → Reports
+- Should be ~$0.01 total
+- Set billing alerts for safety
+- Free tier should cover this dataset
+
+ISSUE 7: Data quality issues (missing values, wrong dates)
+Solution:
+- Check WHERE clause in queries (filters bad data)
+- Verify timestamp conversion logic
+- Re-download specific cells/PDUs if needed
+
+ISSUE 8: Script hangs or very slow
+Solution:
+- Normal: 8-12 minutes for full download
+- BigQuery processing 115 tables sequentially
+- Monitor progress output
+- Can interrupt (Ctrl+C) and resume by modifying script
+
+================================================================================
+SUCCESS CRITERIA CHECKLIST
+================================================================================
+
+□ Google Cloud account created with billing enabled
+□ Project created with unique ID noted
+□ BigQuery API enabled
+□ BigQuery console accessible, dataset visible
+□ Google Cloud SDK installed and gcloud works
+□ Application Default Credentials authenticated
+□ Python can import google.cloud.bigquery
+□ Test query executes successfully
+□ download_bigquery_data.py updated with project ID
+□ Sample download completes without errors
+□ Full download completes successfully
+□ Data file created (50-100 MB)
+□ Data validation passes all checks
+□ Data merged with other 2019 sources
+□ processed_training_data_2019.csv created
+□ Data documentation completed
+□ Data backed up externally
+□ Total cost < $0.05
+□ BigQuery quota not exceeded
+
+FINAL STATUS: Ready to proceed with model training
+
+================================================================================
+ESTIMATED TIMELINE & COSTS
+================================================================================
+
+Phase 1: Google Cloud Setup         15-20 min    $0.00
+Phase 2: Local Environment          10-15 min    $0.00
+Phase 3: Data Download               8-12 min    $0.01
+Phase 4: Validation                  5 min       $0.00
+Phase 5: Documentation              5 min        $0.00
+                                    --------     -----
+TOTAL:                              43-57 min    $0.01
+
+Free Tier Benefits:
+- $300 credit available (if new account)
+- This project uses < $0.05 total
+- 100% covered by free tier
+- No charges to your card
+
+================================================================================
+READY TO BEGIN!
+================================================================================
+
+Next Command: Open PowerShell and start with Phase 2 (Google Cloud SDK install)
+I'll guide you through each step and verify success before moving to the next.
+
+Let's get your datacenter power data! 🚀

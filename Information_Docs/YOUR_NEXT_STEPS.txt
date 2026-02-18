@@ -1,0 +1,202 @@
+================================================================================
+YOUR NEXT STEPS - WHAT YOU NEED TO DO NOW
+================================================================================
+Date: February 16, 2026
+Status: Scripts configured, ready for Google Cloud SDK installation
+
+================================================================================
+✅ WHAT I'VE ALREADY DONE FOR YOU
+================================================================================
+
+✓ Updated test_bigquery_connection.py with your project ID
+✓ Updated download_bigquery_data.py with your project ID  
+✓ All Python packages installed (BigQuery client ready)
+✓ Your project ID saved: datacenter-forecasting
+
+Scripts are now configured and ready to use!
+
+================================================================================
+📋 WHAT YOU NEED TO DO (2 MANUAL STEPS, THEN AUTOMATED)
+================================================================================
+
+STEP 1: INSTALL GOOGLE CLOUD SDK (One-time, ~10 minutes)
+----------------------------------------------------------
+This MUST be done manually - it's a Windows installer.
+
+1. Download the installer:
+   → Open this link: https://cloud.google.com/sdk/docs/install-windows
+   → Click "Download the Google Cloud CLI installer"
+   → Choose "Windows 64-bit (x86_64)"
+   → File: GoogleCloudSDKInstaller.exe (~165 MB)
+
+2. Run the installer:
+   → Double-click GoogleCloudSDKInstaller.exe
+   → If Windows asks permission, click "Yes"
+   → Installation options:
+     ✓ CHECK "Update PATH"
+     ✗ UNCHECK "Run gcloud init" (we'll do it manually)
+   → Click "Install"
+   → Wait 3-5 minutes
+   → When done, click "Finish"
+
+3. Verify installation:
+   → CLOSE your current PowerShell windows (important!)
+   → Open NEW PowerShell
+   → Run: gcloud --version
+   → Should show version info (not "command not found")
+
+⚠️  DO THIS FIRST - nothing else will work without it!
+
+
+STEP 2: AUTHENTICATE (One-time, ~2 minutes)
+--------------------------------------------
+This connects your local computer to your Google Cloud account.
+
+In PowerShell, run these commands:
+
+1. Authenticate:
+   gcloud auth application-default login
+
+   → Browser will open automatically
+   → Sign in with your Google account
+   → Click "Allow" when asked for permissions
+   → Browser shows "You are now authenticated"
+   → Return to PowerShell
+
+2. Set your project:
+   gcloud config set project datacenter-forecasting
+
+   → Should show: "Updated property [core/project]"
+
+3. Verify it worked:
+   gcloud config list
+
+   → Should show:
+     [core]
+     account = your-email@gmail.com
+     project = datacenter-forecasting
+
+✅ After this step, you're fully set up!
+
+
+STEP 3: TEST CONNECTION (Automated, ~10 seconds)
+-------------------------------------------------
+Verify everything works before downloading data.
+
+In PowerShell, run:
+
+.venv\Scripts\python.exe Model_Files\test_bigquery_connection.py
+
+Expected output:
+========================================
+TESTING BIGQUERY CONNECTION
+========================================
+
+[1/3] Creating BigQuery client...
+      ✅ Client created successfully
+
+[2/3] Testing query execution...
+      ✅ Query executed successfully
+
+[3/3] Retrieving results...
+      ✅ Data accessible! Table has X,XXX,XXX rows
+
+SUCCESS! BigQuery connection is working perfectly! ✅
+
+⚠️  If you see errors, check:
+   - Did you complete Steps 1 & 2 above?
+   - Is your internet connection working?
+   - Is BigQuery API enabled in Cloud Console?
+
+
+STEP 4: DOWNLOAD DATA (Automated, choose mode)
+-----------------------------------------------
+Now you can download the actual power consumption data!
+
+Option A - Quick Test (10 seconds, for testing):
+  .venv\Scripts\python.exe Model_Files\download_bigquery_data.py --test
+
+Option B - Sample Mode (2-3 minutes, good for development):
+  .venv\Scripts\python.exe Model_Files\download_bigquery_data.py --sample
+
+Option C - Full Dataset (20-30 minutes, for final model):
+  .venv\Scripts\python.exe Model_Files\download_bigquery_data.py --full
+
+💡 Recommendation:
+   1. Start with --test to make sure it works
+   2. If successful, run --sample for model development
+   3. When ready for final model, run --full
+
+
+STEP 5: VALIDATE DATA (Automated, ~5 seconds)
+----------------------------------------------
+After download completes, verify data quality:
+
+.venv\Scripts\python.exe Model_Files\validate_data.py
+
+Expected output:
+========================================
+DATA VALIDATION REPORT
+========================================
+[10 quality checks performed]
+
+OVERALL: ✅ DATA QUALITY EXCELLENT - Ready for modeling
+
+================================================================================
+📝 SUMMARY - YOUR ACTION ITEMS
+================================================================================
+
+Things YOU must do manually:
+□ Download and install Google Cloud SDK from link above
+□ Run: gcloud auth application-default login (browser opens)
+□ Run: gcloud config set project datacenter-forecasting
+
+Things that run automatically after that:
+□ Test connection script
+□ Download data script (you choose --test, --sample, or --full)
+□ Validate data script
+
+Total time: ~15 minutes manual setup + 2-30 min automated download
+
+================================================================================
+🎯 WHEN YOU'RE DONE
+================================================================================
+
+You'll have these files in Data_Sources folder:
+✓ google_power_data_2019_raw.csv (~50-100 MB)
+✓ google_power_data_2019_hourly.csv (~10-20 MB)
+✓ machine_to_pdu_mapping.csv (~1 MB)
+
+Then you're ready to build your forecasting models! 🎉
+
+================================================================================
+❓ TROUBLESHOOTING
+================================================================================
+
+Problem: gcloud command not found after installing SDK
+Solution: Close ALL PowerShell windows, open NEW one, try again
+
+Problem: Browser doesn't open during authentication
+Solution: Copy the link shown in terminal, paste in browser manually
+
+Problem: "Permission denied" when testing connection
+Solution: Make sure you completed the authentication step
+
+Problem: Download script shows "Project not found"
+Solution: Run: gcloud config list
+         Verify it shows: project = datacenter-forecasting
+
+Problem: Import errors in Python scripts
+Solution: Make sure you're using .venv Python:
+         .venv\Scripts\python.exe (not just "python")
+
+================================================================================
+📞 NEXT: START WITH STEP 1
+================================================================================
+
+Go download the Google Cloud SDK installer now:
+https://cloud.google.com/sdk/docs/install-windows
+
+After you install it and authenticate, come back and run the test script!
+
+================================================================================

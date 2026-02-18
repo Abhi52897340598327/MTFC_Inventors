@@ -1,0 +1,55 @@
+
+    Northern Virginia (esp. Ashburn) is the world's largest datacenter market.
+    You need to research/estimate the total AI datacenter capacity for scenarios.
+    
+    📊 RESEARCH SOURCES:
+    
+    1. UTILITY PLANNING DOCUMENTS
+       → Dominion Energy Virginia Integrated Resource Plan (IRP)
+       → https://www.dominionenergy.com/company/making-energy/Resource-planning
+       → Look for: Power demand forecasts, datacenter load growth
+    
+    2. PUBLIC UTILITY COMMISSION FILINGS
+       → Virginia State Corporation Commission
+       → https://www.scc.virginia.gov/
+       → Search: "datacenter" in recent case filings
+    
+    3. INDUSTRY REPORTS
+       → JLL Datacenter Outlook
+       → CBRE Data Center Trends
+       → Synergy Research Group
+       → Data Center Frontier (news site)
+    
+    4. NEWS AND ANNOUNCEMENTS
+       → Search: "virginia datacenter construction"
+       → Look for MW capacity numbers in announcements
+       → Companies: AWS, Microsoft, Google, Meta all have VA facilities
+    
+    5. ACADEMIC SOURCES
+       → Virginia Tech reports on datacenter energy
+       → UVA research on grid impacts
+    
+    📈 WHAT YOU NEED:
+    
+    - Total datacenter capacity in Northern Virginia: ~XXX MW
+    - AI-specific capacity (subset): ~XXX MW
+    - Growth rate: ~20-30% per year (industry average)
+    - PUE (efficiency): 1.1-1.2 for modern facilities
+    
+    🎯 BASELINE ESTIMATES (if data unavailable):
+    
+    2019 Baseline: ~1,500 MW total datacenter capacity in Northern VA
+    2024 Estimate: ~2,500-3,000 MW (based on 15-20% annual growth)
+    AI Subset: ~30-40% of new capacity (750-1,200 MW AI-focused)
+    
+    2026 Scenario: Add 500-1,000 MW new AI capacity
+    2028 Scenario: Add 1,500-2,000 MW new AI capacity
+    
+    Use these as starting points for your scenarios if you can't find
+    exact numbers. Document your assumptions clearly.
+    
+    💡 TIP: 
+    For a science fair project, reasonable estimates with documented 
+    assumptions are acceptable. Focus on the modeling methodology - 
+    actual capacity numbers matter less than the analytical framework.
+    

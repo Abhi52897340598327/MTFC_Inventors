@@ -1,0 +1,335 @@
+================================================================================
+POWERSHELL COMMAND REFERENCE - BIGQUERY DATA DOWNLOAD
+================================================================================
+Quick reference for all commands you'll need. Copy-paste these directly!
+
+================================================================================
+PHASE 2: GOOGLE CLOUD SDK SETUP
+================================================================================
+
+# After installing SDK, verify installation:
+gcloud --version
+
+# Authenticate with Google Cloud:
+gcloud auth application-default login
+
+# Set your default project (replace YOUR-PROJECT-ID):
+gcloud config set project YOUR-PROJECT-ID
+
+# Verify configuration:
+gcloud config list
+
+# Check authentication token (confirms auth works):
+gcloud auth application-default print-access-token
+
+================================================================================
+PHASE 3: DATA DOWNLOAD - PYTHON COMMANDS
+================================================================================
+
+# Navigate to project directory (if not already there):
+cd "C:\Users\ishan\OneDrive\Desktop\MTFC_Inventors"
+
+# Test BigQuery connection:
+.venv\Scripts\python.exe Model_Files\test_bigquery_connection.py
+
+# Quick test download (single PDU, ~10 seconds):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --test
+
+# Sample download (10K rows per PDU, ~2-3 minutes):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --sample
+
+# Full download (complete dataset, ~20-30 minutes):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --full
+
+# Interactive mode (prompts for choice):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py
+
+# Validate downloaded data:
+.venv\Scripts\python.exe Model_Files\validate_data.py
+
+================================================================================
+FILE MANAGEMENT COMMANDS
+================================================================================
+
+# List files in Data_Sources folder:
+Get-ChildItem "Data_Sources" | Select-Object Name, Length, LastWriteTime | Format-Table
+
+# Check specific file size:
+Get-Item "Data_Sources\google_power_data_2019_raw.csv" | Select-Object Name, Length
+
+# Preview first few lines of CSV:
+Get-Content "Data_Sources\google_power_data_2019_raw.csv" -First 5
+
+# Count lines in CSV file:
+(Get-Content "Data_Sources\google_power_data_2019_raw.csv").Count
+
+# Calculate folder total size:
+(Get-ChildItem "Data_Sources" -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+
+================================================================================
+TROUBLESHOOTING COMMANDS
+================================================================================
+
+# Check if gcloud is in PATH:
+$env:PATH -split ';' | Select-String "Google"
+
+# Find Python executable being used:
+Get-Command python | Select-Object Source
+
+# Check Python virtual environment:
+.venv\Scripts\python.exe --version
+
+# Test Python imports:
+.venv\Scripts\python.exe -c "import requests; import pandas; from google.cloud import bigquery; print('All imports OK')"
+
+# Check Google Cloud authentication status:
+gcloud auth list
+
+# View current BigQuery quota:
+gcloud alpha services quota usage describe --service=bigquery.googleapis.com --project=YOUR-PROJECT-ID --consumer=projects/YOUR-PROJECT-ID
+
+# Clear gcloud configuration (if needed to start fresh):
+gcloud config unset project
+gcloud auth revoke
+
+================================================================================
+GOOGLE CLOUD CONSOLE - IMPORTANT URLS
+================================================================================
+
+# Main Console:
+https://console.cloud.google.com/
+
+# Create New Project:
+https://console.cloud.google.com/projectcreate
+
+# Enable BigQuery API:
+https://console.cloud.google.com/apis/library/bigquery.googleapis.com
+
+# BigQuery Studio:
+https://console.cloud.google.com/bigquery
+
+# Billing Dashboard:
+https://console.cloud.google.com/billing
+
+# View Google's Public Dataset:
+https://console.cloud.google.com/bigquery?p=google.com:google-cluster-data
+
+# Download Google Cloud SDK:
+https://cloud.google.com/sdk/docs/install-windows
+
+================================================================================
+MONITORING & VERIFICATION
+================================================================================
+
+# Monitor download progress (while running):
+# (Download script shows real-time progress, just watch the console)
+
+# Check data files after download:
+Get-ChildItem "Data_Sources" -Filter "google_power*.csv" | Select-Object Name, @{Name="Size (MB)";Expression={[math]::Round($_.Length/1MB, 2)}}, LastWriteTime
+
+# Quick data preview using pandas:
+.venv\Scripts\python.exe -c "import pandas as pd; df = pd.read_csv('Data_Sources/google_power_data_2019_raw.csv'); print(df.head()); print(f'\nShape: {df.shape}')"
+
+# Check if all expected files exist:
+$files = @(
+    "Data_Sources\google_power_data_2019_raw.csv",
+    "Data_Sources\google_power_data_2019_hourly.csv",
+    "Data_Sources\machine_to_pdu_mapping.csv"
+)
+foreach ($file in $files) {
+    if (Test-Path $file) {
+        Write-Host "✅ $file exists"
+    } else {
+        Write-Host "❌ $file missing"
+    }
+}
+
+================================================================================
+PROJECT STATUS CHECK
+================================================================================
+
+# Complete environment check (copy all these commands):
+
+Write-Host "`n=== ENVIRONMENT STATUS ===" -ForegroundColor Cyan
+
+# 1. Check gcloud
+if (Get-Command gcloud -ErrorAction SilentlyContinue) {
+    Write-Host "✅ gcloud installed: " -NoNewline
+    gcloud --version | Select-Object -First 1
+} else {
+    Write-Host "❌ gcloud not found - install Google Cloud SDK"
+}
+
+# 2. Check Python
+Write-Host "✅ Python: " -NoNewline
+.venv\Scripts\python.exe --version
+
+# 3. Check authentication
+Write-Host "✅ Google Cloud auth: " -NoNewline
+$auth = gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>$null
+if ($auth) {
+    Write-Host $auth
+} else {
+    Write-Host "❌ Not authenticated"
+}
+
+# 4. Check project
+Write-Host "✅ Project: " -NoNewline
+$project = gcloud config get-value project 2>$null
+if ($project) {
+    Write-Host $project
+} else {
+    Write-Host "❌ No project set"
+}
+
+# 5. Check Data_Sources files
+Write-Host "`n=== DATA FILES ===" -ForegroundColor Cyan
+$dataFiles = Get-ChildItem "Data_Sources" -Filter "*.csv" | Measure-Object
+Write-Host "CSV files in Data_Sources: $($dataFiles.Count)"
+
+Write-Host "`n"
+
+================================================================================
+BACKUP COMMANDS
+================================================================================
+
+# Create backup of Data_Sources folder:
+Compress-Archive -Path "Data_Sources\*" -DestinationPath "Data_Sources_backup_$(Get-Date -Format 'yyyy-MM-dd').zip" -Force
+
+# Restore from backup:
+# Expand-Archive -Path "Data_Sources_backup_2026-02-16.zip" -DestinationPath "Data_Sources" -Force
+
+================================================================================
+CLEANUP COMMANDS (if needed to start fresh)
+================================================================================
+
+# Remove BigQuery data files (CAREFUL - this deletes data!):
+# Remove-Item "Data_Sources\google_power*.csv" -Force
+# Remove-Item "Data_Sources\machine_to_pdu_mapping.csv" -Force
+
+# Reauthenticate from scratch:
+# gcloud auth revoke
+# gcloud auth application-default revoke
+# gcloud auth application-default login
+
+================================================================================
+COMMON COMMAND SEQUENCES
+================================================================================
+
+SEQUENCE 1: First-time setup
+----------------------------
+gcloud --version
+gcloud auth application-default login
+gcloud config set project YOUR-PROJECT-ID
+.venv\Scripts\python.exe Model_Files\test_bigquery_connection.py
+
+
+SEQUENCE 2: Download data (testing first)
+-----------------------------------------
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --test
+# If test works:
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --sample
+# If sample works:
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --full
+
+
+SEQUENCE 3: Verify everything
+------------------------------
+Get-ChildItem "Data_Sources" -Filter "google_power*.csv"
+.venv\Scripts\python.exe Model_Files\validate_data.py
+gcloud config list
+
+
+SEQUENCE 4: Check costs
+------------------------
+# Open browser to billing:
+Start-Process "https://console.cloud.google.com/billing"
+# Should see ~$0.01 for BigQuery
+
+================================================================================
+TIPS & SHORTCUTS
+================================================================================
+
+# Set PowerShell alias for Python (optional, makes commands shorter):
+Set-Alias -Name py -Value ".venv\Scripts\python.exe"
+# Then you can use: py Model_Files\test_bigquery_connection.py
+
+# Create function for quick status check:
+function Check-BigQueryStatus {
+    Write-Host "gcloud: " -NoNewline
+    if (Get-Command gcloud -ErrorAction SilentlyContinue) { Write-Host "✅" } else { Write-Host "❌" }
+    
+    Write-Host "Auth: " -NoNewline
+    if (gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>$null) { Write-Host "✅" } else { Write-Host "❌" }
+    
+    Write-Host "Project: " -NoNewline
+    $proj = gcloud config get-value project 2>$null
+    if ($proj) { Write-Host "✅ $proj" } else { Write-Host "❌" }
+    
+    Write-Host "Data files: " -NoNewline
+    $files = Get-ChildItem "Data_Sources" -Filter "google_power*.csv" 2>$null
+    Write-Host "$($files.Count) found"
+}
+# Then just run: Check-BigQueryStatus
+
+================================================================================
+ERROR MESSAGE DECODER
+================================================================================
+
+Error: "command not found" or "is not recognized"
+Fix: Install Google Cloud SDK or restart PowerShell
+
+Error: "Could not automatically determine credentials"
+Fix: gcloud auth application-default login
+
+Error: "Permission denied" or "403"
+Fix: Enable BigQuery API in Cloud Console
+
+Error: "Project not found" or "404"
+Fix: Check project ID spelling (gcloud config list)
+
+Error: "Quota exceeded"
+Fix: Wait a few minutes or check quota limits in Console
+
+Error: "Connection timeout"
+Fix: Check internet connection, try again
+
+Error: "Import error: no module named 'google.cloud'"
+Fix: Verify using .venv Python: .venv\Scripts\python.exe
+
+================================================================================
+QUICK COPY-PASTE SECTION
+================================================================================
+
+Replace YOUR-PROJECT-ID below, then copy and paste each block:
+
+# BLOCK 1: Setup
+gcloud config set project YOUR-PROJECT-ID
+gcloud config list
+
+# BLOCK 2: Test connection
+cd "C:\Users\ishan\OneDrive\Desktop\MTFC_Inventors"
+.venv\Scripts\python.exe Model_Files\test_bigquery_connection.py
+
+# BLOCK 3: Download (choose one):
+
+# Quick test (10 seconds):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --test
+
+# Sample mode (2-3 minutes):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --sample
+
+# Full mode (20-30 minutes):
+.venv\Scripts\python.exe Model_Files\download_bigquery_data.py --full
+
+# BLOCK 4: Validate
+.venv\Scripts\python.exe Model_Files\validate_data.py
+
+================================================================================
+END OF COMMAND REFERENCE
+================================================================================
+
+Save this file for quick reference during setup!
+All commands are tested and ready to use.
+
+Need help? Check: Information_Docs\START_HERE_BIGQUERY.txt

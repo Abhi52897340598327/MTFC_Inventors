@@ -1,0 +1,234 @@
+QUICK REFERENCE: DATA SOURCES AND DOWNLOAD CHECKLIST
+====================================================
+
+Last Updated: February 16, 2026
+
+This is your quick reference guide for finding and downloading all data.
+For detailed instructions, see: complete_data_guide.txt
+
+====================================================
+STATUS OF YOUR DATA
+====================================================
+
+✅ HAVE (Already in Data_Sources folder):
+   1. ashburn_va_temperature_2019.csv
+   2. google_cluster_utilization_2019.csv  
+   3. pjm_grid_carbon_intensity_2019_full.csv
+   4. EIA923_Schedules_2_3_4_5_M_11_2025_21JAN2026.xlsx
+
+❌ NEED (Follow instructions below):
+   5. Google power consumption data (BigQuery)
+   6. PJM 2024 carbon intensity (EIA API)
+   7. Ashburn 2024 temperature (NOAA API)
+   8. Virginia datacenter capacity (research)
+
+====================================================
+QUICK DOWNLOAD INSTRUCTIONS
+====================================================
+
+STEP 1: GET API KEYS (10 minutes, FREE)
+----------------------------------------
+□ EIA API Key:
+  → Visit: https://www.eia.gov/opendata/register.php
+  → Fill form → Receive key instantly
+  → Save key: [write here: _________________]
+
+□ NOAA API Key:
+  → Visit: https://www.ncdc.noaa.gov/cdo-web/token
+  → Request token → Receive via email in 1-2 days
+  → Save key: [write here: _________________]
+
+STEP 2: DOWNLOAD 2024 DATA (30 minutes)
+----------------------------------------
+□ Run automated script:
+  1. Open: Model_Files/download_all_data.py
+  2. Replace YOUR_API_KEY_HERE with actual keys
+  3. Run: python download_all_data.py
+  4. Check Data_Sources folder for new files
+
+Files downloaded:
+  □ pjm_grid_data_2024_raw.csv
+  □ ashburn_va_temperature_2024.csv
+
+STEP 3: DOWNLOAD BIGQUERY DATA (1 hour first time)
+---------------------------------------------------
+□ Setup Google Cloud:
+  1. Visit: https://console.cloud.google.com/
+  2. Create new project (any name)
+  3. Enable BigQuery API
+  4. Enable billing (FREE TIER covers this!)
+
+□ Download power data:
+  Option A - Web Console (easiest):
+    1. Open BigQuery SQL workspace
+    2. Paste query from complete_data_guide.txt
+    3. Click Run
+    4. Export results to CSV
+    5. Save as: google_power_data_2019.csv
+  
+  Option B - Python script:
+    1. Install: pip install google-cloud-bigquery
+    2. Authenticate: gcloud auth login
+    3. Open: Model_Files/download_bigquery_data.py
+    4. Set PROJECT_ID
+    5. Run: python download_bigquery_data.py
+
+Files downloaded:
+  □ google_power_data_2019_raw.csv
+  □ google_power_data_2019_hourly.csv
+  □ machine_to_pdu_mapping.csv
+
+STEP 4: RESEARCH VIRGINIA DATA (1-2 hours)
+-------------------------------------------
+□ Datacenter capacity estimates:
+  Sources to check:
+  □ Dominion Energy IRP: 
+    https://www.dominionenergy.com/company/making-energy/Resource-planning
+  □ Google News: "northern virginia data center megawatt"
+  □ Virginia SCC: https://www.scc.virginia.gov/
+
+  Record findings:
+  □ 2024 total capacity: _____ MW
+  □ AI-specific capacity: _____ MW
+  □ Sources used: ____________________
+
+  Use baseline if unavailable:
+  □ 2024: ~2,500 MW total, ~400 MW AI
+  □ Document as assumption
+
+□ AI workload specifications:
+  Sources to check:
+  □ Nvidia H100 specs: 700W per GPU
+  □ MLCommons benchmarks
+  □ Academic papers on AI power
+
+  Record findings:
+  □ Power per GPU/rack: _____ W
+  □ Utilization rate: _____% 
+  □ PUE: _____
+
+====================================================
+DATA INVENTORY CHECKLIST
+====================================================
+
+TRAINING DATA (2019):
+□ Temperature (hourly)
+□ CPU utilization (seconds → aggregate to hourly)
+□ Power consumption (5-min → aggregate to hourly)
+□ Carbon intensity (hourly)
+□ Regional demand (hourly)
+
+FORECASTING DATA (2024-2026):
+□ Temperature 2024 (or use 2019 as proxy)
+□ Carbon intensity 2024
+□ Virginia capacity estimates
+□ AI workload assumptions
+□ Scenario definitions
+
+ALL DATA COLLECTED? → Ready to start preprocessing!
+
+====================================================
+NEXT STEPS AFTER DATA COLLECTION
+====================================================
+
+1. □ Run data preprocessing script
+      → Merge all datasets on timestamps
+      → Aggregate to hourly
+      → Create features (hour, day, etc.)
+      → Save: processed_training_data_2019.csv
+
+2. □ Train forecasting models
+      → SARIMAX baseline
+      → LSTM residual learner
+      → XGBoost interactions
+      → Meta-learner ensemble
+
+3. □ Create Virginia scenarios
+      → Define capacity levels
+      → Define utilization patterns
+      → Run forecasts
+
+4. □ Calculate risk metrics
+      → Carbon emissions
+      → Grid stress
+      → Peak demand
+
+5. □ Test mitigation strategies
+      → Workload shifting
+      → Demand response
+      → Efficiency improvements
+
+6. □ Generate visualizations
+      → Time series plots
+      → Scenario comparisons
+      → Summary tables
+
+7. □ Write report!
+
+====================================================
+TROUBLESHOOTING COMMON ISSUES
+====================================================
+
+"API key doesn't work"
+→ Check you copied entire key (no spaces)
+→ EIA works immediately, NOAA takes 1-2 days
+
+"BigQuery requires billing"
+→ Yes, but FREE TIER covers it ($300 credit)
+→ This dataset costs < $0.05
+→ Need credit card but won't be charged
+
+"Can't find Virginia data"
+→ Use baseline estimates (documented in guide)
+→ Totally acceptable for this project!
+→ Focus on methodology over exact numbers
+
+"Too complicated!"
+→ Start simple: just download BigQuery data
+→ Use 2019 for all years (acceptable)
+→ Build model first, refine data later
+
+====================================================
+FILES CREATED FOR YOU
+====================================================
+
+In Model_Files folder:
+✓ download_all_data.py - Automated data download
+✓ download_bigquery_data.py - BigQuery-specific script
+
+In Information_Docs folder:
+✓ data_requirements_and_modeling_approach.txt - Project overview
+✓ complete_data_guide.txt - Detailed data guide
+✓ data_sources_quick_reference.txt - This file!
+
+====================================================
+ESTIMATED TIME TO COLLECT ALL DATA
+====================================================
+
+API keys:          10 minutes (sign up)
+Automated download: 30 minutes (2024 data)
+BigQuery setup:    60 minutes (first time)
+BigQuery download: 20 minutes (actual data)
+Virginia research:  2 hours (reading/compiling)
+--------------
+TOTAL:         ~3-4 hours spread over 2-3 days
+               (waiting for NOAA key)
+
+After that: You're ready to code!
+
+====================================================
+QUESTIONS?
+====================================================
+
+Stuck? Check these files:
+1. complete_data_guide.txt - Detailed instructions
+2. data_requirements_and_modeling_approach.txt - What and why
+3. model_summary.txt - Original model specification
+
+Still stuck? 
+- Google the error message
+- Check API documentation websites
+- Review example code in download scripts
+
+You've got this! 🚀
+====================================================

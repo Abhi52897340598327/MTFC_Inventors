@@ -1,0 +1,320 @@
+1. Models Used — Precise, Mechanistic Overview
+1.1 SARIMAX (Statistical Baseline / Structural Expert)
+What it is
+ SARIMAX is a linear time-series model that combines:
+autoregression (past values),
+
+
+moving averages (past errors),
+
+
+explicit seasonal terms,
+
+
+and exogenous regressors.
+
+
+How it works precisely
+The model assumes the target signal can be decomposed into:
+
+
+deterministic seasonal structure (e.g., 24-hour and 7-day cycles),
+
+
+linear responses to external drivers (temperature, demand),
+
+
+and stochastic noise.
+
+
+Parameters are estimated via maximum likelihood under stationarity or differenced stationarity assumptions.
+
+
+Seasonal differencing forces the model to explicitly encode periodic behavior rather than learn it implicitly.
+
+
+Role in this system
+Produces a structurally constrained baseline forecast of facility-level power demand.
+
+
+Enforces physical realism: demand cannot drift arbitrarily and must follow known cycles.
+
+
+Acts as the reference signal against which nonlinear residuals are learned.
+
+
+
+1.2 LSTM with Temporal Attention (Sequential Nonlinearity Expert)
+What it is
+ A recurrent neural network designed to learn long-range temporal dependencies in sequences, augmented with attention to weight past timesteps unequally.
+How it works precisely
+The LSTM cell maintains a hidden state and memory state governed by gated updates (input, forget, output gates).
+
+
+Instead of assuming all past timesteps matter equally, the attention layer computes similarity scores between the current state and previous states, forming a weighted context vector.
+
+
+The model therefore learns which past events (not just how recent) are most predictive.
+
+
+Role in this system
+Learns lagged, nonlinear demand responses that the SARIMAX model cannot represent.
+
+
+Captures effects such as:
+
+
+delayed cooling response after compute bursts,
+
+
+persistence after large training jobs,
+
+
+hysteresis effects in facility power usage.
+
+
+Trained only on residuals, not raw demand, which stabilizes learning and prevents trend hallucination.
+
+
+
+1.3 XGBoost (Instantaneous Interaction / Regime Expert)
+What it is
+ A gradient-boosted ensemble of decision trees optimized via second-order gradient descent.
+How it works precisely
+Each tree partitions the feature space via threshold splits that minimize residual error.
+
+
+Boosting iteratively adds trees that correct errors made by prior trees.
+
+
+The model naturally represents nonlinear interactions and discontinuities without requiring feature transformations.
+
+
+Role in this system
+Models point-in-time nonlinear interactions, such as:
+
+
+threshold effects (e.g., cooling regime changes),
+
+
+multiplicative interactions (e.g., temperature × humidity),
+
+
+regime switching behavior.
+
+
+Operates on the same residual signal as the LSTM, but from a non-sequential perspective.
+
+
+
+1.4 Meta-Learner (Adaptive Weighting Layer)
+What it is
+ A regularized linear combiner (e.g., ridge regression).
+How it works precisely
+Takes the outputs of SARIMAX, LSTM, and XGBoost as inputs.
+
+
+Learns weights that minimize validation error under regularization, preventing dominance by any single expert.
+
+
+Can optionally condition weights on regime indicators.
+
+
+Role in this system
+Produces the final facility power forecast.
+
+
+Allows the ensemble to adapt dynamically:
+
+
+SARIMAX dominates in stable regimes,
+
+
+LSTM during burst-driven periods,
+
+
+XGBoost during threshold or extreme conditions.
+
+
+
+2. Comprehensive Inputs and Outputs Table
+A. Inputs Used Directly by the Forecasting Models
+(These determine how much electricity the data center will use)
+Category
+Input name
+What this input actually represents (plain language)
+Why it is needed
+Time
+Hour of day
+What hour it is (e.g., 2 AM vs 2 PM)
+Data centers follow strong daily patterns in activity and cooling needs
+Workload
+Compute utilization
+How busy the servers are, as a fraction of their maximum capacity
+This is the main driver of how much electricity the computers themselves consume
+Environment
+Outdoor temperature
+How hot or cold it is outside the data center
+Hotter weather forces cooling systems to work harder, increasing electricity use
+
+These three inputs form the core predictive model.
+ They are sufficient to produce a stable, defensible forecast of electricity demand.
+
+B. Inputs Used to Translate Electricity Use into Risk
+(These do NOT affect how much electricity is used, but determine environmental and grid impacts)
+Category
+Input name
+What this input actually represents (plain language)
+Why it is needed
+Grid
+Carbon intensity of electricity
+How much CO₂ is released to generate one unit of electricity at a given hour
+Converts electricity use into emissions
+Grid
+Regional electricity demand
+How much total electricity the surrounding region is using at that time
+Determines whether the data center is adding stress during peak grid conditions
+
+These inputs are applied after the forecast to compute emissions and grid stress.
+ They are not predictors of data center behavior.
+
+C. Inputs Used for Scenario Testing and Recommendations
+(These are not measured data — they are “what-if” levers)
+Category
+Input name
+What this input actually represents (plain language)
+Why it is included
+Operations
+Flexible workload fraction
+The share of computing tasks that can be delayed without harming users
+Determines how much demand can be shifted away from high-stress hours
+Operations
+Maximum delay window
+How long flexible tasks are allowed to wait before running
+Limits how far work can be shifted in time
+Operations
+Curtailment capability
+The maximum amount of load that can be temporarily reduced if the grid is stressed
+Represents participation in demand-response programs
+Efficiency
+Infrastructure efficiency factor
+How efficient the data center’s equipment and cooling systems are compared to baseline
+Models upgrades like better cooling or more efficient hardware
+
+These inputs are not used during model training.
+ They are applied during sensitivity analysis to test mitigation strategies.
+
+2.2 Outputs
+Output
+What this output actually represents (plain language)
+Why this output matters
+Facility power demand (hourly)
+How much electricity the entire data center pulls from the power grid each hour
+This is the core quantity the model predicts; all environmental and grid risks are calculated from it
+Cumulative CO₂ emissions
+The total amount of carbon dioxide released to generate the data center’s electricity over the study period
+This measures the environmental impact the project aims to reduce
+Peak facility demand
+The highest level of electricity use reached by the data center at any single hour
+High peaks strain grid infrastructure and drive costly upgrades
+Coincident peak contribution
+How much electricity the data center uses during the hours when the regional power grid is under its greatest stress
+Utilities and regulators focus on this metric because it worsens blackouts and reliability risks
+Maximum ramp rate
+The largest hour-to-hour increase in electricity use by the data center
+Sudden jumps in demand make grid balancing more difficult and increase instability
+Prediction uncertainty band
+The range within which the true future electricity demand is likely to fall
+Allows risks to be expressed probabilistically instead of as single numbers
+
+
+3. Model Orchestration Plan
+Step 1: Structural Baseline
+SARIMAX forecasts facility demand using time and linear exogenous effects.
+
+
+Output defines the expected demand absent nonlinear workload effects.
+
+
+Step 2: Residual Learning
+Compute residual = actual (or simulated) demand − SARIMAX prediction.
+
+
+Train:
+
+
+LSTM to learn temporal structure in residuals.
+
+
+XGBoost to learn instantaneous interactions in residuals.
+
+
+Step 3: Ensemble Synthesis
+Combine SARIMAX baseline and residual corrections through the meta-learner.
+
+
+Produce final demand forecast with uncertainty bounds.
+
+
+Step 4: Physical Transformation
+Convert demand to:
+
+
+emissions via grid intensity,
+
+
+stress metrics via comparison to regional demand.
+
+
+
+4. Risk Mitigation and Sensitivity Analysis Strategy
+4.1 Risk Quantification
+CO₂ risk: distribution of cumulative and peak emissions.
+
+
+Grid risk: probability and severity of coincident peak contribution and high ramp rates.
+
+
+4.2 Sensitivity Analysis
+Treat controllable parameters (load shifting, efficiency, curtailment) as independent inputs.
+
+
+Run global sensitivity methods (screening → variance decomposition) on:
+
+
+emissions,
+
+
+peak demand,
+
+
+stress index.
+
+
+Attribute sensitivity to model components:
+
+
+SARIMAX coefficients → structural drivers,
+
+
+XGBoost SHAP values → nonlinear interactions,
+
+
+LSTM attention weights → temporal drivers.
+
+
+4.3 Risk Mitigation Use
+Identify which levers:
+
+
+most reduce emissions per unit change,
+
+
+most reduce peak stress,
+
+
+remain effective across regimes.
+
+
+Translate results into ranked, quantitative mitigation strategies rather than qualitative claims.
+

@@ -1,0 +1,255 @@
+DATA REQUIREMENTS AND MODELING APPROACH FOR 
+FORECASTING AI DATACENTER IMPACTS ON VIRGINIA GRID
+================================================================
+
+PROJECT GOAL:
+Forecast the energy consumption and grid impacts (carbon emissions + grid stress) 
+of AI datacenters in Virginia, and identify mitigation strategies.
+
+This is a FORECASTING project, not just historical analysis.
+2019 data is for TRAINING the model to learn relationships.
+Then we PROJECT to 2024-2030 scenarios.
+
+================================================================
+DATA ARCHITECTURE
+================================================================
+
+PART 1: HISTORICAL TRAINING DATA (2019)
+----------------------------------------
+Purpose: Learn fundamental relationships between inputs and power consumption
+
+What You Have:
+✓ Temperature (Ashburn, VA) - Hourly, full 2019
+✓ Google cluster CPU utilization - Second-level, May 2019 only
+✓ PJM grid carbon intensity - Hourly, full 2019  
+✓ PJM regional generation (demand proxy) - Hourly, full 2019
+
+What You Need to Get:
+❌ Google power consumption data from BigQuery
+   - Location: google.com:google-cluster-data.powerdata_2019.*
+   - Coverage: 57 power domains, May 2019
+   - Access: Requires Google Cloud account + BigQuery API
+   - Fields: measured_power_util, production_power_util, time, pdu, cell
+   - Documentation: https://github.com/google/cluster-data/blob/master/PowerData2019.md
+
+Training Approach:
+1. Align all data to May 2019 (overlapping period)
+2. Aggregate utilization: seconds → hourly averages
+3. Aggregate power: 5-minute → hourly averages  
+4. Train models to learn:
+   - How utilization → power consumption
+   - How temperature → cooling overhead
+   - Temporal patterns (daily, weekly cycles)
+   - Nonlinear interactions
+
+PART 2: CURRENT/FUTURE VIRGINIA SCENARIO DATA (2024-2030)
+----------------------------------------------------------
+Purpose: Apply learned relationships to forecast future impacts
+
+2.1 VIRGINIA DATACENTER CAPACITY PROJECTIONS
+Sources:
+- Industry reports (Data Center Frontier, Data Center Knowledge)
+- Virginia economic development announcements
+- Dominion Energy/utility planning documents
+- Public utility commission filings
+
+What to find:
+- Total MW of datacenter capacity planned for Virginia
+- Timeline of deployments (which years)
+- Location (Northern VA = most growth, different grid subregion)
+- Type: AI training vs inference (different utilization patterns)
+
+Assumption if unavailable:
+- Use national growth rates: AI datacenter capacity growing 20-30%/year
+- Apply to Ashburn region (already 70+ datacenters)
+- Estimate 500 MW - 2 GW new AI capacity by 2026-2028
+
+2.2 UPDATED WEATHER DATA (2024-2025)
+Sources:
+- NOAA Climate Data Online: https://www.ncdc.noaa.gov/cdo-web/
+- Station: Dulles Airport (IAD) for Ashburn area
+- Download: Hourly temperature for 2024-2025
+
+Alternative: Use 2019 as "typical meteorological year" proxy
+
+2.3 UPDATED GRID CARBON INTENSITY (2024-2025)
+Sources:
+- PJM Environmental Information Services: https://www.pjm-eis.com/
+- EIA Form 930 (real-time grid data): https://www.eia.gov/electricity/gridmonitor/
+- Download: Hourly carbon intensity for Virginia/PJM region
+
+Why needed: Virginia's grid is getting cleaner
+- 2019: ~307 gCO2/kWh average
+- 2025: ~280 gCO2/kWh (more solar/wind, less coal)
+- This affects your emissions calculations
+
+2.4 AI WORKLOAD CHARACTERISTICS
+Research sources:
+- Academic papers on LLM training/inference power
+- MLCommons power benchmarks
+- GPU vendor specifications (Nvidia H100, MI300)
+
+Key parameters:
+- Utilization: AI workloads run 70-90% sustained (vs 2019 general compute 20-40%)
+- Power per chip: H100 = 700W, training racks = 50-100 kW
+- Burst patterns: Training runs are weeks-long sustained loads
+- Inference: More variable, follows user request patterns
+
+Assumptions if unavailable:
+- Scale 2019 utilization by 2-3x for AI workloads
+- Increase power density proportionally
+
+2.5 DATACENTER EFFICIENCY PARAMETERS
+Modern datacenter specs (2024):
+- PUE (Power Usage Effectiveness): 1.1-1.2 (vs 2019: 1.3-1.5)
+  * PUE = Total facility power / IT equipment power
+  * Lower = more efficient (less cooling/overhead)
+- Hardware efficiency: 2-3x better compute per watt (newer chips)
+- Advanced cooling: Liquid cooling becoming standard for AI
+
+Use these to adjust 2019 relationships for modern facilities
+
+================================================================
+HOW THE MODEL ACTUALLY WORKS
+================================================================
+
+STEP 1: Train on 2019 Data
+Model learns: Power = f(utilization, temperature, time_patterns, nonlinear_effects)
+
+Result: Trained SARIMAX + LSTM + XGBoost ensemble that understands:
+- Base power consumption patterns
+- How utilization drives power
+- How temperature affects cooling
+- Daily/weekly cycles
+
+STEP 2: Create Virginia AI Datacenter Scenarios
+Define futures to test:
+- Scenario A: +500 MW AI capacity by 2026
+- Scenario B: +1000 MW AI capacity by 2028  
+- Scenario C: +500 MW but with advanced efficiency
+- etc.
+
+For each scenario, construct:
+- Projected hourly utilization (AI workload patterns)
+- Virginia temperature (2024 data or 2019 proxy)
+- Virginia grid carbon intensity (2024 data)
+
+STEP 3: Forecast with Trained Model
+Apply trained model to new scenario inputs:
+Forecasted_Power = Model(AI_utilization, Virginia_temp, time_patterns)
+
+Adjust for:
+- Modern efficiency (divide by PUE improvement factor)
+- Hardware improvements (adjust power per utilization)
+
+STEP 4: Calculate Risk Metrics
+From forecasted power, compute:
+
+Grid Impact Risks:
+- Peak demand (MW): When does datacenter peak?
+- Coincident peak: How much load during Virginia's grid peak hours?
+- Ramp rates: Hour-to-hour changes in demand
+- Percentage of total regional load
+
+Carbon Emissions:
+- Total annual CO2 (tons) = Σ(Hourly_Power × Hourly_Carbon_Intensity)
+- Peak emissions hours
+- Emissions during high-carbon periods (evening, winter)
+
+STEP 5: Test Mitigation Strategies
+Run sensitivity analysis on:
+- Workload shifting: Move flexible compute to low-carbon hours
+- Demand response: Curtail during grid stress
+- Efficiency upgrades: Better PUE, hardware
+- On-site renewables: Solar offset
+
+Quantify: Which strategies reduce emissions/stress most?
+
+================================================================
+MINIMUM VIABLE DATASET TO START
+================================================================
+
+If you can't get everything, you can still build a working model with:
+
+ESSENTIAL (must have):
+✓ Temperature - you have this
+✓ Utilization - you have this  
+✓ Carbon intensity - you have this
+✓ Regional demand - you have this (total_gen_mw)
+❌ Power consumption - NEED from BigQuery (or build synthetic)
+
+HIGHLY RECOMMENDED:
+- Updated 2024 carbon intensity (PJM published this, free)
+- Virginia datacenter capacity estimates (research reports)
+
+NICE TO HAVE:
+- Updated 2024 temperature
+- Detailed AI workload traces
+- Site-specific parameters
+
+================================================================
+SYNTHETIC APPROACH (If Can't Get BigQuery Data)
+================================================================
+
+If you absolutely cannot access BigQuery, you can create synthetic power data:
+
+Physical Model:
+Power(t) = IT_Base + (Utilization(t) × IT_Scale) + Cooling(Temperature(t))
+
+Where:
+- IT_Base = 30-40% of capacity (idle servers)
+- IT_Scale = Scale factor (60% capacity range)
+- Cooling = PUE overhead, increases with temperature
+
+Calibrate to published benchmarks:
+- Typical datacenter: 1 MW average per 2000 servers
+- PUE = 1.3-1.5 for 2019, 1.1-1.2 for modern
+- AI datacenters: Higher power density (2-3x)
+
+This gives you a training target to build the forecasting model.
+
+================================================================
+NEXT STEPS - PRIORITY ORDER
+================================================================
+
+1. CRITICAL: Get power data
+   Option A: Set up BigQuery access (1-2 hours, ~$5 cost)
+   Option B: Build synthetic power model (4-6 hours)
+
+2. HIGH: Get 2024 PJM carbon intensity  
+   - Visit https://www.pjm-eis.com/
+   - Download hourly emissions data for 2024
+   - Will significantly improve forecast accuracy
+
+3. MEDIUM: Research Virginia datacenter growth
+   - Search news, reports for capacity projections
+   - Contact Virginia Dept of Mines, Minerals and Energy
+   - Utility filings (Dominion Energy)
+
+4. LOW: Get 2024 weather if time permits
+   - NOAA Climate Data Online
+   - Dulles Airport station
+   - Or just use 2019 as proxy
+
+5. BUILD: Start implementation
+   - Data pipeline
+   - Model training
+   - Scenario forecasting
+   - Risk analysis
+
+================================================================
+CLARIFYING YOUR PROJECT SCOPE
+================================================================
+
+You are NOT just analyzing 2019 Google datacenters.
+
+You ARE:
+1. Using 2019 data to TRAIN a generic forecasting model
+2. Applying that model to VIRGINIA AI DATACENTER scenarios (future)
+3. Quantifying grid stress and emissions (risks)
+4. Testing mitigation strategies (demand response, efficiency, etc.)
+
+The model learns relationships from history, then forecasts future impacts
+under different growth/policy scenarios.
+
+This is exactly what utilities and regulators need for planning!

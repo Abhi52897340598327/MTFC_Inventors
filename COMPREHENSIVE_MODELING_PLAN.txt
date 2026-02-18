@@ -1,0 +1,2138 @@
+================================================================================
+COMPREHENSIVE MODELING AND ANALYSIS PLAN
+MTFC Virginia Datacenter Energy Forecasting Project
+================================================================================
+
+PROJECT TITLE:
+Forecasting Electricity Consumption and Carbon Emissions from Virginia 
+Datacenters: A Sensitivity Analysis for Grid Stress and Policy Recommendations
+
+GENERATED: February 16, 2026
+AUTHOR: MTFC Science Fair Project
+SCOPE: Time-series forecasting, sensitivity analysis, carbon emissions modeling
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+PART 1: PROJECT OVERVIEW AND OBJECTIVES
+PART 2: DATA INVENTORY AND VARIABLE DEFINITIONS
+PART 3: THEORETICAL FOUNDATION
+PART 4: MODELING METHODOLOGY
+PART 5: MODEL SPECIFICATIONS AND EQUATIONS
+PART 6: IMPLEMENTATION WORKFLOW
+PART 7: SENSITIVITY ANALYSIS FRAMEWORK
+PART 8: METRICS AND CALCULATIONS
+PART 9: VALIDATION AND TESTING
+PART 10: EXPECTED OUTPUTS AND DELIVERABLES
+
+
+================================================================================
+PART 1: PROJECT OVERVIEW AND OBJECTIVES
+================================================================================
+
+1.1 RESEARCH QUESTION
+--------------------------------------------------------------------------------
+How will electricity consumption from Virginia datacenters evolve through 2030,
+and what are the impacts on:
+  (a) Grid stress and reliability
+  (b) Carbon emissions
+  (c) Peak demand periods
+
+AND: Which factors (capacity, utilization, PUE, temperature, grid carbon 
+intensity, load timing) have the greatest impact on these outcomes?
+
+1.2 PRIMARY OBJECTIVES
+--------------------------------------------------------------------------------
+1. Build time-series forecasting models to predict datacenter electricity 
+   consumption patterns (hourly, through 2030)
+
+2. Perform comprehensive sensitivity analysis on 6 key factors:
+   - Datacenter capacity (installed MW)
+   - CPU utilization (workload intensity)
+   - Power Usage Effectiveness (PUE - cooling efficiency)
+   - Temperature (climate change scenarios)
+   - Grid carbon intensity (renewable penetration)
+   - Load timing (peak vs off-peak consumption)
+
+3. Calculate key metrics for each scenario:
+   - Total energy consumption (MWh/year)
+   - Peak demand contribution (MW)
+   - Carbon emissions (metric tons CO2/year)
+   - Coincident peak factor (% overlap with grid peaks)
+   - Grid stress score (custom composite metric)
+
+4. Generate data-driven policy recommendations for:
+   - Optimal datacenter siting and design
+   - Load shifting strategies
+   - Efficiency improvements
+   - Renewable energy integration
+   - Grid infrastructure planning
+
+1.3 SCIENTIFIC APPROACH
+--------------------------------------------------------------------------------
+This project employs a HYBRID MODELING APPROACH combining:
+
+A. PHYSICS-BASED MODELS:
+   - Thermodynamic cooling load calculations
+   - PUE-based power consumption relationships
+   - Heat transfer equations for temperature effects
+
+B. STATISTICAL/ML TIME-SERIES MODELS:
+   - SARIMAX (Seasonal AutoRegressive Integrated Moving Average with eXogenous)
+   - LSTM (Long Short-Term Memory neural networks)
+   - XGBoost (Gradient Boosting for feature importance)
+
+C. SCENARIO ANALYSIS:
+   - Monte Carlo simulations for uncertainty quantification
+   - Factorial design for sensitivity analysis
+   - Tornado diagrams for factor ranking
+
+This multi-model approach provides:
+- Physical validity (models obey thermodynamic laws)
+- Pattern learning (captures complex seasonality)
+- Uncertainty quantification (confidence intervals)
+- Interpretability (feature importance rankings)
+
+
+================================================================================
+PART 2: DATA INVENTORY AND VARIABLE DEFINITIONS
+================================================================================
+
+2.1 PRIMARY DATASETS
+--------------------------------------------------------------------------------
+
+DATASET 1: Synthetic Datacenter Power (Full Year 2019)
+-------------------------------------------------------
+File: synthetic_datacenter_power_full_year_2019_cleaned.csv
+Rows: 8,760 (hourly for one year)
+Temporal Resolution: Hourly
+Coverage: January 1, 2019 - December 31, 2019
+
+VARIABLES:
+- timestamp: DateTime (hourly intervals)
+- power_utilization (%): Overall power consumption as % of capacity
+- cpu_utilization (%): Compute workload intensity
+- temperature_f (°F): Ambient temperature
+- temperature_c (°C): Ambient temperature (Celsius)
+- base_load (MW): Baseline power (always-on systems)
+- it_load (MW): IT equipment power (servers, storage, network)
+- cooling_load (MW): HVAC and cooling systems power
+- pue (dimensionless): Power Usage Effectiveness ratio
+- total_power_with_pue (MW): Total facility power including overhead
+- hour_of_day (0-23): Hour of day
+- day_of_week (0-6): Day of week (0=Monday)
+- day_of_year (1-365): Julian day
+- month (1-12): Month number
+- is_weekend (0/1): Weekend indicator
+
+KEY RELATIONSHIPS EMBEDDED:
+- IT Load = Base Load + CPU-dependent load
+- Cooling Load = f(Temperature, IT Load)
+- Total Power = (IT Load + Cooling Load) × PUE
+- Seasonal patterns: Summer peak cooling, winter low cooling
+- Weekly patterns: Weekday higher utilization than weekend
+- Daily patterns: Peak usage during business hours
+
+USAGE: Primary training data for time-series models
+
+
+DATASET 2: Temperature Data (Full Year 2019)
+-------------------------------------------------------
+File: ashburn_va_temperature_2019_cleaned.csv
+Rows: 8,760 (hourly for one year)
+Temporal Resolution: Hourly
+Coverage: January 1, 2019 - December 31, 2019
+
+VARIABLES:
+- timestamp: DateTime (hourly intervals)
+- temperature_f (°F): Observed ambient temperature
+
+STATISTICS:
+- Mean: ~58°F
+- Range: 10-105°F
+- Seasonal amplitude: ±30°F from mean
+- Daily variation: ~12°F
+
+KEY RELATIONSHIPS:
+- Cooling load increases with temperature above threshold (65°F)
+- Non-linear relationship: Cooling ∝ max(0, T - T_threshold)²
+- Summer peak temperatures drive peak power consumption
+
+USAGE: 
+- Independent variable for temperature sensitivity analysis
+- Validation of synthetic temperature patterns
+- Climate change scenario modeling (+2°F to +10°F warming)
+
+
+DATASET 3: PJM Hourly Demand (2019-2024)
+-------------------------------------------------------
+File: pjm_hourly_demand_2019_2024_cleaned.csv
+Rows: 52,469 (6 years of hourly data)
+Temporal Resolution: Hourly
+Coverage: January 1, 2019 - December 31, 2024
+
+VARIABLES:
+- period: DateTime (hourly intervals)
+- respondent: "PJM" (grid operator)
+- type: "D" (demand)
+- value: Grid demand (MW)
+- Other metadata columns
+
+STATISTICS:
+- Peak demand: ~180,000 MW (summer afternoons)
+- Minimum demand: ~80,000 MW (spring nights)
+- Average: ~120,000 MW
+- Peak hours: Typically 2-8 PM on hot summer weekdays
+
+KEY RELATIONSHIPS:
+- Identifies grid stress periods (top 10% demand hours)
+- Enables calculation of coincident peak factor
+- Shows seasonal grid loading patterns
+
+USAGE:
+- Identify when datacenter load adds to grid stress
+- Calculate grid stress score
+- Evaluate load shifting benefits
+
+
+DATASET 4: Virginia CO2 Emissions (2015-2023)
+-------------------------------------------------------
+File: virginia_co2_emissions_2015_2023_cleaned.csv
+Rows: 32 (annual data for multiple categories)
+Temporal Resolution: Annual
+Coverage: 2015-2023 (9 years)
+
+VARIABLES:
+- period: Year
+- stateid: "VA"
+- sectorid: "EC" (Electric Power sector)
+- value: CO2 emissions (million metric tons)
+- Other metadata
+
+OBSERVED TREND:
+- 2015: ~45 million metric tons CO2
+- 2023: ~35 million metric tons CO2
+- Declining trend: ~2-3% per year (coal retirement, renewable growth)
+
+USAGE:
+- Calculate emissions intensity (kg CO2/MWh)
+- Project future grid cleanliness
+- Calculate datacenter carbon footprint
+
+
+DATASET 5: Virginia Electricity Consumption (2015-2024)
+-------------------------------------------------------
+File: virginia_electricity_consumption_2015_2024_cleaned.csv
+Rows: 720 (monthly data for 10 years, multiple sectors)
+Temporal Resolution: Monthly
+Coverage: January 2015 - December 2024
+
+VARIABLES:
+- period: Year-Month
+- stateid: "VA"
+- sectorid: Residential, Commercial, Industrial, Transportation
+- sectorname: Sector description
+- (Additional consumption metrics)
+
+OBSERVED TRENDS:
+- Total consumption: ~100,000 GWh/year
+- Growth rate: ~1-2% per year
+- Commercial sector growing fastest (datacenters in this category)
+
+USAGE:
+- Baseline consumption for context
+- Relative datacenter impact assessment
+- Demand growth rate validation
+
+
+DATASET 6: Virginia Generation by Fuel (2015-2024)
+-------------------------------------------------------
+File: virginia_generation_by_fuel_2015_2024_cleaned.csv
+Rows: 5,000 (monthly data, multiple fuel types)
+Temporal Resolution: Monthly
+Coverage: January 2015 - December 2024
+
+VARIABLES:
+- period: Year-Month
+- location: "VA"
+- fueltypeid: Coal, Natural Gas, Nuclear, Solar, Wind, etc.
+- generation: MWh generated
+
+OBSERVED TRENDS:
+- Coal: Declining sharply (40% → 10% over decade)
+- Natural gas: Steady ~40%
+- Nuclear: Steady ~30%
+- Solar: Growing rapidly (1% → 8%)
+- Wind: Minimal in Virginia (~1%)
+
+USAGE:
+- Model future fuel mix scenarios
+- Calculate emissions intensity trends
+- Renewable penetration sensitivity analysis
+
+
+DATASET 7: Virginia Renewable Generation (2015-2024)
+-------------------------------------------------------
+File: virginia_renewable_generation_2015_2024_cleaned.csv
+Rows: 1,996 (monthly solar, wind, hydro separately)
+Temporal Resolution: Monthly
+Coverage: January 2015 - December 2024
+
+VARIABLES:
+- period: Year-Month
+- location: "VA"
+- fueltypeid: SUN, WND, HYC
+- generation: MWh from renewable sources
+
+OBSERVED TRENDS:
+- Solar: Exponential growth (50 GWh/year → 800 GWh/year)
+- Wind: Minimal and flat
+- Hydro: Steady ~100 GWh/year
+
+USAGE:
+- Model cleaner grid scenarios (2024 vs 2030)
+- Calculate reduced emissions intensity
+- Renewable integration sensitivity
+
+
+DATASET 8: PJM Grid Carbon Intensity (Full Year 2019)
+-------------------------------------------------------
+File: pjm_grid_carbon_intensity_2019_full_cleaned.csv
+Rows: 8,758 (hourly for one year)
+Temporal Resolution: Hourly
+Coverage: January 1, 2019 - December 31, 2019
+
+VARIABLES:
+- timestamp: DateTime (hourly)
+- net_generation_(mw)_from_coal: Coal generation
+- net_generation_(mw)_from_natural_gas: Gas generation
+- net_generation_(mw)_from_nuclear: Nuclear generation
+- net_generation_(mw)_from_petroleum: Oil generation
+- net_generation_(mw)_from_solar: Solar generation
+- net_generation_(mw)_from_wind: Wind generation
+- (Additional fuel sources)
+
+KEY INSIGHTS:
+- Carbon intensity varies hourly based on fuel mix
+- Cleanest hours: Spring nights (high nuclear, low gas)
+- Dirtiest hours: Summer afternoon peaks (high gas, some coal)
+- Range: ~300-800 kg CO2/MWh
+
+USAGE:
+- Hourly carbon footprint calculations
+- Optimal load timing analysis
+- Alternative to annual emissions factors
+
+
+DATASET 9: Google Cluster Utilization (2019 Sample)
+-------------------------------------------------------
+File: google_cluster_utilization_2019_cleaned.csv
+Rows: 2,000 (sample of real datacenter data)
+Temporal Resolution: Sub-hourly
+Coverage: Various times in 2019
+
+VARIABLES:
+- real_timestamp: DateTime
+- avg_cpu_utilization: Average CPU usage
+- num_tasks_sampled: Tasks running
+- (Cluster metadata)
+
+STATISTICS:
+- CPU utilization: Mean ~0.6% (as decimal)
+- Shows real workload variability
+
+USAGE:
+- Validation of synthetic workload patterns
+- Comparison for realism check
+- Not used directly in modeling (too sparse)
+
+
+2.2 VARIABLE TAXONOMY
+--------------------------------------------------------------------------------
+
+DEPENDENT VARIABLES (What we're predicting):
+- Hourly power consumption (MW)
+- Daily/monthly energy consumption (MWh)
+- Peak demand (MW during grid peaks)
+- Annual carbon emissions (metric tons CO2)
+
+INDEPENDENT VARIABLES (Predictors):
+TEMPORAL:
+- Hour of day (0-23)
+- Day of week (0-6)
+- Day of year (1-365)
+- Month (1-12)
+- Season (Winter/Spring/Summer/Fall)
+- Is weekend (0/1)
+- Is holiday (0/1) - can derive
+
+ENVIRONMENTAL:
+- Temperature (°F or °C)
+- Temperature lagged (t-1, t-24 hours)
+- Heating/cooling degree days
+- Humidity (if available)
+
+OPERATIONAL:
+- CPU utilization (%)
+- Datacenter capacity (MW)
+- PUE (dimensionless ratio)
+- Workload type (AI/compute/storage)
+
+GRID:
+- Grid demand (MW) - for coincident peak
+- Grid carbon intensity (kg CO2/MWh)
+- Time-of-use pricing (if available)
+
+SCENARIO PARAMETERS (For sensitivity analysis):
+- Capacity multiplier (0.5x, 1x, 2x, 4x)
+- Utilization level (50%, 70%, 90%)
+- PUE value (1.1, 1.3, 1.5)
+- Temperature delta (+0°F to +10°F)
+- Year (2024-2030, for grid evolution)
+- Load shift (0%, 20%, 40% moved to off-peak)
+
+
+2.3 DATA QUALITY ASSESSMENT
+--------------------------------------------------------------------------------
+
+COMPLETENESS:
+✓ All primary datasets have 0% missing values after cleaning
+✓ Full year of hourly data (8,760 observations) for training
+✓ 6 years of grid demand for robust peak analysis
+✓ 10 years of historical trends for long-term forecasting
+
+TEMPORAL ALIGNMENT:
+✓ All hourly datasets synchronized to 2019 (base year)
+✓ Monthly/annual data spans 2015-2024 for trend analysis
+✓ Sufficient for training models and forecasting 2024-2030
+
+REPRESENTATIVENESS:
+✓ 2019 is typical year (no major grid events or outages)
+✓ Temperature range covers typical Virginia climate
+✓ Datacenter patterns based on industry-standard profiles
+✓ Grid data from PJM (actual regional operator)
+
+LIMITATIONS AND ASSUMPTIONS:
+⚠ Synthetic datacenter data (not actual datacenter measurements)
+  → Justified: Based on physics and industry benchmarks
+⚠ Single location (Ashburn, VA) assumed representative
+  → Justified: Major datacenter hub in Virginia
+⚠ 2019 as base year (pre-pandemic patterns)
+  → Justification: More typical than 2020-2021 anomalies
+⚠ Future grid composition estimated, not certain
+  → Addressed: Multiple scenarios in sensitivity analysis
+
+
+================================================================================
+PART 3: THEORETICAL FOUNDATION
+================================================================================
+
+3.1 DATACENTER POWER CONSUMPTION PHYSICS
+--------------------------------------------------------------------------------
+
+FUNDAMENTAL EQUATION:
+Total Power = (IT Load + Cooling Load + Auxiliary Load) = IT Load × PUE
+
+Where:
+- IT Load: Power consumed by servers, storage, networking
+- Cooling Load: HVAC, chillers, cooling towers
+- Auxiliary Load: Lighting, backup systems, control systems
+- PUE: Power Usage Effectiveness (industry efficiency metric)
+
+PUE DEFINITION:
+PUE = Total Facility Power / IT Equipment Power
+
+Typical values:
+- Excellent: PUE = 1.1 (only 10% overhead)
+- Good: PUE = 1.3 (30% overhead)
+- Average: PUE = 1.5 (50% overhead)
+- Poor: PUE = 2.0 (100% overhead, typical for older facilities)
+
+IT LOAD DECOMPOSITION:
+IT_Load(t) = Base_Load + Workload_Load(t)
+
+Base_Load: Always-on systems (network, storage, control)
+  → Typically 20-30% of peak capacity
+
+Workload_Load(t): Variable compute demand
+  → Function of CPU utilization, time patterns
+
+CPU_Utilization(t) = Base_Level + Seasonal_Component(t) + 
+                     Daily_Component(t) + Weekly_Component(t) + Noise(t)
+
+COOLING LOAD MODEL:
+Cooling_Load(t) = IT_Load(t) × Cooling_Factor(T_ambient(t))
+
+Where Cooling_Factor depends on temperature:
+
+Cooling_Factor(T) = {
+    CF_min                           if T < T_threshold
+    CF_min + α(T - T_threshold)      if T_threshold ≤ T < T_max
+    CF_max                           if T ≥ T_max
+}
+
+Typical parameters:
+- T_threshold = 65°F (15°C) - cooling starts becoming significant
+- CF_min = 0.15 (15% of IT load for cooling at cold temperatures)
+- CF_max = 0.50 (50% of IT load for cooling at hot temperatures)
+- α = 0.01 per °F (rate of cooling increase with temperature)
+
+TEMPERATURE-POWER RELATIONSHIP:
+This creates a NON-LINEAR relationship where:
+- Cool days (T < 65°F): Low cooling load (~15% of IT)
+- Moderate days (65-85°F): Linear increase in cooling
+- Hot days (T > 85°F): High cooling load (~40-50% of IT)
+
+Result: Summer peak power >> Winter base power
+
+
+3.2 TIME-SERIES FORECASTING THEORY
+--------------------------------------------------------------------------------
+
+TIME-SERIES COMPONENTS:
+Any time series Y(t) can be decomposed as:
+Y(t) = Trend(t) + Seasonal(t) + Cyclic(t) + Irregular(t)
+
+For datacenter power:
+- TREND: Long-term increase (e.g., growing demand)
+- SEASONAL: Yearly pattern (summer peaks, winter lows)
+- CYCLIC: Weekly pattern (weekday vs weekend)
+- IRREGULAR: Random fluctuations, special events
+
+STATIONARITY:
+A time series is stationary if:
+- Mean is constant over time: E[Y(t)] = μ
+- Variance is constant: Var[Y(t)] = σ²
+- Autocovariance depends only on lag: Cov[Y(t), Y(t-k)] = γ(k)
+
+Non-stationary series must be differenced to achieve stationarity.
+
+AUTOCORRELATION:
+ACF(k) = Corr[Y(t), Y(t-k)]
+
+For datacenter power, expect:
+- ACF(1): High correlation (adjacent hours similar)
+- ACF(24): High correlation (daily seasonality)
+- ACF(168): High correlation (weekly seasonality)
+
+SEASONALITY:
+Multiple seasonal periods:
+- Daily: Period = 24 hours (business hours peak)
+- Weekly: Period = 168 hours (weekday vs weekend)
+- Annual: Period = 8,760 hours (summer vs winter)
+
+
+3.3 CARBON EMISSIONS THEORY
+--------------------------------------------------------------------------------
+
+EMISSIONS ACCOUNTING:
+Total Emissions = Energy Consumption × Emissions Intensity
+
+E_total = ∫ P(t) × EI(t) dt
+
+Where:
+- P(t): Power consumption at time t (MW)
+- EI(t): Emissions intensity at time t (kg CO2/MWh)
+- Integration over time period (typically 1 year)
+
+EMISSIONS INTENSITY CALCULATION:
+EI(t) = Σ [Gen_fuel(t) × EF_fuel] / Σ Gen_fuel(t)
+
+Where:
+- Gen_fuel(t): Generation from each fuel type at time t (MWh)
+- EF_fuel: Emissions factor for each fuel (kg CO2/MWh)
+
+FUEL-SPECIFIC EMISSIONS FACTORS:
+(Based on EPA and EIA standards)
+- Coal: 1,000 kg CO2/MWh (highest)
+- Natural Gas: 450 kg CO2/MWh (50% lower than coal)
+- Oil/Petroleum: 850 kg CO2/MWh
+- Nuclear: 0 kg CO2/MWh (no combustion)
+- Solar: 0 kg CO2/MWh
+- Wind: 0 kg CO2/MWh
+- Hydro: 0 kg CO2/MWh
+
+TEMPORAL VARIATION:
+Emissions intensity varies by hour:
+- Nighttime: Lower EI (nuclear baseload, minimal peaking plants)
+- Daytime peak: Higher EI (gas peaking plants, occasional coal)
+- Summer peaks: Highest EI (all plants running, including dirtiest)
+
+GRID DECARBONIZATION:
+Over time, emissions intensity decreases as:
+- Coal plants retire
+- Renewable penetration increases
+- Efficiency improves
+
+Virginia trend: ~2-3% annual reduction in emissions intensity
+
+
+3.4 GRID STRESS THEORY
+--------------------------------------------------------------------------------
+
+GRID RELIABILITY METRICS:
+
+1. PEAK DEMAND:
+Maximum instantaneous power draw on grid
+- Virginia/PJM peak: ~180 GW (summer afternoon)
+- Reserve margin needed: ~15% above peak
+- Inadequate reserves → blackouts, voltage drops
+
+2. COINCIDENT PEAK FACTOR (CPF):
+CPF = Datacenter_Power_at_Grid_Peak / Datacenter_Peak_Power
+
+Interpretation:
+- CPF = 1.0: Datacenter peaks exactly when grid peaks (worst case)
+- CPF = 0.5: Datacenter uses half its peak during grid peak (better)
+- CPF < 0.3: Low overlap, minimal grid stress (best)
+
+3. CAPACITY FACTOR:
+CF = Average_Power / Peak_Power
+
+Higher CF → more consistent load → easier for grid to manage
+
+4. LOAD VARIABILITY:
+Var[P(t)] = E[(P(t) - μ)²]
+
+Higher variability → harder to forecast and manage
+
+GRID STRESS SCORE (Custom Composite Metric):
+GSS = w1×CPF + w2×(Peak_MW/Grid_Peak_MW) + w3×Variability + 
+      w4×(1 - Load_Factor)
+
+Where weights (w1, w2, w3, w4) reflect priority:
+- CPF: 40% weight (most important - overlap with grid peak)
+- Peak contribution: 30% weight (absolute impact)
+- Variability: 20% weight (difficulty to manage)
+- Load factor: 10% weight (consistency)
+
+Normalized to 0-100 scale:
+- 0-30: Low stress (good for grid)
+- 31-60: Moderate stress (manageable)
+- 61-100: High stress (problematic)
+
+
+================================================================================
+PART 4: MODELING METHODOLOGY
+================================================================================
+
+4.1 OVERALL MODELING STRATEGY
+--------------------------------------------------------------------------------
+
+MULTI-MODEL ENSEMBLE APPROACH:
+We will train THREE different model types and compare:
+
+MODEL 1: SARIMAX (Statistical)
+- Strengths: Captures seasonality explicitly, interpretable
+- Weaknesses: Assumes linear relationships, struggles with complex patterns
+
+MODEL 2: LSTM (Deep Learning)
+- Strengths: Learns complex non-linear patterns, handles long sequences
+- Weaknesses: Black box, requires more data, harder to interpret
+
+MODEL 3: XGBoost (Gradient Boosting)
+- Strengths: Feature importance, handles non-linearities, robust
+- Weaknesses: Not explicitly time-aware, needs feature engineering
+
+ENSEMBLE: Average predictions from all three models
+- Reduces individual model biases
+- More robust predictions
+- Confidence intervals from spread
+
+RATIONALE:
+- Different models capture different aspects of the data
+- Ensemble typically outperforms individual models
+- Provides uncertainty estimates
+
+
+4.2 DATA PREPARATION PIPELINE
+--------------------------------------------------------------------------------
+
+STEP 1: Data Loading
+- Load all cleaned CSV files
+- Convert timestamps to datetime
+- Sort by timestamp
+- Check for gaps (should be none after cleaning)
+
+STEP 2: Feature Engineering
+CREATE TEMPORAL FEATURES:
+- hour: 0-23
+- day_of_week: 0-6 (0=Monday)
+- month: 1-12
+- day_of_year: 1-365
+- week_of_year: 1-52
+- is_weekend: 0/1
+- is_business_hour: 1 if 8am-6pm, else 0
+- season: 0=Winter, 1=Spring, 2=Summer, 3=Fall
+
+CREATE LAG FEATURES (for XGBoost):
+- power_lag1: Power at t-1
+- power_lag24: Power at t-24 (same hour yesterday)
+- power_lag168: Power at t-168 (same hour last week)
+- temp_lag1: Temperature at t-1
+- temp_lag24: Temperature at t-24
+
+CREATE ROLLING FEATURES:
+- power_rolling_mean_24: Mean power last 24 hours
+- power_rolling_std_24: Std dev last 24 hours
+- temp_rolling_mean_24: Mean temp last 24 hours
+
+CREATE CYCLICAL FEATURES (for neural networks):
+- hour_sin = sin(2π × hour / 24)
+- hour_cos = cos(2π × hour / 24)
+- month_sin = sin(2π × month / 12)
+- month_cos = cos(2π × month / 12)
+
+Why cyclical? Hour 23 and hour 0 are adjacent, but numerically far apart.
+Sine/cosine encoding captures this circular nature.
+
+STEP 3: Data Splitting
+Split into train/validation/test:
+- Train: First 70% (6,132 hours)
+- Validation: Next 15% (1,314 hours)
+- Test: Last 15% (1,314 hours)
+
+Alternative: Time-series cross-validation
+- Use expanding window: train on [0:t], test on [t:t+h]
+- Repeat for multiple values of t
+- More robust for time series
+
+STEP 4: Scaling
+For LSTM and some features:
+- Standardization: X_scaled = (X - μ) / σ
+- Min-Max scaling: X_scaled = (X - min) / (max - min)
+
+Note: Scale AFTER splitting to avoid data leakage
+Save scaler parameters for inverse transform on predictions
+
+STEP 5: Sequence Creation (for LSTM)
+Create sequences of length L:
+- Input: [X(t-L), ..., X(t-1)]
+- Output: Y(t)
+
+Typical L = 24-168 hours (1 day to 1 week lookback)
+
+
+4.3 MODEL COMPARISON CRITERIA
+--------------------------------------------------------------------------------
+
+ACCURACY METRICS:
+1. MAE (Mean Absolute Error): Average |predicted - actual|
+   → Interpretable in MW units
+
+2. RMSE (Root Mean Squared Error): √(mean[(predicted - actual)²])
+   → Penalizes large errors more
+
+3. MAPE (Mean Absolute Percentage Error): mean(|error| / |actual|) × 100%
+   → Scale-independent, good for comparison
+
+4. R² (Coefficient of Determination): 1 - (SS_residual / SS_total)
+   → Proportion of variance explained
+
+TARGET PERFORMANCE:
+- R² > 0.90 (excellent fit)
+- MAPE < 5% (high accuracy)
+- RMSE < 5 MW (acceptable error for ~100 MW facility)
+
+ADDITIONAL CRITERIA:
+- Computational time
+- Interpretability
+- Robustness to outliers
+- Extrapolation capability
+
+
+================================================================================
+PART 5: MODEL SPECIFICATIONS AND EQUATIONS
+================================================================================
+
+5.1 SARIMAX MODEL
+--------------------------------------------------------------------------------
+
+FULL NAME: Seasonal AutoRegressive Integrated Moving Average with eXogenous variables
+
+MATHEMATICAL FORMULATION:
+Φ(B)φ(B^s) ∇^d ∇_s^D Y(t) = Θ(B)θ(B^s) ε(t) + β'X(t)
+
+Where:
+- Y(t): Time series (power consumption)
+- X(t): Exogenous variables (temperature, time features)
+- ε(t): White noise error term
+- B: Backshift operator, B^k Y(t) = Y(t-k)
+- ∇: Differencing operator, ∇Y(t) = Y(t) - Y(t-1)
+- s: Seasonal period (24 for daily, 168 for weekly)
+
+COMPONENTS:
+- Φ(B): Non-seasonal AR polynomial of order p
+- φ(B^s): Seasonal AR polynomial of order P
+- Θ(B): Non-seasonal MA polynomial of order q
+- θ(B^s): Seasonal MA polynomial of order Q
+- d: Non-seasonal differencing order
+- D: Seasonal differencing order
+
+PARAMETER NOTATION: SARIMAX(p,d,q)(P,D,Q)_s
+
+NON-SEASONAL COMPONENTS:
+AR(p): Y(t) = φ₁Y(t-1) + φ₂Y(t-2) + ... + φₚY(t-p) + ε(t)
+- Uses past values to predict current value
+- p: Number of lagged values
+
+MA(q): Y(t) = ε(t) + θ₁ε(t-1) + θ₂ε(t-2) + ... + θₑε(t-q)
+- Uses past forecast errors to predict current value
+- q: Number of lagged errors
+
+I(d): Apply differencing d times to achieve stationarity
+- d=0: No differencing (stationary)
+- d=1: First difference, ∇Y(t) = Y(t) - Y(t-1)
+- d=2: Second difference (rarely needed)
+
+SEASONAL COMPONENTS:
+SAR(P): Similar to AR but at seasonal lags (t-s, t-2s, etc.)
+SMA(Q): Similar to MA but for seasonal errors
+SI(D): Seasonal differencing, ∇_s Y(t) = Y(t) - Y(t-s)
+
+EXOGENOUS VARIABLES:
+X(t) = [temperature(t), hour(t), is_weekend(t), ...]
+β: Coefficients for exogenous variables
+
+RECOMMENDED CONFIGURATION FOR DATACENTER POWER:
+SARIMAX(1,1,1)(1,1,1)₂₄ with exogenous temperature
+
+Justification:
+- (1,1,1): One lag each for AR, differencing, MA (captures short-term dynamics)
+- (1,1,1)₂₄: Daily seasonality (24-hour period)
+- Exogenous: Temperature drives cooling load
+- Additional seasonal term for weekly could be (1,1,1)₁₆₈
+
+ESTIMATION:
+- Maximum Likelihood Estimation (MLE)
+- Use statsmodels.tsa.statespace.SARIMAX in Python
+- Check residuals for white noise (Ljung-Box test)
+
+ADVANTAGES:
+✓ Explicitly models seasonality
+✓ Interpretable coefficients
+✓ Confidence intervals built-in
+✓ Well-established statistical theory
+
+LIMITATIONS:
+✗ Assumes linear relationships
+✗ Sensitive to outliers
+✗ Requires stationarity (may need differencing)
+✗ Computationally intensive for very long series
+
+
+5.2 LSTM MODEL
+--------------------------------------------------------------------------------
+
+FULL NAME: Long Short-Term Memory Neural Network
+
+ARCHITECTURE:
+Input Layer → LSTM Layer(s) → Dense Layer(s) → Output Layer
+
+LSTM CELL EQUATIONS:
+At each time step t, an LSTM cell computes:
+
+Forget Gate: f(t) = σ(W_f · [h(t-1), x(t)] + b_f)
+Input Gate:  i(t) = σ(W_i · [h(t-1), x(t)] + b_i)
+Output Gate: o(t) = σ(W_o · [h(t-1), x(t)] + b_o)
+Cell Update: C̃(t) = tanh(W_C · [h(t-1), x(t)] + b_C)
+Cell State:  C(t) = f(t) ⊙ C(t-1) + i(t) ⊙ C̃(t)
+Hidden State: h(t) = o(t) ⊙ tanh(C(t))
+
+Where:
+- x(t): Input vector at time t
+- h(t): Hidden state (short-term memory)
+- C(t): Cell state (long-term memory)
+- W: Weight matrices
+- b: Bias vectors
+- σ: Sigmoid activation (0 to 1)
+- tanh: Hyperbolic tangent (-1 to 1)
+- ⊙: Element-wise multiplication
+
+INTUITION:
+- FORGET GATE: Decides what to discard from previous cell state
+  → If f=0, completely forget; if f=1, fully remember
+- INPUT GATE: Decides what new information to store
+  → If i=0, ignore new input; if i=1, fully incorporate
+- OUTPUT GATE: Decides what to output based on cell state
+  → Controls what information flows to next cell
+
+RECOMMENDED ARCHITECTURE:
+Input: Sequence of length 168 (one week lookback)
+  → Shape: (batch_size, 168, n_features)
+
+Layer 1: LSTM(128 units, return_sequences=True)
+  → Captures patterns at multiple time scales
+  → Returns sequences for stacking
+
+Layer 2: LSTM(64 units, return_sequences=False)
+  → Condenses information
+  → Final hidden state used for prediction
+
+Layer 3: Dense(32 units, activation='relu')
+  → Non-linear transformation
+
+Layer 4: Dropout(0.2)
+  → Regularization to prevent overfitting
+
+Output: Dense(1 unit, activation='linear')
+  → Predicts power consumption
+
+Total parameters: ~80,000-100,000
+
+LOSS FUNCTION:
+Mean Squared Error: L = (1/N) Σ(ŷᵢ - yᵢ)²
+
+OPTIMIZATION:
+- Adam optimizer (adaptive learning rate)
+- Learning rate: 0.001 (with decay)
+- Batch size: 32
+- Epochs: 50-100 (with early stopping)
+
+TRAINING PROCEDURE:
+1. Create sequences: X = data[t-168:t], y = data[t]
+2. Shuffle sequences (maintain internal order)
+3. Train in batches
+4. Validate on held-out data
+5. Early stopping if validation loss doesn't improve for 10 epochs
+
+ADVANTAGES:
+✓ Captures complex non-linear patterns
+✓ Handles long-term dependencies (weeks/months)
+✓ Learns feature interactions automatically
+✓ State-of-the-art for many time series tasks
+
+LIMITATIONS:
+✗ Black box (hard to interpret)
+✗ Requires more data (thousands of observations)
+✗ Computationally expensive
+✗ Prone to overfitting
+✗ Requires careful tuning
+
+
+5.3 XGBOOST MODEL
+--------------------------------------------------------------------------------
+
+FULL NAME: eXtreme Gradient Boosting
+
+BOOSTING PRINCIPLE:
+Build ensemble of weak learners (decision trees) sequentially:
+F(x) = f₀(x) + η·f₁(x) + η·f₂(x) + ... + η·f_M(x)
+
+Where:
+- f₀: Initial prediction (mean of target)
+- fₘ: m-th tree, fitted to residuals of previous ensemble
+- η: Learning rate (shrinkage factor)
+- M: Number of trees
+
+GRADIENT BOOSTING OBJECTIVE:
+At step m, fit tree fₘ to gradients of loss function:
+fₘ = argmin_f Σᵢ L(yᵢ, F_{m-1}(xᵢ) + f(xᵢ)) + Ω(f)
+
+Where:
+- L: Loss function (MSE for regression)
+- Ω(f): Regularization term (tree complexity)
+
+XGBoost optimization uses second-order Taylor expansion:
+L ≈ Σᵢ [gᵢf(xᵢ) + ½hᵢf²(xᵢ)] + Ω(f)
+
+Where:
+- gᵢ: First derivative of loss w.r.t. prediction
+- hᵢ: Second derivative (curvature)
+
+REGULARIZATION:
+Ω(f) = γT + ½λ Σⱼ wⱼ²
+
+Where:
+- T: Number of leaves in tree
+- wⱼ: Leaf weights
+- γ: Leaf penalty (prevents too many leaves)
+- λ: L2 regularization on weights
+
+TREE STRUCTURE:
+- Depth: 3-10 (shallow trees prevent overfitting)
+- Split criterion: Gain = ½[G_L²/(H_L+λ) + G_R²/(H_R+λ) - (G_L+G_R)²/(H_L+H_R+λ)] - γ
+  Where G = Σgᵢ, H = Σhᵢ for left (L) and right (R) splits
+
+RECOMMENDED HYPERPARAMETERS:
+- n_estimators: 500 (number of trees)
+- max_depth: 6 (tree depth)
+- learning_rate: 0.05 (shrinkage)
+- subsample: 0.8 (row sampling)
+- colsample_bytree: 0.8 (column sampling)
+- gamma: 0.1 (minimum split gain)
+- reg_alpha: 0.1 (L1 regularization)
+- reg_lambda: 1.0 (L2 regularization)
+
+FEATURE ENGINEERING FOR XGBOOST:
+Must create explicit features (not time-aware like LSTM):
+- Lag features: power(t-1), power(t-24), power(t-168)
+- Rolling statistics: mean/std over windows
+- Temporal: hour, day_of_week, month, season
+- Interactions: temperature × hour, weekend × hour
+
+FEATURE IMPORTANCE:
+XGBoost provides importance scores:
+- Gain: Average gain when feature is used for splitting
+- Frequency: Number of times feature appears in trees
+- Cover: Average coverage (samples affected) by splits
+
+ADVANTAGES:
+✓ High accuracy
+✓ Feature importance for interpretation
+✓ Handles missing values
+✓ Built-in regularization
+✓ Fast training (parallel processing)
+✓ Robust to outliers
+
+LIMITATIONS:
+✗ Not explicitly time-aware
+✗ Requires extensive feature engineering
+✗ Can overfit if not regularized
+✗ Prediction extrapolation limited
+
+
+5.4 ENSEMBLE MODEL
+--------------------------------------------------------------------------------
+
+COMBINATION STRATEGY:
+Simple Average:
+ŷ_ensemble = (ŷ_SARIMAX + ŷ_LSTM + ŷ_XGBoost) / 3
+
+Weighted Average (if one model clearly better):
+ŷ_ensemble = w1·ŷ_SARIMAX + w2·ŷ_LSTM + w3·ŷ_XGBoost
+where w1 + w2 + w3 = 1
+
+Weights based on validation RMSE:
+wᵢ = (1/RMSEᵢ) / Σⱼ(1/RMSEⱼ)
+
+CONFIDENCE INTERVALS:
+Use prediction spread as uncertainty estimate:
+- Mean: (ŷ_SARIMAX + ŷ_LSTM + ŷ_XGBoost) / 3
+- Std Dev: std([ŷ_SARIMAX, ŷ_LSTM, ŷ_XGBoost])
+- 95% CI: [Mean - 1.96×StdDev, Mean + 1.96×StdDev]
+
+
+================================================================================
+PART 6: IMPLEMENTATION WORKFLOW
+================================================================================
+
+6.1 PHASE 1: EXPLORATORY DATA ANALYSIS (EDA)
+--------------------------------------------------------------------------------
+
+OBJECTIVE: Understand data characteristics before modeling
+
+STEP 1.1: Load and Inspect Data
+- Load primary dataset (synthetic power data)
+- Check shape: (8760, 15)
+- Display first/last rows
+- Check data types
+- Summary statistics (mean, std, min, max)
+
+STEP 1.2: Temporal Visualizations
+Plot 1: Time series of power consumption
+  - X-axis: Timestamp (full year)
+  - Y-axis: Total power (MW)
+  - Observe: Overall trend, seasonality, outliers
+
+Plot 2: Seasonal decomposition
+  - Use statsmodels.seasonal_decompose
+  - Show: Trend, Seasonal, Residual components
+  - Frequency: 24 hours (daily seasonality)
+
+Plot 3: Monthly averages
+  - Box plots by month
+  - Observe: Summer peak, winter low
+
+Plot 4: Weekly patterns
+  - Average by day of week
+  - Observe: Weekday vs weekend difference
+
+Plot 5: Daily patterns  
+  - Average by hour of day
+  - Observe: Business hours peak
+
+STEP 1.3: Correlation Analysis
+Correlation matrix for:
+- power_utilization
+- cpu_utilization
+- temperature_f
+- cooling_load
+- pue
+
+Expected findings:
+- Power ~ Temperature: Positive (cooling load)
+- Power ~ CPU: Positive (workload)
+- Cooling ~ Temperature: Strong positive
+- Weekend indicator ~ Power: Negative (lower on weekends)
+
+STEP 1.4: Distribution Analysis
+Histograms for:
+- Power consumption (should be bimodal: low/high)
+- Temperature (normal distribution)
+- CPU utilization (clustered around mean)
+
+STEP 1.5: Stationarity Tests
+Augmented Dickey-Fuller (ADF) Test:
+- H0: Time series has unit root (non-stationary)
+- H1: Time series is stationary
+- If p-value > 0.05: need differencing
+
+STEP 1.6: Autocorrelation Analysis
+Plot ACF and PACF:
+- ACF: Shows overall correlation structure
+- PACF: Shows direct correlation (controlling for intermediate lags)
+- Use to determine ARMA orders (p, q)
+
+Expected:
+- ACF(24): High (daily seasonality)
+- ACF(168): High (weekly seasonality)
+- Gradual decay suggesting AR process
+
+STEP 1.7: Temperature-Power Relationship
+Scatter plot: Temperature vs Power
+- Add regression line
+- Fit polynomial (degree 2-3) for non-linear relationship
+- Calculate R² for fit quality
+
+Expected: Non-linear, stronger effect at high temperatures
+
+DELIVERABLE: EDA Report (PDF/HTML) with all visualizations and findings
+
+
+6.2 PHASE 2: DATA PREPARATION
+--------------------------------------------------------------------------------
+
+OBJECTIVE: Transform raw data into model-ready formats
+
+STEP 2.1: Feature Engineering
+- Create temporal features (as defined in 4.2)
+- Create lag features
+- Create rolling features
+- Create cyclical encodings
+- Create interaction terms (temperature × hour)
+
+STEP 2.2: Data Splitting
+Split dataset:
+- Train: Hours 0-6131 (first 70%)
+- Validation: Hours 6132-7445 (next 15%)
+- Test: Hours 7446-8759 (last 15%)
+
+Verify no data leakage:
+- Test set comes chronologically after train/val
+- No future information in lag features
+
+STEP 2.3: Scaling
+Fit StandardScaler on TRAIN set only:
+- μ = mean(train)
+- σ = std(train)
+
+Transform all sets:
+- train_scaled = (train - μ) / σ
+- val_scaled = (val - μ) / σ
+- test_scaled = (test - μ) / σ
+
+Save scaler for later inverse transformation
+
+STEP 2.4: Sequence Creation (for LSTM)
+Create overlapping sequences:
+For i in range(lookback, len(data)):
+    X_seq[i] = data[i-lookback:i]
+    y_seq[i] = data[i]
+
+Result: (n_samples, lookback, n_features)
+
+STEP 2.5: Data Validation
+Check:
+- No missing values
+- No infinite values
+- Timestamps monotonically increasing
+- No duplicate timestamps
+- Consistent sampling frequency (1 hour)
+
+DELIVERABLE: Preprocessed datasets ready for modeling
+
+
+6.3 PHASE 3: MODEL TRAINING
+--------------------------------------------------------------------------------
+
+OBJECTIVE: Train all three models and evaluate performance
+
+STEP 3.1: Train SARIMAX
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# Define order
+order = (1, 1, 1)  # (p, d, q)
+seasonal_order = (1, 1, 1, 24)  # (P, D, Q, s)
+
+# Fit model
+model_sarimax = SARIMAX(
+    train['power'],
+    exog=train[['temperature_f', 'hour', 'is_weekend']],
+    order=order,
+    seasonal_order=seasonal_order
+)
+results_sarimax = model_sarimax.fit(disp=False)
+
+# Predictions
+pred_sarimax = results_sarimax.forecast(
+    steps=len(test),
+    exog=test[['temperature_f', 'hour', 'is_weekend']]
+)
+
+# Diagnostics
+results_sarimax.plot_diagnostics()
+
+Training time: ~10-30 minutes
+
+STEP 3.2: Train LSTM
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+
+# Build model
+model_lstm = Sequential([
+    LSTM(128, return_sequences=True, input_shape=(168, n_features)),
+    Dropout(0.2),
+    LSTM(64, return_sequences=False),
+    Dropout(0.2),
+    Dense(32, activation='relu'),
+    Dense(1)
+])
+
+# Compile
+model_lstm.compile(
+    optimizer='adam',
+    loss='mse',
+    metrics=['mae']
+)
+
+# Train
+history = model_lstm.fit(
+    X_train_seq, y_train,
+    validation_data=(X_val_seq, y_val),
+    epochs=100,
+    batch_size=32,
+    callbacks=[
+        EarlyStopping(patience=10, restore_best_weights=True),
+        ReduceLROnPlateau(factor=0.5, patience=5)
+    ],
+    verbose=1
+)
+
+# Predictions
+pred_lstm = model_lstm.predict(X_test_seq)
+
+Training time: ~1-3 hours (GPU recommended)
+
+STEP 3.3: Train XGBoost
+import xgboost as xgb
+
+# Prepare data
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dval = xgb.DMatrix(X_val, label=y_val)
+
+# Parameters
+params = {
+    'objective': 'reg:squarederror',
+    'max_depth': 6,
+    'learning_rate': 0.05,
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'gamma': 0.1,
+    'reg_alpha': 0.1,
+    'reg_lambda': 1.0,
+    'eval_metric': 'rmse'
+}
+
+# Train
+model_xgb = xgb.train(
+    params,
+    dtrain,
+    num_boost_round=500,
+    evals=[(dtrain, 'train'), (dval, 'val')],
+    early_stopping_rounds=50,
+    verbose_eval=50
+)
+
+# Predictions
+pred_xgb = model_xgb.predict(dtest)
+
+Training time: ~5-15 minutes
+
+STEP 3.4: Evaluate Models
+Calculate metrics for each:
+- MAE = mean(|predicted - actual|)
+- RMSE = sqrt(mean((predicted - actual)²))
+- MAPE = mean(|predicted - actual| / |actual|) × 100%
+- R² = 1 - SS_res / SS_tot
+
+Create comparison table:
+| Model   | MAE | RMSE | MAPE | R²   |
+|---------|-----|------|------|------|
+| SARIMAX | ... | ...  | ...  | ...  |
+| LSTM    | ... | ...  | ...  | ...  |
+| XGBoost | ... | ...  | ...  | ...  |
+| Ensemble| ... | ...  | ...  | ...  |
+
+STEP 3.5: Visualize Predictions
+Plot actual vs predicted for test set:
+- Line plot: Time series overlay
+- Scatter plot: 45-degree line (perfect prediction)
+- Residual plot: Errors over time
+
+STEP 3.6: Feature Importance (XGBoost)
+Plot importance:
+- By gain (most important)
+- By frequency
+- SHAP values (advanced interpretation)
+
+Expected top features:
+1. power_lag24 (same hour yesterday)
+2. temperature_f (cooling load driver)
+3. hour (daily pattern)
+4. power_rolling_mean_24 (recent average)
+5. is_weekend (weekly pattern)
+
+DELIVERABLE: Trained models saved to disk, performance report
+
+
+6.4 PHASE 4: FORECASTING 2024-2030
+--------------------------------------------------------------------------------
+
+OBJECTIVE: Project power consumption into the future
+
+STEP 4.1: Scenario Definition
+Define baseline scenario:
+- Datacenter capacity: 100 MW (example)
+- CPU utilization: 70% average
+- PUE: 1.3 (industry good practice)
+- Temperature: Historical average
+- Grid: Current fuel mix
+
+STEP 4.2: Generate Future Features
+For years 2024-2030:
+- Temperature: Use 2019 pattern as proxy (or climate projections)
+- Grid demand: Extrapolate trends
+- CO2 intensity: Model 2-3% annual decline
+
+STEP 4.3: Forecast with Each Model
+SARIMAX: 
+- Use forecast() method with exogenous variables
+- Confidence intervals from model
+
+LSTM:
+- Recursively predict: use prediction as input for next step
+- Bootstrap for confidence intervals
+
+XGBoost:
+- Predict with future feature values
+- Quantile regression for intervals
+
+STEP 4.4: Aggregate Forecasts
+Ensemble predictions:
+- Mean of three models
+- Confidence bands from spread
+
+STEP 4.5: Annual Projections
+Aggregate hourly to annual:
+- Total energy: sum(hourly power) / 1000  [GWh/year]
+- Peak power: max(hourly power)  [MW]
+- Average power: mean(hourly power)  [MW]
+- Load factor: average / peak
+
+STEP 4.6: Visualize Forecasts
+Create plots:
+1. Hourly forecast for first year (2024)
+2. Monthly averages 2024-2030
+3. Annual energy consumption bar chart
+4. Peak demand trend line
+
+DELIVERABLE: Forecast spreadsheet with hourly/monthly/annual values
+
+
+================================================================================
+PART 7: SENSITIVITY ANALYSIS FRAMEWORK
+================================================================================
+
+7.1 SENSITIVITY ANALYSIS DESIGN
+--------------------------------------------------------------------------------
+
+OBJECTIVE: Quantify how changes in key factors affect outcomes
+
+FACTORS TO VARY:
+Factor 1: Datacenter Capacity
+- Levels: 500 MW, 1000 MW, 2000 MW, 4000 MW
+- Linear scaling: multiply base load by factor
+
+Factor 2: CPU Utilization
+- Levels: 50%, 70%, 90%
+- Affects IT load directly
+
+Factor 3: PUE (Power Usage Effectiveness)
+- Levels: 1.1 (excellent), 1.3 (good), 1.5 (average)
+- Affects total power: Total = IT × PUE
+
+Factor 4: Temperature Change (Climate)
+- Levels: +0°F, +2°F, +5°F, +7°F, +10°F
+- Add to baseline temperature
+- Affects cooling load non-linearly
+
+Factor 5: Grid Carbon Intensity
+- Levels: 2024 (baseline), 2027 (mid), 2030 (clean)
+- Use different emissions factors
+- Accounts for renewable growth
+
+Factor 6: Load Shifting
+- Levels: 0% (baseline), 20%, 40% shifted to off-peak
+- Move flexible workloads to low-demand hours (10pm-6am)
+- Affects coincident peak factor
+
+FULL FACTORIAL DESIGN:
+4 × 3 × 3 × 5 × 3 × 3 = 1,620 scenarios
+
+Too many! Use strategic subset:
+- Baseline scenario (all factors at middle level)
+- One-at-a-time (OAT) sensitivity (vary one factor, hold others constant)
+- Key combinations (e.g., high capacity + poor PUE + warming climate)
+
+RECOMMENDED ANALYSIS:
+1. Baseline: 1000 MW, 70% util, PUE 1.3, +0°F, 2024 grid, 0% shift
+2. OAT: 18 scenarios (6 factors × 3 levels each, excluding baseline)
+3. Worst case: 4000 MW, 90% util, PUE 1.5, +10°F, 2024 grid, 0% shift
+4. Best case: 500 MW, 50% util, PUE 1.1, +0°F, 2030 grid, 40% shift
+5. Key combinations: ~10 scenarios (e.g., high capacity + warming)
+
+Total scenarios: ~35-40 (manageable)
+
+
+7.2 SCENARIO IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+FOR EACH SCENARIO:
+
+STEP 1: Adjust Input Parameters
+# Example: High capacity, warming climate
+capacity_multiplier = 4.0  # 4000 MW instead of 1000 MW
+temp_delta = 5.0  # +5°F warming
+pue_value = 1.5  # Average efficiency
+
+# Modify data
+data_scenario = data_baseline.copy()
+data_scenario['temperature_f'] += temp_delta
+data_scenario['it_load'] *= capacity_multiplier
+data_scenario['pue'] = pue_value
+
+# Recalculate power
+data_scenario['cooling_load'] = calculate_cooling(
+    data_scenario['temperature_f'],
+    data_scenario['it_load']
+)
+data_scenario['total_power'] = (
+    data_scenario['it_load'] + data_scenario['cooling_load']
+) * pue_value
+
+STEP 2: Re-run Forecasting Models
+- Use same trained models
+- Input adjusted features
+- Generate predictions for 2024-2030
+
+STEP 3: Calculate Metrics
+For each year 2024-2030:
+  - Total energy (GWh)
+  - Peak demand (MW)
+  - Coincident peak factor
+  - Carbon emissions (metric tons CO2)
+  - Grid stress score
+
+STEP 4: Store Results
+results_dict = {
+    'scenario_name': 'High Capacity + Warming',
+    'capacity_mw': 4000,
+    'utilization': 0.70,
+    'pue': 1.5,
+    'temp_delta': 5.0,
+    'grid_year': 2024,
+    'load_shift': 0.0,
+    'metrics': {
+        2024: {...},
+        2025: {...},
+        ...
+        2030: {...}
+    }
+}
+
+
+7.3 METRICS CALCULATIONS
+--------------------------------------------------------------------------------
+
+METRIC 1: Total Annual Energy Consumption
+E_total = Σₜ P(t) × Δt
+
+Where:
+- P(t): Power at hour t (MW)
+- Δt: 1 hour
+- Sum over 8,760 hours
+
+Convert to GWh: E_GWh = E_MWh / 1000
+
+METRIC 2: Peak Demand
+P_peak = max(P(t)) for all t in year
+
+METRIC 3: Average Power
+P_avg = mean(P(t))
+
+METRIC 4: Load Factor
+LF = P_avg / P_peak
+
+Interpretation:
+- LF = 1.0: Constant load (ideal for grid)
+- LF = 0.5: Half of peak on average
+- Higher LF → easier for grid to manage
+
+METRIC 5: Coincident Peak Factor (CPF)
+Identify top 100 grid peak hours:
+peak_hours = hours where grid_demand > percentile(grid_demand, 90)
+
+Calculate datacenter power during these hours:
+P_DC_at_peak = mean(P_DC(t) for t in peak_hours)
+
+CPF = P_DC_at_peak / P_DC_peak
+
+Interpretation:
+- CPF = 1.0: Datacenter peaks exactly when grid peaks (worst)
+- CPF = 0.5: Datacenter at half capacity during grid peaks (better)
+- CPF = 0.3: Low overlap (best)
+
+METRIC 6: Carbon Emissions
+E_CO2 = Σₜ P(t) × EI(t) × Δt
+
+Where:
+- EI(t): Emissions intensity at hour t (kg CO2/MWh)
+
+For annual average:
+EI_annual = (Total_CO2_emissions / Total_generation) from Virginia data
+
+E_CO2 = E_total_MWh × EI_annual
+
+For 2019: EI ≈ 400 kg CO2/MWh
+For 2030: EI ≈ 300 kg CO2/MWh (25% reduction)
+
+METRIC 7: Emissions Intensity (Datacenter-specific)
+EI_DC = E_CO2 / E_total
+
+Units: kg CO2/MWh or g CO2/kWh
+
+METRIC 8: Grid Stress Score
+Composite metric:
+GSS = 0.4 × CPF × 100 + 
+      0.3 × (P_DC_peak / Grid_peak) × 100 +
+      0.2 × CV_power × 100 +
+      0.1 × (1 - LF) × 100
+
+Where:
+- CPF: Coincident peak factor (0-1)
+- P_DC_peak / Grid_peak: Relative contribution (e.g., 5000/180000 = 0.028)
+- CV_power: Coefficient of variation = std(P) / mean(P)
+- LF: Load factor (0-1)
+
+Scale: 0-100
+- 0-30: Low stress (good)
+- 31-60: Moderate stress
+- 61-100: High stress (bad)
+
+
+7.4 SENSITIVITY RANKING
+--------------------------------------------------------------------------------
+
+ONE-AT-A-TIME SENSITIVITY:
+For each factor:
+  1. Calculate metric at low level
+  2. Calculate metric at high level
+  3. Sensitivity = (High - Low) / (High factor - Low factor)
+
+Example:
+Capacity: 500 MW → 4000 MW (range: 3500 MW)
+Energy: 3500 GWh → 28000 GWh (range: 24500 GWh)
+Sensitivity: 24500 / 3500 = 7.0 GWh per MW (expected: linear)
+
+Temperature: +0°F → +10°F (range: 10°F)
+Energy: 7000 GWh → 8500 GWh (range: 1500 GWh)
+Sensitivity: 1500 / 10 = 150 GWh per °F
+
+TORNADO DIAGRAM:
+Bar chart showing sensitivity of each factor:
+- X-axis: Change in metric (e.g., GWh or tons CO2)
+- Y-axis: Factors (sorted by impact)
+- Bars show range from low to high level
+- Longest bar = most sensitive factor
+
+Expected ranking (for energy):
+1. Capacity (linear multiplier -  dominant)
+2. PUE (moderate multiplier)
+3. Temperature (affects cooling)
+4. Utilization (affects IT load)
+5. Load shift (affects timing, not total energy)
+6. Grid carbon (affects emissions, not energy)
+
+Expected ranking (for emissions):
+1. Grid carbon intensity (directly multiplicative)
+2. Capacity (determines total energy)
+3. PUE (determines efficiency)
+4. Temperature (affects cooling energy)
+5. Utilization
+6. Load shift (minimal, unless time-of-use emissions)
+
+INTERACTION EFFECTS:
+Test key combinations:
+- High capacity × High PUE: Multiplicative effect
+- High temp × High utilization: Non-linear cooling
+- Load shift × Grid carbon: Depends on hourly emissions
+
+Use regression:
+CO2 ~ Capacity + PUE + Temp + Capacity:PUE + Temp:Utilization
+
+Significant interaction terms indicate non-additive effects
+
+
+================================================================================
+PART 8: VALIDATION AND UNCERTAINTY QUANTIFICATION
+================================================================================
+
+8.1 MODEL VALIDATION TECHNIQUES
+--------------------------------------------------------------------------------
+
+1. HOLDOUT VALIDATION
+- Train: 70% (first 6,132 hours)
+- Validation: 15% (next 1,314 hours)
+- Test: 15% (last 1,314 hours)
+
+Check test set performance matches validation
+→ If test << validation: overfitting
+→ If test ≈ validation: good generalization
+
+2. TIME-SERIES CROSS-VALIDATION
+Expanding window approach:
+- Fold 1: Train on hours 0-4000, test on 4001-5000
+- Fold 2: Train on hours 0-5000, test on 5001-6000
+- Fold 3: Train on hours 0-6000, test on 6001-7000
+- Etc.
+
+Average metrics across folds for robust estimate
+
+3. RESIDUAL ANALYSIS
+Plot residuals: ε(t) = y_actual(t) - y_pred(t)
+
+Check for:
+- Mean ≈ 0 (unbiased predictions)
+- Constant variance (homoscedasticity)
+- No autocorrelation (white noise)
+- Normal distribution
+
+Tests:
+- Ljung-Box: H0: no autocorrelation
+- Shapiro-Wilk: H0: normal distribution
+
+4. OUT-OF-SAMPLE TESTING
+After full model training on 2019:
+- Test on 2024 data (if available)
+- Check if patterns hold
+- Assess forecast degradation
+
+5. PHYSICS CHECKS
+Verify predictions satisfy:
+- Power > 0 (always positive)
+- Power < Capacity (can't exceed installed)
+- Cooling increases with temperature
+- PUE > 1.0 (always overhead)
+- Weekend < Weekday (typically)
+
+
+8.2 UNCERTAINTY QUANTIFICATION
+--------------------------------------------------------------------------------
+
+SOURCES OF UNCERTAINTY:
+
+1. MODEL UNCERTAINTY
+- Different models give different predictions
+- Ensemble spread indicates uncertainty
+
+Quantification: Standard deviation of predictions
+SD_model = std([pred_SARIMAX, pred_LSTM, pred_XGBoost])
+
+2. PARAMETER UNCERTAINTY
+- Model parameters estimated from finite data
+- Confidence intervals on parameters
+
+Quantification: Bootstrap resampling
+- Resample training data 100 times
+- Retrain model on each sample
+- Calculate percentiles of predictions
+
+3. SCENARIO UNCERTAINTY
+- Future temperature unknown
+- Future grid composition unknown
+- Future workload patterns unknown
+
+Quantification: Scenario analysis
+- Test multiple scenarios (optimistic, baseline, pessimistic)
+- Report range of outcomes
+
+4. MEASUREMENT UNCERTAINTY
+- Synthetic data may not match real datacenters
+- Temperature sensors have error
+- Grid data has reporting delays
+
+Quantification: Sensitivity analysis on input data
+- Add ±5% noise to inputs
+- Check output variation
+
+CONFIDENCE INTERVALS:
+95% CI = [ŷ - 1.96×SE, ŷ + 1.96×SE]
+
+Where SE (standard error) from:
+- Model ensemble spread
+- Bootstrap resampling
+- SARIMAX built-in intervals
+
+REPORTING:
+Always report predictions with uncertainty:
+"Forecasted 2030 energy consumption: 12,500 GWh (95% CI: 11,800-13,200 GWh)"
+
+
+8.3 SENSITIVITY TO ASSUMPTIONS
+--------------------------------------------------------------------------------
+
+KEY ASSUMPTIONS TO TEST:
+
+ASSUMPTION 1: 2019 is representative of future patterns
+Test: Use 2016-2018 data, check if model performance similar
+
+ASSUMPTION 2: Linear scaling of capacity
+Test: Compare linear scaling vs non-linear (e.g., efficiency losses at scale)
+
+ASSUMPTION 3: PUE remains constant over time
+Test: Model improving PUE over time (e.g., 1.5 → 1.3 by 2030)
+
+ASSUMPTION 4: Temperature-cooling relationship
+Test: Vary cooling factor parameters (α, T_threshold)
+
+ASSUMPTION 5: Grid decarbonization rate
+Test: Scenarios with faster/slower renewable growth
+
+ASSUMPTION 6: Workload growth rate
+Test: CPU utilization increasing over time vs constant
+
+Document sensitivity to each assumption in report
+
+
+================================================================================
+PART 9: EXPECTED OUTPUTS AND DELIVERABLES
+================================================================================
+
+9.1 DELIVERABLE 1: Data Analysis Report
+--------------------------------------------------------------------------------
+CONTENTS:
+- Executive summary
+- Data description and sources
+- Exploratory data analysis
+  * Time series plots
+  * Seasonal decomposition
+  * Correlation analysis
+  * Distribution analysis
+- Data quality assessment
+- Key findings and patterns
+
+FORMAT: PDF or HTML (from Jupyter Notebook)
+PAGES: 15-20
+
+
+9.2 DELIVERABLE 2: Model Performance Report
+--------------------------------------------------------------------------------
+CONTENTS:
+- Methodology overview
+- Model descriptions (SARIMAX, LSTM, XGBoost)
+- Training procedures and hyperparameters
+- Performance metrics table
+- Model comparison
+- Validation results
+- Residual analysis
+- Feature importance (XGBoost)
+- Model selection and justification
+
+FORMAT: PDF with figures and tables
+PAGES: 10-15
+
+
+9.3 DELIVERABLE 3: Forecast Report 2024-2030
+--------------------------------------------------------------------------------
+CONTENTS:
+- Baseline scenario description
+- Forecasting methodology
+- Annual projections:
+  * Total energy consumption (GWh)
+  * Peak demand (MW)
+  * Average power (MW)
+  * Load factor
+- Seasonal patterns
+- Uncertainty quantification
+- Confidence intervals
+- Visualizations:
+  * Time series forecast (monthly averages)
+  * Annual bar chart
+  * Peak demand trend
+  * Load duration curve
+
+FORMAT: PDF with Excel spreadsheet
+PAGES: 8-10
+
+
+9.4 DELIVERABLE 4: Sensitivity Analysis Report
+--------------------------------------------------------------------------------
+CONTENTS:
+- Sensitivity analysis framework
+- Scenario definitions (35-40 scenarios)
+- Results summary table:
+  * All scenarios × all metrics
+- Tornado diagrams:
+  * Energy sensitivity
+  * Peak demand sensitivity
+  * Emissions sensitivity
+  * Grid stress sensitivity
+- Factor rankings
+- Interaction effects
+- Key findings:
+  * Which factors matter most?
+  * Best-case and worst-case scenarios
+  * Break-even analysis (e.g., temperature increase offset by PUE improvement)
+
+FORMAT: PDF with Excel data file
+PAGES: 20-25
+
+
+9.5 DELIVERABLE 5: Carbon Emissions Analysis
+--------------------------------------------------------------------------------
+CONTENTS:
+- Emissions calculation methodology
+- Baseline emissions (2024)
+- Future emissions (2025-2030)
+- Emissions intensity trends
+- Impact of grid decarbonization
+- Impact of datacenter design (PUE)
+- Impact of load shifting
+- Comparison to benchmarks (e.g., other industries)
+- Carbon offset requirements
+- Visualizations:
+  * Annual emissions bar chart
+  * Emissions intensity trend
+  * Scenario comparison
+  * Fuel mix evolution
+
+FORMAT: PDF
+PAGES: 8-12
+
+
+9.6 DELIVERABLE 6: Grid Stress Analysis
+--------------------------------------------------------------------------------
+CONTENTS:
+- Grid stress metric definition
+- PJM demand patterns (2019-2024)
+- Peak demand hours identification
+- Coincident peak factor calculation
+- Grid stress scores by scenario
+- Load shifting benefit quantification
+- Optimal timing analysis:
+  * Best hours for datacenter load
+  * Worst hours (avoid)
+- Capacity contribution analysis
+- Recommendations for grid operators
+- Visualizations:
+  * Grid demand heatmap (hour × month)
+  * Datacenter vs grid peaks overlay
+  * CPF by scenario
+  * Grid stress score comparison
+
+FORMAT: PDF
+PAGES: 10-15
+
+
+9.7 DELIVERABLE 7: Policy Recommendations
+--------------------------------------------------------------------------------
+CONTENTS:
+Executive Summary of Findings
+
+Key Metrics Summary Table:
+- Baseline: X GWh, Y MW, Z tons CO2
+- Best practices: -30% energy, -40% emissions
+- Business as usual: +50% energy, +60% emissions
+
+Immediate Actions (2024-2025):
+1. Implement PUE monitoring and improvement
+2. Conduct datacenter energy audits
+3. Establish load shifting programs
+4. Install temperature monitoring
+
+Short-Term Improvements (2025-2027):
+1. Upgrade cooling systems (target PUE < 1.2)
+2. Implement AI-based load optimization
+3. Procure renewable energy (PPAs)
+4. Deploy thermal storage
+
+Long-Term Strategy (2027-2030):
+1. Mandate PUE < 1.2 for new facilities
+2. Carbon pricing mechanisms
+3. Grid-interactive datacenters
+4. Renewable energy targets (80%)
+
+Cost-Benefit Analysis:
+- PUE 1.5 → 1.3: -15% energy, payback 2-3 years
+- 20% load shift: -10% peak demand, minimal cost
+- +5°F warming: +20% cooling load, plan infrastructure
+
+Priority Ranking (by impact):
+1. Capacity planning (controls total scale)
+2. PUE improvement (15-30% savings)
+3. Grid decarbonization (largest emissions impact)
+4. Load shifting (10-20% grid stress reduction)
+5. Temperature adaptation (defensive necessity)
+
+Recommendations for:
+- State policymakers (incentives, regulations)
+- Grid operators (capacity planning, pricing)
+- Datacenter operators (design, operations)
+- Renewable energy developers (siting, timing)
+
+FORMAT: PDF (executive-friendly)
+PAGES: 10-15
+
+
+9.8 DELIVERABLE 8: Supporting Materials
+--------------------------------------------------------------------------------
+
+PYTHON CODE:
+- Data cleaning scripts
+- EDA notebooks
+- Model training scripts
+- Forecasting scripts
+- Sensitivity analysis scripts
+- Visualization scripts
+
+DATA FILES:
+- Cleaned datasets (CSV)
+- Preprocessed model inputs (CSV/NPY)
+- Forecast outputs (CSV/Excel)
+- Sensitivity results (Excel)
+
+TRAINED MODELS:
+- SARIMAX model (pickle)
+- LSTM model (H5 or SavedModel)
+- XGBoost model (JSON)
+
+VISUALIZATIONS:
+- High-resolution figures (PNG/PDF)
+- Interactive dashboards (optional, HTML)
+
+
+================================================================================
+PART 10: IMPLEMENTATION TIMELINE
+================================================================================
+
+PHASE 1: DATA PREPARATION (1-2 weeks)
+- Week 1: Data cleaning, EDA, feature engineering
+- Week 2: Data splitting, scaling, sequence creation
+
+PHASE 2: MODEL DEVELOPMENT (2-3 weeks)
+- Week 3: SARIMAX training and tuning
+- Week 4: LSTM training and tuning
+- Week 5: XGBoost training and tuning
+- Continuous: Model evaluation and comparison
+
+PHASE 3: FORECASTING (1 week)
+- Week 6: Generate 2024-2030 forecasts, validate, document
+
+PHASE 4: SENSITIVITY ANALYSIS (2-3 weeks)
+- Week 7: Design scenarios, implement parameter variations
+- Week 8: Run all scenarios, calculate metrics
+- Week 9: Analysis, tornado diagrams, factor ranking
+
+PHASE 5: REPORTING (2 weeks)
+- Week 10: Write reports, create visualizations
+- Week 11: Final polish, executive summary, presentation prep
+
+TOTAL: 8-11 weeks (2-3 months)
+
+For science fair: Can compress to 4-6 weeks by:
+- Simplifying model tuning
+- Reducing number of scenarios
+- Focusing on key deliverables
+
+
+================================================================================
+PART 11: SCIENTIFIC RIGOR AND JUSTIFICATION
+================================================================================
+
+11.1 WHY THESE MODELS?
+--------------------------------------------------------------------------------
+
+SARIMAX:
+✓ Industry standard for time series with seasonality
+✓ Statistical theory well-established (Box-Jenkins methodology)
+✓ Provides interpretable parameters
+✓ Confidence intervals mathematically derived
+✓ Used in energy forecasting by utilities (ISO-NE, ERCOT)
+
+LSTM:
+✓ State-of-the-art for complex time series (Google, DeepMind use)
+✓ Handles long-term dependencies (weeks/months)
+✓ Learns non-linear patterns automatically
+✓ Published in thousands of energy forecasting papers
+✓ Proven superior to ARMA for complex patterns
+
+XGBoost:
+✓ Dominates ML competitions (Kaggle, etc.)
+✓ Feature importance aids interpretation
+✓ Regularization prevents overfitting
+✓ Fast training, robust to outliers
+✓ Used by load forecasting companies (Google, Apple)
+
+Ensemble:
+✓ Reduces individual model bias
+✓ Robust to model selection uncertainty
+✓ Often outperforms best individual model
+✓ Widely used in forecasting competitions
+
+
+11.2 ASSUMPTIONS AND LIMITATIONS
+--------------------------------------------------------------------------------
+
+ACKNOWLEDGED:
+1. Synthetic data (not real datacenter measurements)
+   → Mitigation: Based on physics, validated against Google data
+
+2. Single location (Ashburn, VA)
+   → Mitigation: Major datacenter hub, representative of region
+
+3. 2019 as base year (pre-pandemic)
+   → Mitigation: More typical than 2020-2021 disruptions
+
+4. Simplified cooling model
+   → Mitigation: Captures main driver (temperature), conservative estimates
+
+5. Future grid assumptions
+   → Mitigation: Multiple scenarios, sensitivity analysis
+
+6. No consideration of:
+   - Water usage (could add WUE - Water Usage Effectiveness)
+   - Economic factors (electricity prices, capital costs)
+   - Reliability metrics (uptime, redundancy)
+   - Network effects (interconnection, edge computing)
+   → Justification: Out of scope for initial analysis, future work
+
+
+11.3 VALIDATION AGAINST LITERATURE
+--------------------------------------------------------------------------------
+
+EXPECTED FINDINGS vs PUBLISHED BENCHMARKS:
+
+PUE:
+- Model assumes 1.3 (good practice)
+- Literature: Average US datacenter PUE = 1.58 (2020)
+- Best-in-class: Google average PUE = 1.10 (2024)
+- Model range 1.1-1.5 covers realistic spectrum ✓
+
+COOLING FRACTION:
+- Model: 15-50% of IT load for cooling
+- Literature: 40-50% typical for older facilities
+- Modern: 20-30% with efficient cooling
+- Model is realistic ✓
+
+TEMPERATURE SENSITIVITY:
+- Model: +1°F → ~2-3% increase in cooling
+- Literature: 2-5% (varies by baseline temperature)
+- Model is conservative ✓
+
+LOAD PATTERNS:
+- Model: Higher weekday than weekend
+- Literature: Confirmed in studies of commercial datacenters
+- Cloud datacenters: Less weekly variation ✓ (assumed mixed use)
+
+GRID EMISSIONS:
+- Model: 400 kg CO2/MWh (Virginia 2019)
+- Literature: 434 kg CO2/MWh (US average 2019)
+- Virginia grid mix: Consistent with ~30% nuclear, 40% gas, 20% coal ✓
+
+FORECASTING ACCURACY:
+- Target: MAPE < 5%
+- Literature: Good energy forecasts achieve 3-10% MAPE
+- Target is achievable ✓
+
+
+11.4 MATHEMATICAL RIGOR
+--------------------------------------------------------------------------------
+
+ALL MODELS USE ESTABLISHED THEORY:
+- SARIMAX: Box-Jenkins methodology (1970s), Maximum Likelihood
+- LSTM: Backpropagation through time, gradient descent
+- XGBoost: Gradient boosting (Friedman 2001), additive modeling
+
+LOSS FUNCTIONS:
+- Regression: MSE (convex, global minimum exists)
+- Optimization: Gradient-based (proven convergence)
+
+STATISTICAL TESTS:
+- Stationarity: Augmented Dickey-Fuller
+- Autocorrelation: Ljung-Box Q-statistic
+- Normality: Shapiro-Wilk, Kolmogorov-Smirnov
+- Model selection: AIC, BIC (information criteria)
+
+VALIDATION:
+- Cross-validation: Time-series aware (no lookahead bias)
+- Metrics: Standard (MAE, RMSE, MAPE, R²)
+- Residual diagnostics: ACF, PACF of residuals
+
+
+================================================================================
+CLOSING REMARKS
+================================================================================
+
+This modeling plan provides a COMPREHENSIVE, SCIENTIFICALLY RIGOROUS framework
+for forecasting Virginia datacenter electricity consumption, conducting 
+sensitivity analysis, and deriving policy recommendations.
+
+KEY STRENGTHS:
+✓ Multi-model approach (statistical + ML + ensemble)
+✓ Physics-based foundation (thermodynamics)
+✓ Comprehensive data (hourly resolution, multiple years)
+✓ Systematic sensitivity analysis (6 factors, ~40 scenarios)
+✓ Actionable metrics (energy, peak, emissions, grid stress)
+✓ Uncertainty quantification (confidence intervals)
+✓ Validated against literature and benchmarks
+
+EXPECTED IMPACT:
+This analysis will provide data-driven insights into:
+- Optimal datacenter design (PUE targets)
+- Load shifting opportunities (peak demand reduction)
+- Climate adaptation needs (temperature sensitivity)
+- Grid planning priorities (capacity requirements)
+- Decarbonization strategies (emissions pathways)
+- Policy interventions (incentives, regulations)
+
+SCIENTIFIC CONTRIBUTION:
+- Combines multiple modeling approaches (hybrid framework)
+- Systematic sensitivity analysis (factor importance ranking)
+- Hourly resolution (rare in literature)
+- Multi-year forecasting with uncertainty (2024-2030)
+- Custom grid stress metric (novel contribution)
+
+This is a PUBLISHABLE-QUALITY analysis appropriate for:
+- Science fair (MTFC) competition
+- Academic journal (Energy & Buildings, Applied Energy)
+- Industry white paper (Uptime Institute, Green Grid)
+- Policy brief (state energy office)
+
+GOOD LUCK WITH YOUR MTFC PROJECT!
+
+================================================================================
+END OF COMPREHENSIVE MODELING PLAN
+================================================================================

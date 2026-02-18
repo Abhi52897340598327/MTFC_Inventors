@@ -1,0 +1,315 @@
+
+Found 15 CSV files to process
+
+
+======================================================================
+CLEANING: ashburn_va_temperature_2019.csv
+======================================================================
+  Initial shape: 8760 rows × 2 columns
+  Standardized column names
+  Converted 1 datetime columns: ['timestamp']
+
+  Data types:
+    - datetime64[us]: 1 columns
+    - float64: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 8760 rows × 2 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/ashburn_va_temperature_2019_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: ashburn_va_temperature_2024.csv
+======================================================================
+  Initial shape: 1098 rows × 5 columns
+  Standardized column names
+  Converted 1 datetime columns: ['date']
+
+  Data types:
+    - str: 3 columns
+    - datetime64[us]: 1 columns
+    - float64: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 1098 rows × 5 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/ashburn_va_temperature_2024_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: epa_temperature_loudoun_2019.csv
+======================================================================
+  [ERROR] Failed to process: No columns to parse from file
+  STATUS: ERROR - No columns to parse from file
+
+
+======================================================================
+CLEANING: google_cluster_utilization_2019.csv
+======================================================================
+  Initial shape: 2000 rows × 4 columns
+  Standardized column names
+  Converted 1 datetime columns: ['real_timestamp']
+
+  Data types:
+    - int64: 2 columns
+    - datetime64[us, UTC]: 1 columns
+    - float64: 1 columns
+  No missing values found
+  No duplicate rows found
+
+  Outliers detected (using 3*IQR method):
+    - avg_cpu_utilization: 50 outliers (2.50%)
+      Range: [0.00, 0.01]
+      Bounds: [-0.00, 0.01]
+      Action: Flagged but not removed (may be valid extreme events)
+    - num_tasks_sampled: 83 outliers (4.15%)
+      Range: [56.00, 650361.00]
+      Bounds: [-206.00, 691.75]
+      Action: Flagged but not removed (may be valid extreme events)
+
+  Final shape: 2000 rows × 4 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/google_cluster_utilization_2019_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: noaa_gsod_dulles_2019.csv
+======================================================================
+  [ERROR] Failed to process: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+  STATUS: ERROR - 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+
+======================================================================
+CLEANING: pjm_grid_carbon_intensity_2019_full.csv
+======================================================================
+  Initial shape: 8758 rows × 11 columns
+  Standardized column names
+  Converted 1 datetime columns: ['timestamp']
+
+  Data types:
+    - float64: 10 columns
+    - datetime64[us]: 1 columns
+  No missing values found
+  No duplicate rows found
+
+  Outliers detected (using 3*IQR method):
+    - net_generation_(mw)_from_all_petroleum_products: 328 outliers (3.75%)
+      Range: [21.00, 3756.00]
+      Bounds: [-339.00, 641.00]
+      Action: Flagged but not removed (may be valid extreme events)
+    - net_generation_(mw)_from_other_fuel_sources: 14 outliers (0.16%)
+      Range: [402.00, 3724.00]
+      Bounds: [-1431.00, 3469.00]
+      Action: Flagged but not removed (may be valid extreme events)
+
+  Final shape: 8758 rows × 11 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/pjm_grid_carbon_intensity_2019_full_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: pjm_grid_data_2024_raw.csv
+======================================================================
+  Initial shape: 34948 rows × 5 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 4 columns
+    - datetime64[us]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 34948 rows × 5 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/pjm_grid_data_2024_raw_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: pjm_hourly_demand_2019_2024.csv
+======================================================================
+  Initial shape: 52469 rows × 5 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 4 columns
+    - datetime64[us]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 52469 rows × 5 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/pjm_hourly_demand_2019_2024_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: synthetic_datacenter_power_2019.csv
+======================================================================
+  Initial shape: 1 rows × 10 columns
+  Standardized column names
+  Converted 1 datetime columns: ['timestamp']
+
+  Data types:
+    - float64: 9 columns
+    - datetime64[us, UTC]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 1 rows × 10 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/synthetic_datacenter_power_2019_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: synthetic_datacenter_power_full_year_2019.csv
+======================================================================
+  Initial shape: 8760 rows × 15 columns
+  Standardized column names
+  Converted 1 datetime columns: ['timestamp']
+
+  Data types:
+    - float64: 9 columns
+    - int64: 5 columns
+    - datetime64[us]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 8760 rows × 15 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/synthetic_datacenter_power_full_year_2019_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: temp_weather_test.csv
+======================================================================
+  [ERROR] Failed to process: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+  STATUS: ERROR - 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+
+======================================================================
+CLEANING: virginia_co2_emissions_2015_2023.csv
+======================================================================
+  Initial shape: 32 rows × 7 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 6 columns
+    - datetime64[ns]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 32 rows × 7 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/virginia_co2_emissions_2015_2023_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: virginia_electricity_consumption_2015_2024.csv
+======================================================================
+  Initial shape: 720 rows × 5 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 4 columns
+    - datetime64[us]: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 720 rows × 5 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/virginia_electricity_consumption_2015_2024_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: virginia_generation_by_fuel_2015_2024.csv
+======================================================================
+  Initial shape: 5000 rows × 7 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 5 columns
+    - datetime64[us]: 1 columns
+    - int64: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 5000 rows × 7 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/virginia_generation_by_fuel_2015_2024_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING: virginia_renewable_generation_2015_2024.csv
+======================================================================
+  Initial shape: 1996 rows × 7 columns
+  Standardized column names
+  Converted 1 datetime columns: ['period']
+
+  Data types:
+    - str: 5 columns
+    - datetime64[us]: 1 columns
+    - int64: 1 columns
+  No missing values found
+  No duplicate rows found
+  No significant outliers detected
+
+  Final shape: 1996 rows × 7 columns
+  Rows changed: 0 (0.00%)
+  Columns changed: 0
+  [OK] Saved cleaned file: cleaned/virginia_renewable_generation_2015_2024_cleaned.csv
+  STATUS: CLEANED SUCCESSFULLY
+
+
+======================================================================
+CLEANING COMPLETE!
+======================================================================
+  Successfully cleaned: 12 files
+  Empty files skipped: 0 files
+  Errors encountered: 3 files
+======================================================================
+
+======================================================================
+DATA QUALITY SUMMARY REPORT
+======================================================================
+Generated: 2026-02-16 22:22:53
+Data directory: C:\Users\ishan\OneDrive\Desktop\MTFC_Inventors\Data_Sources
+Cleaned files saved to: C:\Users\ishan\OneDrive\Desktop\MTFC_Inventors\Data_Sources\cleaned
+======================================================================
