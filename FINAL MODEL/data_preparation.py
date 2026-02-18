@@ -92,6 +92,46 @@ def get_xgb_feature_cols(df: pd.DataFrame) -> list:
     return get_feature_cols(df)
 
 
+def get_optimized_feature_cols(df: pd.DataFrame, feature_set: str = "full") -> list:
+    """
+    Return optimized feature columns based on feature importance analysis.
+    
+    Parameters
+    ----------
+    df : DataFrame with all engineered features
+    feature_set : str
+        "full" - All priority features (Critical + High + Medium)
+        "realtime" - Critical + High (for nowcasting with lag available)
+        "forecast_safe" - Only features computable without future target values
+        "critical" - Minimal set for fast inference
+    
+    Returns
+    -------
+    list of feature column names that exist in df
+    """
+    if feature_set == "full":
+        priority_cols = cfg.FEATURE_SET_FULL
+    elif feature_set == "realtime":
+        priority_cols = cfg.FEATURE_SET_REALTIME
+    elif feature_set == "forecast_safe":
+        priority_cols = cfg.FEATURE_SET_FORECAST_SAFE
+    elif feature_set == "critical":
+        priority_cols = cfg.PRIORITY_FEATURES["critical"]
+    else:
+        log.warning(f"Unknown feature_set '{feature_set}', using 'full'")
+        priority_cols = cfg.FEATURE_SET_FULL
+    
+    # Filter to columns that exist in df
+    available = [c for c in priority_cols if c in df.columns]
+    missing = [c for c in priority_cols if c not in df.columns]
+    
+    if missing:
+        log.warning(f"Requested features not in DataFrame: {missing}")
+    
+    log.info(f"Using {len(available)} optimized features ({feature_set})")
+    return available
+
+
 def get_forecast_feature_cols(df: pd.DataFrame) -> list:
     """Feature columns safe for multi-year forecasting (NO target-derived lags/rolling).
 

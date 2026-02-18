@@ -10,7 +10,7 @@ import os
 # ── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(BASE_DIR)
-DATA_DIR = os.path.join(PROJECT_DIR, "Data_Sources", "cleaned")
+DATA_DIR = os.path.join(PROJECT_DIR, "Data_Sources")  # Use raw Data_Sources folder
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 FIGURE_DIR = os.path.join(OUTPUT_DIR, "figures")
 MODEL_DIR = os.path.join(OUTPUT_DIR, "models")
@@ -19,17 +19,20 @@ RESULTS_DIR = os.path.join(OUTPUT_DIR, "results")
 for _d in [OUTPUT_DIR, FIGURE_DIR, MODEL_DIR, RESULTS_DIR]:
     os.makedirs(_d, exist_ok=True)
 
-# ── Dataset file names ──────────────────────────────────────────────────────
+# ── Dataset file names (REAL DATA SOURCES ONLY) ────────────────────────────
+# All datasets must be from verified real-world sources:
+# - Google Cluster: Public Google cluster trace data
+# - EIA: Energy Information Administration official data
+# - PJM: PJM Interconnection grid data
+# - NOAA: National Oceanic and Atmospheric Administration weather data
 DATASETS = {
-    "power":            "semisynthetic_datacenter_power_2015_2024.csv",
-    "temperature":      "ashburn_va_temperature_2019_cleaned.csv",
-    "pjm_demand":       "pjm_hourly_demand_2019_2024_cleaned.csv",
-    "co2_emissions":    "virginia_co2_emissions_2015_2023_cleaned.csv",
-    "elec_consumption": "virginia_electricity_consumption_2015_2024_cleaned.csv",
-    "gen_by_fuel":      "virginia_generation_by_fuel_2015_2024_cleaned.csv",
-    "renewable_gen":    "virginia_renewable_generation_2015_2024_cleaned.csv",
-    "carbon_intensity": "pjm_grid_carbon_intensity_2019_full_cleaned.csv",
-    "google_cluster":   "google_cluster_utilization_2019_cleaned.csv",
+    "temperature":      "ashburn_va_temperature_2019.csv",          # NOAA weather data
+    "carbon_intensity": "pjm_carbon_intensity_2019_hourly.csv",     # EIA-930 grid data
+    "carbon_daily":     "pjm_carbon_intensity_2019_daily.csv",      # EIA-930 aggregated
+    "generation_mix":   "pjm_generation_mix_2019_weekly.csv",       # EIA-930 fuel mix
+    "google_cluster":   "google_cluster_utilization_2019.csv",      # Google public trace
+    "eia_generation":   "EIA923_Schedules_2_3_4_5_M_11_2025_21JAN2026.xlsx",  # EIA-923
+    "datacenter_specs": "datacenter_constants.json",                # Physical constants
 }
 
 def dataset_path(key: str) -> str:
@@ -38,8 +41,8 @@ def dataset_path(key: str) -> str:
 
 
 # ── Facility Capacity ───────────────────────────────────────────────────────
-# The raw synthetic data is in per-unit (p.u.) where 1.0 = base facility.
-# Multiply by FACILITY_CAPACITY_MW to convert to real megawatts.
+# Physical datacenter specifications based on datacenter_constants.json
+# All power calculations use physics-based models, NOT synthetic data
 FACILITY_CAPACITY_MW = 100.0        # base facility rated IT capacity (MW)
 
 # ── Physical Constants ──────────────────────────────────────────────────────
@@ -98,6 +101,58 @@ XGB_PARAMS = {
     "verbosity":        0,
 }
 XGB_EARLY_STOPPING = 50
+
+# ── OPTIMIZED FEATURE SELECTION (Based on Feature Importance Analysis) ─────
+# Priority ranking from analysis: lag1 > rolling_std > rolling_mean > temp > cooling_degree
+PRIORITY_FEATURES = {
+    "critical": [  # Must always include - highest predictive power
+        "power_lag1",           # Rank 1: 1.000 importance
+        "power_rolling_std_24", # Rank 2: 0.406 importance
+        "power_rolling_mean_24",# Rank 3: 0.303 importance
+    ],
+    "high": [  # Strong predictors - include for accuracy
+        "temperature_f",        # ~0.25 importance - drives cooling
+        "cooling_degree",       # ~0.20 importance - cooling threshold exceeded
+        "hour_sin",             # ~0.15 importance - diurnal patterns
+        "hour_cos",             # paired with hour_sin
+        "power_lag24",          # ~0.12 importance - daily pattern
+        "temp_lag1",            # recent temp autocorrelation
+    ],
+    "medium": [  # Useful - include if not forecasting far ahead
+        "is_weekend",           # ~0.08 importance
+        "month_sin",            # seasonal patterns
+        "month_cos",
+        "power_lag168",         # weekly pattern
+        "temp_rolling_mean_24", # 24h temp trend
+        "is_business_hour",     # workload proxy
+        "dow_sin",              # day-of-week pattern
+        "dow_cos",
+    ],
+    "low": [  # Can drop for simpler models / forecasting
+        "temp_x_hour",          # interaction term
+        "weekend_x_hour",       # interaction term
+        "season",               # captured by month encoding
+        "day_of_year",          # high cardinality
+        "week_of_year",         # redundant with month
+    ],
+}
+
+# Feature sets for different use cases
+FEATURE_SET_FULL = (
+    PRIORITY_FEATURES["critical"] + 
+    PRIORITY_FEATURES["high"] + 
+    PRIORITY_FEATURES["medium"]
+)
+
+FEATURE_SET_FORECAST_SAFE = [
+    # Features that can be computed without knowing future target values
+    "temperature_f", "cooling_degree", "hour_sin", "hour_cos",
+    "month_sin", "month_cos", "is_weekend", "is_business_hour",
+    "dow_sin", "dow_cos", "temp_x_hour", "season", "hour", "month", "day_of_week",
+]
+
+FEATURE_SET_REALTIME = PRIORITY_FEATURES["critical"] + PRIORITY_FEATURES["high"]
+# Use REALTIME features when lag values are available (e.g., nowcasting, next-hour)
 
 # ── Sensitivity Analysis Scenarios ──────────────────────────────────────────
 BASELINE_SCENARIO = {
