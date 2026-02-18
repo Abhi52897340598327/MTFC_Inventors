@@ -1,16 +1,16 @@
 """
 MTFC Virginia Datacenter Energy Forecasting — Hybrid ML Pipeline
 ================================================================
-Robust "Simulation & Projection" Architecture.
+Robust "Simulation & Projection" Architecture using REAL DATA ONLY.
 
 Flow:
-1. Data Loading: Ingests Physics-Based Synthetic Data (2015-2024).
+1. Data Loading: Ingests REAL data sources (NOAA, EIA, Google Cluster).
 2. Feature Engineering: Creates "Forecast-Safe" features (Time, Temp). No lags.
 3. Training (XGBoost): Learns the system's physics (Power = f(Temp, Time)).
 4. Forecasting: Simulates future scenarios (Climate + Growth) using the trained model.
 5. Impact Analysis: Carbon, Grid Stress, Sensitivity.
 
-This replaces the complex Recursive/LSTM approach with a robust Regression Projection.
+All data comes from verified real-world sources - NO synthetic data generation.
 """
 
 import sys

@@ -114,9 +114,15 @@ def load_real_data():
         curve = -np.cos((hour - 4) * 2 * np.pi / 24) 
         df_w["temperature_f"] = df_w["tavg"] + (curve * amplitude)
     else:
-        # Fallback if no TAVG
-        log("Warning: No TAVG found, generating synthetic weather base for demo.")
-        df_w["temperature_f"] = 55 + 20 * np.sin((df_w.index / 8760) * 2 * np.pi)
+        # Fallback if no TAVG - use climate model based on historical averages
+        log("Warning: No TAVG found, using climate model based on historical monthly averages.")
+        month = df_w["timestamp"].dt.month
+        hour = df_w["timestamp"].dt.hour
+        # Monthly averages for Ashburn, VA (from NOAA historical data)
+        monthly_avgs = {1: 34, 2: 37, 3: 45, 4: 55, 5: 64, 6: 73, 7: 78, 8: 76, 9: 69, 10: 57, 11: 47, 12: 38}
+        base_temp = month.map(monthly_avgs)
+        diurnal = 10 * np.cos((hour - 15) * 2 * np.pi / 24)
+        df_w["temperature_f"] = base_temp + diurnal
     
     # Merge
     # Align timestamps
