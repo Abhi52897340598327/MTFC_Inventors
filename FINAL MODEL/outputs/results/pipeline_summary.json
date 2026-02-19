@@ -1,53 +1,49 @@
 {
-  "runtime_minutes": 18.6,
+  "runtime_minutes": 7.8,
+  "target_variable": "pue",
   "models_trained": [
-    "LSTM",
     "XGBoost",
-    "Ensemble"
+    "GRU",
+    "RandomForest"
   ],
   "model_metrics": {
-    "LSTM": {
-      "MAE": 2.7394125266462037,
-      "RMSE": 3.5470281433105466,
-      "MAPE": 3.7331570382736814,
-      "R2": 0.984685824580313
-    },
     "XGBoost": {
-      "MAE": 0.433993800034514,
-      "RMSE": 1.0044398586336214,
-      "MAPE": 0.4694699550365427,
-      "R2": 0.9987713750334513
+      "MAE": 0.12340992450748392,
+      "RMSE": 0.15335335304258255,
+      "MAPE": 0.158669532199544,
+      "R2": 0.9997009688301562
     },
-    "Ensemble": {
-      "MAE": 3.448552633085906,
-      "RMSE": 4.53279600993879,
-      "MAPE": 4.837315679056932,
-      "R2": 0.9749909785737363
+    "GRU": {
+      "MAE": 2.628739767640547,
+      "RMSE": 3.244475219821015,
+      "MAPE": 3.3716806955729477,
+      "R2": 0.8651274914256146
+    },
+    "RandomForest": {
+      "MAE": 0.11075066596472327,
+      "RMSE": 0.21584008818107572,
+      "MAPE": 0.14367801783337852,
+      "R2": 0.9994076285391771
     }
   },
-  "forecast_model_metrics": {
-    "MAE": 0.4685258355505796,
-    "RMSE": 1.0328163741476335,
-    "MAPE": 0.5288211065444649,
-    "R2": 0.9987009744626724
-  },
-  "forecast_years": [
-    2024,
-    2025,
-    2026,
-    2027,
-    2028,
-    2029,
-    2030
+  "forecast_scenarios": [
+    "Conservative (5%)",
+    "Baseline (15%)",
+    "Aggressive (25%)"
   ],
-  "sensitivity_scenarios": 21,
-  "baseline_emissions_tons_2019": 1492050.3931794595,
-  "grid_stress_baseline": {
-    "cpf": 0.6897857299572964,
-    "load_factor": 0.5174875709140934,
-    "coefficient_of_variation": 0.37413087226152186,
-    "peak_contribution": 0.00030910781339142776,
-    "grid_stress_score": 39.9084441687831
+  "pue_stats": {
+    "mean": 1.241906816065192,
+    "min": 1.15,
+    "max": 1.6
   },
-  "facility_capacity_mw": 100.0
+  "data_sources": {
+    "temperature": "NOAA (real)",
+    "carbon_intensity": "EIA-930 (real)",
+    "pue": "Patterson (2008) physics model"
+  },
+  "assumptions_removed": [
+    "Sinusoidal utilization pattern (fabricated)",
+    "Base utilization = 70% (arbitrary)",
+    "Weekend reduction = 8% (arbitrary)"
+  ]
 }

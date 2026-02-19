@@ -71,19 +71,25 @@ VAL_RATIO = 0.15
 TEST_RATIO = 0.15
 
 # ── SARIMAX Hyperparameters ─────────────────────────────────────────────────
-SARIMAX_ORDER = (1, 1, 1)
-SARIMAX_SEASONAL_ORDER = (1, 1, 1, 24)
-SARIMAX_EXOG_COLS = ["temperature_f", "hour_of_day", "is_weekend"]
+# Increased complexity: (p,d,q) = AR lags, differencing, MA lags
+SARIMAX_ORDER = (1, 1, 2)              # AR(1) + MA(2) for better memory
+SARIMAX_SEASONAL_ORDER = (1, 1, 1, 24) # Full seasonal differencing
+SARIMAX_EXOG_COLS = [
+    "temperature_f",     # Primary driver of cooling load
+    "is_weekend",        # Weekend reduction
+    "carbon_intensity",  # Grid emissions factor
+    "is_business_hour",  # Peak hours (9-17)
+]
 
-# ── LSTM Hyperparameters ────────────────────────────────────────────────────
-LSTM_LOOKBACK = 24             # 1 day of hourly data (CPU-practical)
-LSTM_UNITS_1 = 64
-LSTM_UNITS_2 = 32
-LSTM_DENSE_UNITS = 16
-LSTM_DROPOUT = 0.2
-LSTM_EPOCHS = 50
-LSTM_BATCH_SIZE = 64
-LSTM_PATIENCE = 10
+# ── GRU/LSTM Hyperparameters ────────────────────────────────────────────────
+LSTM_LOOKBACK = 24             # 1 day of hourly data
+LSTM_UNITS_1 = 96              # Larger first layer
+LSTM_UNITS_2 = 48              # Larger second layer
+LSTM_DENSE_UNITS = 24          # Larger dense layer
+LSTM_DROPOUT = 0.15            # Lower dropout to retain more info
+LSTM_EPOCHS = 50               # More epochs for convergence
+LSTM_BATCH_SIZE = 32           # Smaller batch for better gradients
+LSTM_PATIENCE = 8              # More patience before LR reduction
 LSTM_LR = 0.001
 
 # ── XGBoost Hyperparameters ─────────────────────────────────────────────────
@@ -103,37 +109,37 @@ XGB_PARAMS = {
 XGB_EARLY_STOPPING = 50
 
 # ── OPTIMIZED FEATURE SELECTION (Based on Feature Importance Analysis) ─────
-# Priority ranking from analysis: lag1 > rolling_std > rolling_mean > temp > cooling_degree
+# Priority ranking: lag1 > rolling_std > rolling_mean > temp > cooling_degree
 PRIORITY_FEATURES = {
     "critical": [  # Must always include - highest predictive power
-        "power_lag1",           # Rank 1: 1.000 importance
-        "power_rolling_std_24", # Rank 2: 0.406 importance
-        "power_rolling_mean_24",# Rank 3: 0.303 importance
+        "power_lag1",           # Rank 1: autoregressive
+        "power_rolling_std_24", # Rank 2: volatility
+        "power_rolling_mean_24",# Rank 3: trend
     ],
-    "high": [  # Strong predictors - include for accuracy
-        "temperature_f",        # ~0.25 importance - drives cooling
-        "cooling_degree",       # ~0.20 importance - cooling threshold exceeded
-        "hour_sin",             # ~0.15 importance - diurnal patterns
-        "hour_cos",             # paired with hour_sin
-        "power_lag24",          # ~0.12 importance - daily pattern
-        "temp_lag1",            # recent temp autocorrelation
+    "high": [  # Strong predictors
+        "temperature_f",        # Drives cooling/PUE
+        "cooling_degree",       # Temp above threshold
+        "hour_sin",             # Diurnal patterns
+        "hour_cos",
+        "power_lag24",          # Daily pattern
+        "temp_lag1",            # Recent temp
     ],
-    "medium": [  # Useful - include if not forecasting far ahead
-        "is_weekend",           # ~0.08 importance
-        "month_sin",            # seasonal patterns
+    "medium": [  # Useful features
+        "is_weekend",           # Weekend effect
+        "month_sin",            # Seasonal
         "month_cos",
-        "power_lag168",         # weekly pattern
-        "temp_rolling_mean_24", # 24h temp trend
-        "is_business_hour",     # workload proxy
-        "dow_sin",              # day-of-week pattern
+        "power_lag168",         # Weekly pattern
+        "temp_rolling_mean_24",
+        "is_business_hour",
+        "dow_sin",
         "dow_cos",
     ],
-    "low": [  # Can drop for simpler models / forecasting
-        "temp_x_hour",          # interaction term
-        "weekend_x_hour",       # interaction term
-        "season",               # captured by month encoding
-        "day_of_year",          # high cardinality
-        "week_of_year",         # redundant with month
+    "low": [  # Can drop for simpler models
+        "temp_x_hour",
+        "weekend_x_hour",
+        "season",
+        "day_of_year",
+        "week_of_year",
     ],
 }
 
@@ -145,7 +151,7 @@ FEATURE_SET_FULL = (
 )
 
 FEATURE_SET_FORECAST_SAFE = [
-    # Features that can be computed without knowing future target values
+    # Features computable for future timestamps (no lags)
     "temperature_f", "cooling_degree", "hour_sin", "hour_cos",
     "month_sin", "month_cos", "is_weekend", "is_business_hour",
     "dow_sin", "dow_cos", "temp_x_hour", "season", "hour", "month", "day_of_week",
@@ -196,4 +202,6 @@ ANNUAL_TEMP_WARMING_F = 0.05        # °F warming per year (climate trend)
 RANDOM_SEED = 42
 
 # Target column
+# total_power_with_pue = IT_Power × PUE (physics-based calculation)
+# Utilization assumption based on Dayarathna et al. (2016) due to data unavailability
 TARGET_COL = "total_power_with_pue"

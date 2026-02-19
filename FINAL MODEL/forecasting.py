@@ -33,6 +33,8 @@ SCENARIOS = {
 def generate_future_features(start_year, end_year, temp_increase_c=0.0):
     """
     Create a DataFrame of future features (timestamp, hour, month, temp_f, etc.)
+    Generates ALL features needed for PUE prediction.
+    
     Logic:
     - Timestamps: Hourly from start to end year.
     - Temperature: Cloned from a representative historical year (2024),
@@ -55,6 +57,12 @@ def generate_future_features(start_year, end_year, temp_increase_c=0.0):
     df["day_of_week"] = df["timestamp"].dt.dayofweek
     df["year"] = df["timestamp"].dt.year
     df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
+    
+    # Season (0=Winter, 1=Spring, 2=Summer, 3=Fall)
+    df["season"] = df["month"].map(
+        {12: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1,
+         6: 2, 7: 2, 8: 2, 9: 3, 10: 3, 11: 3}
+    )
     
     # 3. Synthesize Future Temperature
     # Strategy: Use a sinusoidal model similar to physics engine, 
@@ -84,8 +92,25 @@ def generate_future_features(start_year, end_year, temp_increase_c=0.0):
     
     df["temperature_f"] = base_temp + diurnal + climate_adder + noise
     
-    # 4. Add Interaction Terms (if model expects them)
+    # 4. Add Cyclical Encodings (for neural network friendliness)
+    df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+    df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+    df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
+    df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
+    df["dow_sin"] = np.sin(2 * np.pi * df["day_of_week"] / 7)
+    df["dow_cos"] = np.cos(2 * np.pi * df["day_of_week"] / 7)
+    
+    # 5. Add Cooling Degree (temp above threshold - ASHRAE TC 9.9)
+    df["cooling_degree"] = np.maximum(0, df["temperature_f"] - cfg.COOLING_THRESHOLD_F)
+    
+    # 6. Add interaction features
+    df["is_business_hour"] = ((df["hour"] >= 8) & (df["hour"] <= 18)).astype(int)
     df["temp_x_hour"] = df["temperature_f"] * df["hour"]
+    df["weekend_x_hour"] = df["is_weekend"] * df["hour"]
+    
+    # 7. Temperature lags (using synthetic temp momentum)
+    df["temp_lag1"] = df["temperature_f"].shift(1).fillna(df["temperature_f"])
+    df["temp_rolling_mean_24"] = df["temperature_f"].rolling(24, min_periods=1).mean()
     
     return df
 
