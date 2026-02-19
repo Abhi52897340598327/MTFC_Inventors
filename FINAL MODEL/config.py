@@ -10,7 +10,7 @@ import os
 # ── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(BASE_DIR)
-DATA_DIR = os.path.join(PROJECT_DIR, "Data_Sources", "cleaned")
+DATA_DIR = os.path.join(PROJECT_DIR, "Data_Sources")  # Use raw Data_Sources folder
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 FIGURE_DIR = os.path.join(OUTPUT_DIR, "figures")
 MODEL_DIR = os.path.join(OUTPUT_DIR, "models")
@@ -19,17 +19,20 @@ RESULTS_DIR = os.path.join(OUTPUT_DIR, "results")
 for _d in [OUTPUT_DIR, FIGURE_DIR, MODEL_DIR, RESULTS_DIR]:
     os.makedirs(_d, exist_ok=True)
 
-# ── Dataset file names ──────────────────────────────────────────────────────
+# ── Dataset file names (REAL DATA SOURCES ONLY) ────────────────────────────
+# All datasets must be from verified real-world sources:
+# - Google Cluster: Public Google cluster trace data
+# - EIA: Energy Information Administration official data
+# - PJM: PJM Interconnection grid data
+# - NOAA: National Oceanic and Atmospheric Administration weather data
 DATASETS = {
-    "power":            "semisynthetic_datacenter_power_2015_2024.csv",
-    "temperature":      "ashburn_va_temperature_2019_cleaned.csv",
-    "pjm_demand":       "pjm_hourly_demand_2019_2024_cleaned.csv",
-    "co2_emissions":    "virginia_co2_emissions_2015_2023_cleaned.csv",
-    "elec_consumption": "virginia_electricity_consumption_2015_2024_cleaned.csv",
-    "gen_by_fuel":      "virginia_generation_by_fuel_2015_2024_cleaned.csv",
-    "renewable_gen":    "virginia_renewable_generation_2015_2024_cleaned.csv",
-    "carbon_intensity": "pjm_grid_carbon_intensity_2019_full_cleaned.csv",
-    "google_cluster":   "google_cluster_utilization_2019_cleaned.csv",
+    "temperature":      "ashburn_va_temperature_2019.csv",          # NOAA weather data
+    "carbon_intensity": "pjm_carbon_intensity_2019_hourly.csv",     # EIA-930 grid data
+    "carbon_daily":     "pjm_carbon_intensity_2019_daily.csv",      # EIA-930 aggregated
+    "generation_mix":   "pjm_generation_mix_2019_weekly.csv",       # EIA-930 fuel mix
+    "google_cluster":   "google_cluster_utilization_2019.csv",      # Google public trace
+    "eia_generation":   "EIA923_Schedules_2_3_4_5_M_11_2025_21JAN2026.xlsx",  # EIA-923
+    "datacenter_specs": "datacenter_constants.json",                # Physical constants
 }
 
 def dataset_path(key: str) -> str:
@@ -38,8 +41,8 @@ def dataset_path(key: str) -> str:
 
 
 # ── Facility Capacity ───────────────────────────────────────────────────────
-# The raw synthetic data is in per-unit (p.u.) where 1.0 = base facility.
-# Multiply by FACILITY_CAPACITY_MW to convert to real megawatts.
+# Physical datacenter specifications based on datacenter_constants.json
+# All power calculations use physics-based models, NOT synthetic data
 FACILITY_CAPACITY_MW = 100.0        # base facility rated IT capacity (MW)
 
 # ── Physical Constants ──────────────────────────────────────────────────────
@@ -68,19 +71,25 @@ VAL_RATIO = 0.15
 TEST_RATIO = 0.15
 
 # ── SARIMAX Hyperparameters ─────────────────────────────────────────────────
-SARIMAX_ORDER = (1, 1, 1)
-SARIMAX_SEASONAL_ORDER = (1, 1, 1, 24)
-SARIMAX_EXOG_COLS = ["temperature_f", "hour_of_day", "is_weekend"]
+# Increased complexity: (p,d,q) = AR lags, differencing, MA lags
+SARIMAX_ORDER = (1, 1, 2)              # AR(1) + MA(2) for better memory
+SARIMAX_SEASONAL_ORDER = (1, 1, 1, 24) # Full seasonal differencing
+SARIMAX_EXOG_COLS = [
+    "temperature_f",     # Primary driver of cooling load
+    "is_weekend",        # Weekend reduction
+    "carbon_intensity",  # Grid emissions factor
+    "is_business_hour",  # Peak hours (9-17)
+]
 
-# ── LSTM Hyperparameters ────────────────────────────────────────────────────
-LSTM_LOOKBACK = 24             # 1 day of hourly data (CPU-practical)
-LSTM_UNITS_1 = 64
-LSTM_UNITS_2 = 32
-LSTM_DENSE_UNITS = 16
-LSTM_DROPOUT = 0.2
-LSTM_EPOCHS = 50
-LSTM_BATCH_SIZE = 64
-LSTM_PATIENCE = 10
+# ── GRU/LSTM Hyperparameters ────────────────────────────────────────────────
+LSTM_LOOKBACK = 24             # 1 day of hourly data
+LSTM_UNITS_1 = 96              # Larger first layer
+LSTM_UNITS_2 = 48              # Larger second layer
+LSTM_DENSE_UNITS = 24          # Larger dense layer
+LSTM_DROPOUT = 0.15            # Lower dropout to retain more info
+LSTM_EPOCHS = 50               # More epochs for convergence
+LSTM_BATCH_SIZE = 32           # Smaller batch for better gradients
+LSTM_PATIENCE = 8              # More patience before LR reduction
 LSTM_LR = 0.001
 
 # ── XGBoost Hyperparameters ─────────────────────────────────────────────────
@@ -98,6 +107,58 @@ XGB_PARAMS = {
     "verbosity":        0,
 }
 XGB_EARLY_STOPPING = 50
+
+# ── OPTIMIZED FEATURE SELECTION (Based on Feature Importance Analysis) ─────
+# Priority ranking: lag1 > rolling_std > rolling_mean > temp > cooling_degree
+PRIORITY_FEATURES = {
+    "critical": [  # Must always include - highest predictive power
+        "power_lag1",           # Rank 1: autoregressive
+        "power_rolling_std_24", # Rank 2: volatility
+        "power_rolling_mean_24",# Rank 3: trend
+    ],
+    "high": [  # Strong predictors
+        "temperature_f",        # Drives cooling/PUE
+        "cooling_degree",       # Temp above threshold
+        "hour_sin",             # Diurnal patterns
+        "hour_cos",
+        "power_lag24",          # Daily pattern
+        "temp_lag1",            # Recent temp
+    ],
+    "medium": [  # Useful features
+        "is_weekend",           # Weekend effect
+        "month_sin",            # Seasonal
+        "month_cos",
+        "power_lag168",         # Weekly pattern
+        "temp_rolling_mean_24",
+        "is_business_hour",
+        "dow_sin",
+        "dow_cos",
+    ],
+    "low": [  # Can drop for simpler models
+        "temp_x_hour",
+        "weekend_x_hour",
+        "season",
+        "day_of_year",
+        "week_of_year",
+    ],
+}
+
+# Feature sets for different use cases
+FEATURE_SET_FULL = (
+    PRIORITY_FEATURES["critical"] + 
+    PRIORITY_FEATURES["high"] + 
+    PRIORITY_FEATURES["medium"]
+)
+
+FEATURE_SET_FORECAST_SAFE = [
+    # Features computable for future timestamps (no lags)
+    "temperature_f", "cooling_degree", "hour_sin", "hour_cos",
+    "month_sin", "month_cos", "is_weekend", "is_business_hour",
+    "dow_sin", "dow_cos", "temp_x_hour", "season", "hour", "month", "day_of_week",
+]
+
+FEATURE_SET_REALTIME = PRIORITY_FEATURES["critical"] + PRIORITY_FEATURES["high"]
+# Use REALTIME features when lag values are available (e.g., nowcasting, next-hour)
 
 # ── Sensitivity Analysis Scenarios ──────────────────────────────────────────
 BASELINE_SCENARIO = {
@@ -141,4 +202,6 @@ ANNUAL_TEMP_WARMING_F = 0.05        # °F warming per year (climate trend)
 RANDOM_SEED = 42
 
 # Target column
+# total_power_with_pue = IT_Power × PUE (physics-based calculation)
+# Utilization assumption based on Dayarathna et al. (2016) due to data unavailability
 TARGET_COL = "total_power_with_pue"

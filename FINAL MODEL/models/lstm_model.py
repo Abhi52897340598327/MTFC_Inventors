@@ -2,25 +2,39 @@
 MTFC — LSTM Model
 ==================
 Two-layer LSTM neural network for hourly power time-series forecasting.
-Uses TensorFlow / Keras with EarlyStopping and learning-rate reduction.
+Uses TensorFlow / Keras with learning-rate reduction.
 Target is MinMax-scaled for improved convergence.
+Fully deterministic training for reproducibility.
 """
 
 import numpy as np
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   # suppress TF info logs
+import random
+
+# Suppress TensorFlow/Abseil verbose logging BEFORE importing TF
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   # FATAL only
+os.environ["ABSL_MIN_LOG_LEVEL"] = "3"    # suppress Abseil mutex warnings
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["TF_DETERMINISTIC_OPS"] = "1"  # Enable deterministic operations
 
 import tensorflow as tf
+tf.get_logger().setLevel('ERROR')  # Suppress TF Python logging too
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.preprocessing import MinMaxScaler
 
 import config as cfg
 from utils import log, calc_metrics, save_pickle
 
-# Reproducibility
-tf.random.set_seed(cfg.RANDOM_SEED)
+# Set all random seeds for full reproducibility
+SEED = cfg.RANDOM_SEED
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
+
+# Ensure deterministic behavior
+tf.config.experimental.enable_op_determinism()
 
 
 def build_lstm(n_features: int) -> Sequential:
@@ -67,16 +81,12 @@ def train_lstm(X_train: np.ndarray, y_train: np.ndarray,
     save_pickle(target_scaler, "lstm_target_scaler")
 
     callbacks = [
-        EarlyStopping(
-            monitor="val_loss", patience=cfg.LSTM_PATIENCE,
-            restore_best_weights=True, verbose=1,
-        ),
         ReduceLROnPlateau(
             monitor="val_loss", factor=0.5, patience=5, verbose=1,
         ),
     ]
 
-    log.info(f"Training LSTM — {cfg.LSTM_EPOCHS} max epochs, "
+    log.info(f"Training LSTM — {cfg.LSTM_EPOCHS} epochs, "
              f"batch_size={cfg.LSTM_BATCH_SIZE}, lookback={cfg.LSTM_LOOKBACK}")
 
     history = model.fit(
@@ -85,6 +95,7 @@ def train_lstm(X_train: np.ndarray, y_train: np.ndarray,
         epochs=cfg.LSTM_EPOCHS,
         batch_size=cfg.LSTM_BATCH_SIZE,
         callbacks=callbacks,
+        shuffle=False,  # Disable shuffling for deterministic training
         verbose=1,
     )
 

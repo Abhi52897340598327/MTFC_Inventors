@@ -41,8 +41,8 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 CONSTANTS_FILE = os.path.join(DATA_DIR, "datacenter_constants.json")
 
 # Raw Data Files (REAL DATA ONLY)
-PJM_FILE = os.path.join(DATA_DIR, "pjm_hourly_demand_2019_2024_eia.csv")
-WEATHER_FILE = os.path.join(DATA_DIR, "noaa_dulles_daily_2015_2024.csv") 
+PJM_FILE = os.path.join(DATA_DIR, "pjm_carbon_intensity_2019_hourly.csv")
+WEATHER_FILE = os.path.join(DATA_DIR, "ashburn_va_temperature_2019.csv") 
 
 # ─── UTILS ────────────────────────────────────────────────────────────────────
 def log(msg):
@@ -60,66 +60,38 @@ def load_real_data():
     """Load and merge real PJM and Weather data."""
     log("Loading Real PJM & Weather Data...")
     
-    # A. PJM Demand
+    # A. PJM Demand (from carbon intensity file - total_gen_mw serves as demand proxy)
     if not os.path.exists(PJM_FILE):
         raise FileNotFoundError(f"Missing PJM data: {PJM_FILE}")
     
-    # Clean PJM - Hardcoded for reliability
     df_pjm = pd.read_csv(PJM_FILE)
-    df_pjm.columns = [c.lower() for c in df_pjm.columns]
     
-    # We know these exist from manual inspection
-    if "datetime_utc" in df_pjm.columns:
-        df_pjm.rename(columns={"datetime_utc": "timestamp"}, inplace=True)
-    elif "datetime" in df_pjm.columns:
-        df_pjm.rename(columns={"datetime": "timestamp"}, inplace=True)
-        
-    if "demand_mwh" in df_pjm.columns:
-        df_pjm.rename(columns={"demand_mwh": "grid_demand_mw"}, inplace=True)
+    # The carbon intensity file has: timestamp, total_gen_mw, carbon_intensity, etc.
+    if "total_gen_mw" in df_pjm.columns:
+        df_pjm["grid_demand_mw"] = df_pjm["total_gen_mw"]
+    else:
+        raise ValueError("PJM file missing total_gen_mw column")
     
-    # Validation
-    if "timestamp" not in df_pjm.columns or "grid_demand_mw" not in df_pjm.columns:
-        log(f"Columns found: {df_pjm.columns}")
-        raise ValueError("PJM Data missing required columns after mapping")
-
-    # Handle ISO format with potential timezone "T" buffer
-    df_pjm["timestamp"] = pd.to_datetime(df_pjm["timestamp"], utc=True).dt.tz_convert(None)
-    df_pjm["grid_demand_mw"] = pd.to_numeric(df_pjm["grid_demand_mw"], errors="coerce").interpolate()
+    df_pjm["timestamp"] = pd.to_datetime(df_pjm["timestamp"])
     df_pjm = df_pjm.sort_values("timestamp").reset_index(drop=True)
+    df_pjm["grid_demand_mw"] = pd.to_numeric(df_pjm["grid_demand_mw"], errors="coerce").interpolate()
     
-    # B. Weather
+    # B. Weather (ashburn_va_temperature_2019.csv has: timestamp, temperature_c, temperature_f)
     log("Loading Weather...")
     if not os.path.exists(WEATHER_FILE):
         raise FileNotFoundError(f"Missing Weather data: {WEATHER_FILE}")
     
     df_w = pd.read_csv(WEATHER_FILE)
-    df_w.columns = [c.lower() for c in df_w.columns]
-    
-    if "date" in df_w.columns: 
-        df_w.rename(columns={"date": "timestamp"}, inplace=True)
-        
     df_w["timestamp"] = pd.to_datetime(df_w["timestamp"])
     
-    # Create hourly weather via interpolation (Sinusoidal model)
-    df_w = df_w.set_index("timestamp").resample("h").ffill().reset_index()
+    # The ashburn_va_temperature_2019.csv already has temperature_f column
+    if "temperature_f" not in df_w.columns:
+        if "temperature_c" in df_w.columns:
+            df_w["temperature_f"] = df_w["temperature_c"] * 9/5 + 32
+        else:
+            raise ValueError("Weather file missing temperature_f or temperature_c column")
     
-    # Map avg_temp_f -> tavg
-    col_map = {"avg_temp_f": "tavg"}
-    df_w.rename(columns=col_map, inplace=True)
-        
-    if "tavg" in df_w.columns:
-        # Vectorized Diurnal Curve
-        hour = df_w["timestamp"].dt.hour
-        amplitude = 10 
-        curve = -np.cos((hour - 4) * 2 * np.pi / 24) 
-        df_w["temperature_f"] = df_w["tavg"] + (curve * amplitude)
-    else:
-        # Fallback if no TAVG
-        log("Warning: No TAVG found, generating synthetic weather base for demo.")
-        df_w["temperature_f"] = 55 + 20 * np.sin((df_w.index / 8760) * 2 * np.pi)
-    
-    # Merge
-    # Align timestamps
+    # Merge PJM and Weather on timestamp
     df_merged = pd.merge(df_pjm, df_w[["timestamp", "temperature_f"]], on="timestamp", how="inner")
     
     # Feature Engineering (Time)

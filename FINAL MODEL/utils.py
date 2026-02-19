@@ -48,12 +48,14 @@ set_plot_style()
 
 # Colour palette
 COLORS = {
-    "sarimax":  "#1f77b4",
-    "lstm":     "#ff7f0e",
-    "xgboost":  "#2ca02c",
-    "ensemble": "#d62728",
-    "actual":   "#333333",
-    "ci":       "#d6d6d6",
+    "sarimax":      "#1f77b4",
+    "lstm":         "#ff7f0e",
+    "gru":          "#ff7f0e",
+    "xgboost":      "#2ca02c",
+    "randomforest": "#9467bd",
+    "ensemble":     "#d62728",
+    "actual":       "#333333",
+    "ci":           "#d6d6d6",
 }
 
 

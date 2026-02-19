@@ -82,9 +82,18 @@ def add_interaction_features(df: pd.DataFrame) -> pd.DataFrame:
         df["temp_x_hour"] = df["temperature_f"] * df["hour"]
         df["weekend_x_hour"] = df["is_weekend"] * df["hour"]
 
-        # Cooling degree (temp above threshold)
+        # Cooling degree (temp above threshold) - ASHRAE TC 9.9
         df["cooling_degree"] = np.maximum(
             0, df["temperature_f"] - cfg.COOLING_THRESHOLD_F
+        )
+    
+    # Note: temp_factor is created in data_loader.calculate_pue_from_temperature()
+    # and should already exist. If not, create it here.
+    if "temp_factor" not in df.columns and "temperature_f" in df.columns:
+        optimal_temp = 65.0  # ASHRAE TC 9.9 Class A1
+        threshold = 85.0     # ASHRAE TC 9.9 Class A1
+        df["temp_factor"] = np.clip(
+            (df["temperature_f"] - optimal_temp) / (threshold - optimal_temp), 0, 1
         )
 
     log.info("Interaction features added")
