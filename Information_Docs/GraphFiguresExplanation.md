@@ -83,6 +83,14 @@ FINAL MODEL/
 | **actuarial_risk_analysis.py** | Insurance-grade risk quantification |
 | **pjm_carbon_analysis.py** | PJM-specific carbon intensity analysis |
 
+### Feature Engineering & Model Justification
+
+| Script | Purpose |
+|--------|---------|
+| **ridge_feature_combiner.py** | Ridge Regression to combine feature importance weights from multiple methods |
+| **architecture_ablation_study.py** | Before/after analysis justifying each model component |
+| **visualizations_3d.py** | 3D visualization suite complementing 2D figures |
+
 ### Data Collection
 
 | Script | Purpose |
@@ -211,6 +219,32 @@ FINAL MODEL/
 | `actuarial_risk_monthly_breakdown.png` | Monthly risk breakdown |
 | `actuarial_risk_temperature.png` | Temperature-driven risk analysis |
 
+### Ridge Feature Combiner (2 figures)
+
+| Figure | Description |
+|--------|-------------|
+| `ridge_feature_combiner.png` | Ridge-learned method weights, combined importance ranking, heatmap |
+| `ridge_vs_simple_average.png` | Comparison of simple average vs Ridge-weighted importance |
+
+### Architecture Ablation Study (2 figures)
+
+| Figure | Description |
+|--------|-------------|
+| `architecture_ablation_study.png` | **6-panel dashboard** showing feature group ablation, model comparison, incremental improvements |
+| `before_after_component_comparison.png` | Before/After R² improvement for each model component |
+
+### 3D Visualizations (7 figures)
+
+| Figure | Description |
+|--------|-------------|
+| `3d_temp_hour_power_surface.png` | 3D Surface: Temperature × Hour → Power Consumption |
+| `3d_pue_utilization_carbon_surface.png` | 3D Surface: PUE × Utilization → Carbon Emissions |
+| `3d_feature_importance_multimethod.png` | 3D Bar Chart: Feature importance across multiple methods |
+| `3d_time_series_ribbon.png` | 3D Ribbon: Hour × Day of Year → PUE patterns |
+| `3d_monte_carlo_risk_scatter.png` | 3D Scatter: Temperature × Utilization × Carbon Risk |
+| `3d_sensitivity_response_surface.png` | 3D Response Surface: Renewable % × Carbon Price sensitivity |
+| `3d_carbon_intensity_surface.png` | 3D Surface: Hour × Month → PJM Carbon Intensity |
+
 ---
 
 ## 🔬 Validation Methodologies
@@ -243,6 +277,28 @@ Finds minimum conditions for catastrophic failure:
 - Uses differential evolution optimization
 - Maps "fragility surface" of operations
 
+### 6. Ridge Regression Feature Combiner
+Combines feature importance weights from multiple methods using regularized regression:
+$$\hat{w} = \arg\min_w \|y - Xw\|^2 + \alpha\|w\|^2$$
+
+Where:
+- $X$ = normalized importance scores from each method (columns)
+- $y$ = actual feature contribution (computed via single-feature R²)
+- $\alpha$ = regularization parameter (optimized via cross-validation)
+
+**Methods Combined:**
+- Correlation (absolute)
+- Gradient Boosting importance
+- Random Forest importance
+- Mutual Information
+- Permutation Importance
+
+### 7. Architecture Ablation Study
+Systematic evaluation of each component's contribution:
+- **Feature Ablation**: Cumulatively adds feature groups, measures R² improvement
+- **Model Ablation**: Compares Linear → Ridge → RF → GB → XGBoost → GRU → Ensemble
+- **Before/After Visualization**: Explicit improvement from each addition
+
 ---
 
 ## 📈 Key Results
@@ -273,6 +329,15 @@ python3 eda.py
 
 # Feature Importance
 python3 feature_importance_analysis.py
+
+# Ridge Feature Combiner (combines importance weights)
+python3 ridge_feature_combiner.py
+
+# Architecture Ablation Study (justifies each component)
+python3 architecture_ablation_study.py
+
+# 3D Visualizations
+python3 visualizations_3d.py
 
 # Sensitivity Analysis
 python3 sensitivity_analysis.py
