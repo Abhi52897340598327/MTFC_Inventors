@@ -2,8 +2,14 @@
 Digital Twin Sensitivity Analysis
 =================================
 Purpose: Quantify how changes in Input Variables affect the Output.
-Method: OAT (One-at-a-Time) Analysis.
-Metric: % Change in 2030 Carbon Footprint.
+Method: OAT (One-at-a-Time) Analysis using physics-based calculations.
+Metric: % Change in Annual Carbon Emissions.
+
+Physics Equations:
+- IT Power = Capacity × (0.3 + 0.7 × Utilization)
+- PUE = PUE_base + 0.012 × max(0, Temp - 65°F)
+- Total Power = IT Power × PUE
+- Carbon Emissions = Total Power × Carbon Intensity × Hours
 """
 
 import os
@@ -13,85 +19,140 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Import Core Logic
-from run_digital_twin import load_real_data, train_grid_model, DatacenterTwin, load_constants, OUTPUT_DIR
+# Add project path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config as cfg
+
+OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, "digital_twin")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Physical constants
+FACILITY_MW = 100           # IT capacity (MW)
+IDLE_POWER_FRACTION = 0.3   # 30% idle power
+COOL_THRESH_F = 65          # Cooling threshold (°F)
+BASE_PUE = 1.15             # Base PUE
+MAX_PUE = 2.0               # Maximum PUE
+HOURS_PER_YEAR = 8760       # Hours in a year
+
 
 def run_sensitivity():
-    print("\n=== Sensitivity Analysis (OAT) ===")
+    """Run physics-based sensitivity analysis."""
+    print("\n=== Sensitivity Analysis (OAT - Physics-Based) ===")
     
-    # Baseline Setup
-    C = load_constants()
-    df_hist = load_real_data()
-    model, features = train_grid_model(df_hist) # retrain quickly for scope
+    # Baseline parameters
+    baseline = {
+        "temperature_f": 65,
+        "utilization": 0.70,
+        "pue_base": 1.15,
+        "carbon_intensity": 387,  # kg CO2/MWh (PJM average)
+        "growth_factor": 1.0,
+        "capacity_mw": FACILITY_MW,
+    }
     
-    # Define Baseline Scenario (2030, Aggressive Growth)
-    base_year = 2030
-    base_growth = 0.30
-    base_temp_adder = 1.5
-    
-    # Helper to run a single simulation
-    def get_carbon_impact(temp_adder, growth, pue_factor=1.0):
-        # 1. Modify Constants if needed (PUE factor)
-        C_mod = C.copy()
-        if pue_factor != 1.0:
-            # Scale PUE min and max
-            # Note: simplistic scaling of the curve
-            C_mod["facility_specs"]["pue_min"] *= pue_factor
-            
-        twin = DatacenterTwin(C_mod)
+    def calculate_annual_carbon(params):
+        """Calculate annual carbon emissions using physics equations."""
+        # Extract parameters
+        temp = params.get("temperature_f", 65)
+        util = params.get("utilization", 0.70)
+        pue_base = params.get("pue_base", BASE_PUE)
+        carbon_int = params.get("carbon_intensity", 387)
+        growth = params.get("growth_factor", 1.0)
+        capacity = params.get("capacity_mw", FACILITY_MW)
         
-        # 2. Future Weather
-        future_dates = pd.date_range(f"{base_year}-01-01", f"{base_year}-12-31 23:00", freq="h")
-        df_fut = pd.DataFrame({"timestamp": future_dates})
-        df_fut["hour"] = df_fut["timestamp"].dt.hour
+        # Apply growth to capacity
+        effective_capacity = capacity * growth
         
-        # Base on 2022
-        base_temp = df_hist[df_hist["timestamp"].dt.year == 2022]["temperature_f"].values[:len(df_fut)]
-        if len(base_temp) < len(df_fut): base_temp = np.resize(base_temp, len(df_fut))
+        # IT Power: P_IT = Capacity × (idle + (1-idle) × utilization)
+        it_power_mw = effective_capacity * (IDLE_POWER_FRACTION + (1 - IDLE_POWER_FRACTION) * util)
         
-        df_fut["temperature_f"] = base_temp + (temp_adder * 1.8)
+        # PUE: Increases with temperature above threshold
+        temp_above = max(0, temp - COOL_THRESH_F)
+        pue = np.clip(pue_base + 0.012 * temp_above, pue_base, MAX_PUE)
         
-        # 3. Simulate
-        res = twin.simulate_year(base_year, df_fut, growth)
-        return res["carbon_ktons"]
+        # Total Power
+        total_power_mw = it_power_mw * pue
+        
+        # Annual Energy
+        annual_mwh = total_power_mw * HOURS_PER_YEAR
+        
+        # Carbon Emissions (kg → kilo-tons)
+        carbon_kg = annual_mwh * carbon_int
+        carbon_ktons = carbon_kg / 1e6
+        
+        return carbon_ktons
     
     # Calculate Baseline
-    base_carbon = get_carbon_impact(base_temp_adder, base_growth)
-    print(f"Baseline 2030 Carbon: {base_carbon:.1f} kTons")
+    base_carbon = calculate_annual_carbon(baseline)
+    print(f"Baseline Annual Carbon: {base_carbon:.1f} kTons CO₂")
     
     # Sensitivity Tests: [Variable, New Value, Label]
     tests = [
-        ("Temp", base_temp_adder + 2.0, "Temp + 2C"),
-        ("Temp", base_temp_adder - 1.0, "Temp - 1C"),
-        ("Growth", 0.40, "Growth 40%"),
-        ("Growth", 0.20, "Growth 20%"),
-        ("PUE", 1.1, "PUE +10% (Inefficient)"), # Factor 1.1
-        ("PUE", 0.9, "PUE -10% (Super Efficient)")
+        ("temperature_f", baseline["temperature_f"] + 20, "Temp + 20°F"),
+        ("temperature_f", baseline["temperature_f"] - 10, "Temp - 10°F"),
+        ("utilization", 0.90, "Utilization 90%"),
+        ("utilization", 0.50, "Utilization 50%"),
+        ("growth_factor", 1.5, "Capacity +50%"),
+        ("growth_factor", 0.75, "Capacity -25%"),
+        ("pue_base", 1.35, "PUE 1.35 (Inefficient)"),
+        ("pue_base", 1.10, "PUE 1.10 (Efficient)"),
+        ("carbon_intensity", 500, "High Carbon Grid (500)"),
+        ("carbon_intensity", 250, "Low Carbon Grid (250)"),
     ]
     
     results = []
     for var, val, label in tests:
-        if var == "Temp":
-            c = get_carbon_impact(val, base_growth)
-        elif var == "Growth":
-            c = get_carbon_impact(base_temp_adder, val)
-        elif var == "PUE":
-            c = get_carbon_impact(base_temp_adder, base_growth, pue_factor=val)
-            
-        pct_change = ((c - base_carbon) / base_carbon) * 100
-        results.append({"Variable": var, "Scenario": label, "Change %": pct_change})
-        print(f"  {label:<25} -> {pct_change:+.1f}%")
-        
+        test_params = baseline.copy()
+        test_params[var] = val
+        carbon = calculate_annual_carbon(test_params)
+        pct_change = ((carbon - base_carbon) / base_carbon) * 100
+        results.append({
+            "Variable": var, 
+            "Scenario": label, 
+            "Change %": pct_change,
+            "Carbon kTons": carbon
+        })
+        print(f"  {label:<25} -> {pct_change:+.1f}%  ({carbon:.1f} kTons)")
+    
     # Plot
     df_res = pd.DataFrame(results)
-    plt.figure(figsize=(10,6))
-    sns.barplot(data=df_res, y="Scenario", x="Change %", hue="Variable", dodge=False)
-    plt.axvline(0, color="k", linewidth=1)
-    plt.title(f"Sensitivity Analysis: Impact on 2030 Carbon Footprint")
-    plt.xlabel("% Change from Baseline Output")
-    plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(OUTPUT_DIR, "sensitivity_chart.png"))
-    print(f"Sensitivity Chart saved to {OUTPUT_DIR}")
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # Color by direction
+    colors = ['#2ecc71' if x < 0 else '#e74c3c' for x in df_res['Change %']]
+    
+    bars = ax.barh(df_res['Scenario'], df_res['Change %'], color=colors, edgecolor='black')
+    ax.axvline(0, color='black', linewidth=2)
+    ax.set_xlabel('% Change from Baseline', fontsize=12)
+    ax.set_title(f'Sensitivity Analysis: Impact on Annual Carbon Emissions\n'
+                 f'Baseline: {base_carbon:.1f} kTons CO₂/year', fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    # Add value labels
+    for bar, val in zip(bars, df_res['Change %']):
+        color = 'darkgreen' if val < 0 else 'darkred'
+        offset = 1 if val >= 0 else -1
+        ha = 'left' if val >= 0 else 'right'
+        ax.annotate(f'{val:+.1f}%', 
+                   xy=(val + offset, bar.get_y() + bar.get_height()/2),
+                   va='center', ha=ha, fontsize=10, fontweight='bold', color=color)
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#2ecc71', edgecolor='black', label='Decrease (Good)'),
+        Patch(facecolor='#e74c3c', edgecolor='black', label='Increase (Bad)')
+    ]
+    ax.legend(handles=legend_elements, loc='lower right')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "sensitivity_chart.png"), dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    print(f"\n✓ Sensitivity Chart saved to {OUTPUT_DIR}/sensitivity_chart.png")
+    
+    return df_res
+
 
 if __name__ == "__main__":
     run_sensitivity()
