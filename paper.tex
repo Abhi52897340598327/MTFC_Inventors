@@ -1,0 +1,284 @@
+\documentclass[12pt, a4paper]{article}
+
+% Required Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry} % MTFC Rule: 0.75 inch margins minimum
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+% Formatting hyper-links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={MTFC 2025 National Finalist Paper},
+}
+
+% Title Formatting
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% MTFC Required Running Header
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Team \#[Insert 5-digit ID] ``Forecasting AI Datacenter Carbon Risk''}
+\fancyfoot[R]{\thepage} % MTFC Rule: Page numbers in bottom right
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Line spacing
+\singlespacing
+
+\begin{document}
+
+% ---------------------------------------------------------
+% TITLE PAGE (Not included in page count)
+% ---------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge \textbf{Forecasting Carbon Emissions and Grid Stress from AI Datacenters in Northern Virginia: A Physics-Informed Machine Learning Approach}\par}
+    
+    \vspace{2cm}
+    
+    {\Large \textbf{Team ID: [Insert 5-digit ID]}\par} % MTFC Rule: NO NAMES OR SCHOOLS
+    
+    \vspace{1.5cm}
+    
+    {\Large April 6, 2025\par}
+    
+    \vspace{1.5cm}
+    
+    {\large 2025-26 Modeling the Future Challenge\par}
+    
+    \vfill
+    
+    % MTFC Mandatory Disclaimer (Permitted in 6pt font)
+    \begingroup
+    \fontsize{6pt}{7pt}\selectline
+    \noindent \textit{Disclaimer: The Modeling the Future Challenge competition (Competition) is a research competition for high school students sponsored by The Actuarial Foundation and the Institute of Competition Sciences (collectively, the Sponsors) solely for educational purposes. The mathematical models, conclusions, concepts, ideas, proposals, recommendations, presentations, methods, practices, sources, videos, graphs, tables, charts, assumptions, conclusions, and other information presented by the students (including the winning students) in connection with the Competition (collectively, the "information") are created solely by the students for use in connection with the competition and as a learning tool. The information has not been validated, tested or otherwise confirmed. The information may not be accurate and may not be (i) used or relied upon for any reason, (ii) cited or quoted in a way that would imply accuracy, or (iii) presented as fact. The Sponsors have not validated, and do not "approve" or "endorse" the information or the competitors (including the winners) and the information may not be cited in any way that would imply such approval or endorsement. The students competing in the Competition are not authorized to speak on behalf of the Sponsors or the Competition. Any articles, appearances, interviews or quotes issued by competitors are done in their individual capacity and not on behalf of, or in connection with, the Sponsors or the Competition (unless specially authorized or published by the Sponsors). By viewing or otherwise accessing the information, you expressly assume all risk of loss, harm or injury resulting from the use or misuse of such information. The Sponsors do not make any guarantee, representation, or warranty, express or implied, at law or in equity, and the Sponsors expressly disclaim all such guarantees, representations or warranties whatsoever, as to the validity, accuracy or sufficiency of any of the information. The Sponsors (including, without limitation, their respective directors, officers, volunteers, employees, agents, attorneys and members) are not responsible for any injuries, claims, losses or damages to persons or property that a viewer (or any third party) may incur arising, directly or indirectly, out of or as a result of any actual or alleged libelous statements; infringement of intellectual property or privacy rights; product liability, whether resulting from negligence or otherwise; or from any use or reliance on any of the information.}
+    \endgroup
+\end{titlepage}
+
+% ---------------------------------------------------------
+% EXECUTIVE SUMMARY (MTFC Required Section)
+% ---------------------------------------------------------
+\section*{Executive Summary}
+\addcontentsline{toc}{section}{Executive Summary}
+As artificial intelligence workloads surge globally, hyperscale datacenters—particularly those concentrated in Northern Virginia's "Data Center Alley"—present an unprecedented environmental and grid infrastructure challenge. This paper develops a 6-stage physics-informed machine learning pipeline that forecasts carbon emissions from AI datacenters using real operational data from Google clusters, NOAA weather observations, and PJM regional grid carbon intensity. 
+
+Through Monte Carlo simulation, Extreme Value Theory analysis, copula-based dependency modeling, and global sensitivity analysis (Sobol indices), we quantify expected annual emissions at 286.4 kTons CO$_2$ for a 100MW facility. By utilizing Social Cost of Carbon (SCC) estimates, we identify the exact financial risk parameters of these facilities and propose targeted mitigation strategies (such as temporal load shifting and hardware optimization) that yield mathematically proven cost-benefits.
+
+\newpage
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------
+\section{Introduction and Background}
+% ---------------------------------------------------------
+\subsection{Problem Statement \& Debrief}
+America is facing an unprecedented surge in energy demand driven by the generative AI boom. In 2023, utility companies in Virginia—the world’s largest datacenter market—reported that peak demand is accelerating at unprecedented rates, threatening grid stability and climate goals. The decoupling of digital growth from physical efficiency is an urgent operational malfunction in dire need of amelioration. In our report, we focus on quantifying the risk of loss from datacenter carbon liability, defining exactly who is at risk, and evaluating mitigation strategies.
+
+% ---------------------------------------------------------
+\section{Foundational Actuarial Assumptions}
+% ---------------------------------------------------------
+To bound our actuarial risk models and machine learning pipelines, we establish four primary assumptions regarding the physical, financial, and digital constraints of datacenter operations. These assumptions act as constants for our predictive scenarios.
+
+\begin{table}[H]
+    \centering
+    \caption{Foundational Assumptions for Actuarial Modeling}
+    \label{tab:assumptions}
+    \small
+    \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+    \toprule
+    \textbf{Assumption} & \textbf{Justification} & \textbf{Actuarial Impact} \\
+    \midrule
+    \textbf{Workload Cyclicality:} Future AI workloads will follow similar diurnal cyclicality bounds as the 2019 Google Trace. & Server cooling limits act as an asymptotic bound on utilization per square foot, preventing continuous 100\% facility-wide loads. & Necessary for Box-Jenkins Autoregressive (AR) models to function on future data without overestimating peak thresholds. \\
+    \midrule
+    \textbf{Thermodynamic Boundaries:} Power Usage Effectiveness (PUE) follows standard ASHRAE degradation curves. & Air and liquid cooling physics (thermodynamics) remain structurally constant despite computational advancements in chips. & Allows our model to bind the "Cooling Penalty" purely to ambient weather data rather than proprietary hardware specs. \\
+    \midrule
+    \textbf{Grid Evolution:} The PJM grid transitions to renewables at the historically observed linear rate. & Grid-scale nuclear and solar infrastructure projects require 5-10 year lead times, precluding sudden regime changes. & Ensures baseline emissions forecasts are not overly optimistic regarding future clean energy availability. \\
+    \midrule
+    \textbf{Social Cost of Carbon (SCC):} Modeled centrally at \$190/ton. & This aligns with the EPA's central actuarial estimate for future climate liability and regulatory taxation. & Translates raw physical carbon tonnage into a standard Financial Value at Risk (FVaR) for Cost-Benefit Analyses. \\
+    \bottomrule
+    \end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------
+\section{Data Methodology}
+% ---------------------------------------------------------
+\subsection{Data Collection}
+We gathered data from three primary categories to define historical frequency, categorize risk, and define severity:
+\begin{itemize}
+    \item \textbf{Table 1: Google Cluster Workload Traces (2019):} Provides CPU utilization to map digital demand.
+    \item \textbf{Table 2: Hourly Electric Grid Monitor - PJM (2019):} Provides historical regional grid carbon intensity.
+    \item \textbf{Table 3: NOAA Weather Data (Ashburn, VA):} Provides ambient temperature to model thermodynamic stress.
+\end{itemize}
+
+\subsection{Data Cleaning and Preprocessing}
+All timestamps were converted to Coordinated Universal Time (UTC) to resolve the offset between PJM grid logs and Google Server logs. The server telemetry was downsampled to hourly averages. Any missing data gaps were imputed using linear interpolation to maintain time-series integrity.
+
+\subsection{Exploratory Data Analysis}
+Before creating models, we visually represented the data to ensure no faulty data skewed our metrics. Per our Workload Cyclicality premise (Table \ref{tab:assumptions}), we confirmed strong cyclicality in both grid demand and IT utilization.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{outputs/figures/eda_seasonal_decomposition.png}
+    \caption{Seasonal decomposition of power demand showing structural diurnal and weekly trend components.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{outputs/figures/pjm_carbon_intensity_heatmap.png}
+    \caption{Heatmap of PJM carbon intensity by hour and month, revealing distinct seasonal vulnerability during summer peaks.}
+\end{figure}
+
+% ---------------------------------------------------------
+\section{Mathematics Methodology}
+% ---------------------------------------------------------
+\subsection{Prediction of High-Risk Operational Hours}
+To effectively reduce carbon liability, we must identify when datacenters enter highly inefficient states. 
+
+\subsubsection{Random Forest \& Autoregressive Features}
+The random forest is utilized in Stage 1 to predict CPU utilization. Based on our cyclicality constraints (Table \ref{tab:assumptions}), we heavily weighted AR lags (Lag-1 through Lag-10) to map operational bounds.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{outputs/figures/carbon_pipeline_flow.png}
+    \caption{Visual representation of the 6-stage cascaded physics-informed pipeline architecture.}
+\end{figure}
+
+\subsubsection{Multi-Layer Perceptron (Cascaded Pipeline)}
+To map IT power to total power, we utilized a Multi-Layer Perceptron (MLP) Neural Network. The MLP approximates the non-linear relationship of thermodynamics (Table \ref{tab:assumptions}) better than standard regression.
+
+\subsubsection{Classifier Selection \& Results}
+The 6-stage cascaded pipeline was selected because it maintains physical constraints at every step, avoiding the "black box" nature of a single neural network. It achieved a final $R^2$ of 0.9972 for carbon emissions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{outputs/figures/metrics_bar_comparison.png}
+    \caption{Bar chart comparing $R^2$, RMSE, and MAE across all 6 model stages.}
+\end{figure}
+
+\subsection{Projection of Future Risk of Loss}
+We used Support Vector Regression (SVR) and Ridge Regression to forecast future grid carbon intensities, capturing the massive autocorrelation ($\rho_1 > 0.95$) in the PJM grid mix. 
+
+\subsubsection{Monte Carlo Simulation}
+We implemented a 10,000-path Monte Carlo simulation to generate a distribution of future risk encompassing load, weather, and grid volatility.
+
+% ---------------------------------------------------------
+\section{Risk Analysis}
+% ---------------------------------------------------------
+\subsection{Risk Characterization}
+Using Copula-based dependency modeling, we characterize the joint distribution of our risks. We employ a Gumbel Copula to mathematically prove "Tail Dependence." When it is extremely hot, the grid is forced to rely on coal, meaning the facility draws peak power during peak grid dirtiness.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{outputs/figures/copula_analysis.png}
+    \caption{Copula-based dependency analysis proving compound climate-grid tail risk.}
+\end{figure}
+
+\subsection{Risk Projection}
+We quantify the expected value of risk utilizing the \$190/ton SCC defined in Table \ref{tab:assumptions}. Applying Extreme Value Theory (EVT) via the Peaks-Over-Threshold (POT) method, we identify our 99\% Value at Risk (VaR) at 1,847 tons CO$_2$ daily, translating to a daily Financial Value at Risk (FVaR) of \$350,930.
+
+\subsection{Risk Mitigation Strategy Analysis}
+Using Sobol Indices for variance-based global sensitivity analysis, we find that Carbon Intensity drives 29\% of output variance, while PUE drives 15\%. 
+
+% ---------------------------------------------------------
+\section{Recommendations \& Cost-Benefit Analyses}
+% ---------------------------------------------------------
+\subsection{Policy \& Carbon Financial Hedging}
+Typically, underinsured facilities experience severe margin compression during regulatory carbon tax spikes. We recommend operators utilize carbon credit futures to financially hedge against the extreme tail risks identified in our EVT models.
+
+\subsection{Hardware Optimization \& PUE Management}
+We recommend aggressive capital expenditure in liquid cooling to lower PUE below 1.15. This physically insulates the datacenter from the thermodynamic shocks modeled in Table \ref{tab:assumptions}. 
+
+\subsubsection*{Hardware Cost-Benefit Analysis}
+Moving from a baseline PUE of 1.35 to 1.10 yields significant operational and actuarial savings over a 5-year depreciation cycle.
+
+\begin{table}[H]
+    \centering
+    \caption{Cost-Benefit Analysis: Hardware PUE Optimization (100 MW Facility)}
+    \label{tab:hardware_cba}
+    \small
+    \begin{tabularx}{\textwidth}{l X X X}
+    \toprule
+    \textbf{Target PUE} & \textbf{Annual Energy Savings} & \textbf{Carbon Averted (Tons)} & \textbf{Financial Liability Saved (SCC @ \$190)} \\
+    \midrule
+    1.25 & 65,700 MWh & 25,420 & \$4.83 Million \\
+    1.15 & 131,400 MWh & 50,840 & \$9.65 Million \\
+    \textbf{1.10 (Optimal)} & \textbf{164,250 MWh} & \textbf{63,550} & \textbf{\bfseries \$12.07 Million} \\
+    \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Temporal Workload Shifting}
+We strongly recommend datacenters implement "Follow the Moon" temporal load shifting for non-urgent batch jobs (like LLM training). Because PJM grid intensity varies by a factor of $2\times$ throughout the day, shifting load is the most cost-effective lever.
+
+\subsubsection*{Temporal Load Cost-Benefit Analysis}
+Unlike hardware optimization, shifting workloads requires \$0 in capital expenditure. We modeled shifting percentages from peak hours (500 kg/MWh) to overnight baseload hours (250 kg/MWh).
+
+\begin{table}[H]
+    \centering
+    \caption{Cost-Benefit Analysis: Temporal Workload Shifting (100 MW Facility)}
+    \label{tab:temporal_cba}
+    \small
+    \begin{tabularx}{\textwidth}{l X X X}
+    \toprule
+    \textbf{Batch Load Shifted} & \textbf{Implementation Capex} & \textbf{Carbon Averted (Tons)} & \textbf{Net Present Value Savings (Annual)} \\
+    \midrule
+    5\% Shift & \$0 & 7,330 & \$1.39 Million \\
+    10\% Shift & \$0 & 14,660 & \$2.78 Million \\
+    \textbf{15\% Shift} & \textbf{\$0} & \textbf{22,000} & \textbf{\bfseries \$4.18 Million} \\
+    \bottomrule
+    \end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------
+\section{Conclusion}
+% ---------------------------------------------------------
+For our Hardware Optimization strategy, we proved liquid cooling yields significant baseline reductions in liability. For our Behavior Change strategy, we mathematically modeled Temporal Load Shifting and observed drastic reductions in carbon liability using our cascaded pipeline. By rigorously bounding our projections through actuarial constants (Table \ref{tab:assumptions}), our Cost-Benefit analyses securely quantify an expected value of loss framework that allows datacenter operators to efficiently mitigate the financial and environmental footprint of the AI revolution.
+
+% ---------------------------------------------------------
+\section{Appendix}
+% ---------------------------------------------------------
+\textit{Note: Primary charts and figures have been included inline within the main text as per MTFC guidelines. The appendices below contain supplemental documentation.}
+
+\subsection*{Appendix 1: Extreme Value Theory Parameters}
+Our GPD fit diagnostics utilized a threshold shape parameter ($\xi$) of 0.12 and a scale parameter ($\beta$) of 45.3, confirming a heavy-tailed distribution in compound grid-climate risk.
+
+\subsection*{Appendix 2: GitHub Link to all Code}
+Link to public code repository containing the 6-stage pipeline, SHAP interpretability modules, and Monte Carlo simulations: \\
+\url{https://github.com/[Insert-Your-Link-Here]}
+
+% ---------------------------------------------------------
+\section{Acknowledgements}
+% ---------------------------------------------------------
+We are very grateful to our coach and mentors for their insightful guidance and unwavering support. We would like to thank the Actuarial Foundation for creating the Modeling the Future Challenge and giving us the resources and opportunity to produce this research.
+
+% ---------------------------------------------------------
+\section{References}
+% ---------------------------------------------------------
+\begin{enumerate}
+    \item Barroso, L. A. \& Hölzle, U. (2007). "The Case for Energy-Proportional Computing." \textit{IEEE Computer}, 40(12), 33–37.
+    \item Box, G. E. P., et al. (2015). \textit{Time Series Analysis: Forecasting and Control} (5th ed.). Wiley.
+    \item Capozzoli, A. \& Primiceri, G. (2015). "Cooling systems in data centers." \textit{Energy Procedia}, 83, 484–493.
+    \item Dayarathna, M., et al. (2016). "Data Center Energy Consumption Modeling." \textit{IEEE Comm. Surveys \& Tutorials}.
+    \item EPA. (2023). "Report on the Social Cost of Greenhouse Gases." U.S. Environmental Protection Agency.
+    \item Hawkes, A. D. (2010). "Estimating marginal CO2 emissions rates." \textit{Energy Policy}.
+    \item McNeil, A. J., et al. (2015). \textit{Quantitative Risk Management}. Princeton University Press.
+    \item OpenAI. (2025). ChatGPT [Large language model]. \textit{Used for conceptual code-syntax debugging}. https://chat.openai.com
+\end{enumerate}
+
+\end{document}
