@@ -1,0 +1,108 @@
+{
+  "run_id": "carbon_20260223_232419",
+  "horizon_steps": 1,
+  "seasonal_period_steps": 24,
+  "train_rows_context": 54,
+  "holdout_rows_evaluated": 111,
+  "best_params": {
+    "stage1_cpu": {
+      "n_estimators": 400,
+      "max_depth": 16,
+      "min_samples_leaf": 1,
+      "max_features": "sqrt"
+    },
+    "stage5_ci": {
+      "n_estimators": 300,
+      "max_depth": 4,
+      "learning_rate": 0.05,
+      "subsample": 0.9,
+      "colsample_bytree": 0.9,
+      "reg_alpha": 0.0,
+      "reg_lambda": 1.0
+    }
+  },
+  "leakage_checks": {
+    "no_bfill_in_source": true,
+    "strict_past_stage1": true,
+    "strict_past_stage5": true
+  },
+  "optional_dataset_usage": {
+    "grid_exog": false,
+    "weather_exog": false,
+    "power_optional": false,
+    "power_calibration": false
+  },
+  "using_optional_features": false,
+  "selected_variant": "baseline_core",
+  "feature_set": {
+    "stage1_cpu": [
+      "cpu_lag_1",
+      "cpu_lag_2",
+      "cpu_lag_3",
+      "cpu_lag_6",
+      "cpu_lag_12",
+      "cpu_lag_24",
+      "cpu_lag_48",
+      "cpu_roll_mean_3",
+      "cpu_roll_mean_6",
+      "cpu_roll_mean_12",
+      "cpu_roll_mean_24",
+      "cpu_roll_std_3",
+      "cpu_roll_std_6",
+      "cpu_roll_std_12",
+      "cpu_roll_std_24",
+      "cpu_ewm_12",
+      "tasks_lag_1",
+      "tasks_lag_24",
+      "temperature_f_lag1",
+      "hour_sin",
+      "hour_cos",
+      "dow_sin",
+      "dow_cos",
+      "is_weekend",
+      "is_business_hour"
+    ],
+    "stage5_ci": [
+      "ci_lag_1",
+      "ci_lag_2",
+      "ci_lag_3",
+      "ci_lag_6",
+      "ci_lag_12",
+      "ci_lag_24",
+      "ci_lag_48",
+      "ci_roll_mean_3",
+      "ci_roll_mean_6",
+      "ci_roll_mean_12",
+      "ci_roll_mean_24",
+      "ci_roll_std_3",
+      "ci_roll_std_6",
+      "ci_roll_std_12",
+      "ci_roll_std_24",
+      "ci_ewm_12",
+      "temperature_f_lag1_for_ci",
+      "hour_sin",
+      "hour_cos",
+      "dow_sin",
+      "dow_cos",
+      "is_weekend",
+      "is_business_hour"
+    ]
+  },
+  "coverage_rows": 6,
+  "physics_calibration": {
+    "it_power_slope": 1.0,
+    "it_power_intercept": 0.0,
+    "total_power_slope": 1.0,
+    "total_power_intercept": 0.0
+  },
+  "variant_comparison": {
+    "baseline_core_stage5_rmse": 14.015087365086174,
+    "baseline_core_stage6_rmse": 533.9224543426959,
+    "exog_enhanced_stage5_rmse": 14.043226943471472,
+    "exog_enhanced_stage6_rmse": 1384.6642844809448,
+    "uplift_stage5_vs_core": -0.0020078061343661996,
+    "uplift_stage6_vs_core": -1.593380879973637,
+    "enhanced_promoted": false,
+    "passes_leakage_checks": true
+  }
+}
