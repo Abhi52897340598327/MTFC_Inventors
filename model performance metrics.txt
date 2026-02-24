@@ -1,0 +1,21 @@
+MODEL PERFORMANCE METRICS
+Run ID: carbon_pipeline_latest_submission
+Source: ACTUAL_FINAL_MODEL_SUBMISSION/winner_model_bundle/outputs/results/carbon_pipeline_metrics.csv
+Date: 2026-02-24
+
+DATA + LEAKAGE STATUS
+no_synthetic_data_used: PASS
+train_test_row_overlap: PASS (disjoint random holdout split, random_state=42)
+backfill_usage_in_pipeline: PASS (no bfill in carbon_prediction_pipeline.py)
+feature_design_for_stage1: PASS (contemporaneous real telemetry features only)
+feature_design_for_stage5: PASS (PJM exogenous + weather + calendar)
+
+R2 METRICS BY STAGE
+Stage1_CPU | Train_R2=0.9957751 | Test_R2=0.9554830
+Stage2_IT_Power | Train_R2=0.9989633 | Test_R2=0.9532027
+Stage3_PUE | Train_R2=0.9999998 | Test_R2=0.9999729
+Stage4_TotalPower | Train_R2=0.9990615 | Test_R2=0.9982997
+Stage5_CarbonIntensity | Train_R2=0.9999964 | Test_R2=0.9944868
+Stage6_Emissions_FINAL | Train_R2=0.9999966 | Test_R2=0.9974201
+
+ALL TEST R2 ABOVE 0.90: PASS

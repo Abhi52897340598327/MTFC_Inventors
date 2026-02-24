@@ -1,0 +1,22 @@
+{
+  "model_name": "REAL_FINAL_FILES",
+  "run_id": "carbon_20260224_172530",
+  "common_dataset_path": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/real_vs_bad_comparison/common_dataset_same_for_both_models.csv",
+  "train_rows": 633,
+  "holdout_rows": 112,
+  "metrics_summary_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/real_vs_bad_comparison/real_metrics_summary.csv",
+  "artifacts_result_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/results/carbon_20260224_172530",
+  "artifacts_figure_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260224_172530",
+  "artifacts_model_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/models/carbon_20260224_172530",
+  "stage_r2_holdout": {
+    "Stage1_CPU": 0.6500580356487666,
+    "Stage2_ITPower": 0.6500580356487635,
+    "Stage3_PUE": 0.9999999771517148,
+    "Stage4_TotalPower": 0.9999272405927612,
+    "Stage4_TotalPower_CombinedML": 0.44142152345052543,
+    "Stage5_CarbonIntensity": 0.8143657117639774,
+    "Stage6_Emissions": 0.9513185404412208,
+    "Stage6_Emissions_CombinedPowerML": 0.8221311114718937,
+    "Stage7_EnergyUsageML": 0.4404935906358928
+  }
+}

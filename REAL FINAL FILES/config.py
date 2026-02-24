@@ -42,8 +42,8 @@ class PipelineConfig:
 
     min_relative_rmse_improvement: float = 0.01
     max_stage6_rmse_degradation: float = 0.0
-    stage6_target_mode_default: str = "observed_power_if_available"
-    stage6_variant_gate_target_mode: str = "observed_power_if_available"
+    stage6_target_mode_default: str = "physics"
+    stage6_variant_gate_target_mode: str = "physics"
 
     bootstrap_iterations: int = 400
     bootstrap_block_size: int = 24
@@ -51,15 +51,34 @@ class PipelineConfig:
 
     cpu_param_grid: List[Dict[str, Any]] = field(
         default_factory=lambda: [
-            {"n_estimators": 200, "max_depth": 10, "min_samples_leaf": 2, "max_features": "sqrt"},
-            {"n_estimators": 300, "max_depth": 12, "min_samples_leaf": 2, "max_features": "sqrt"},
-            {"n_estimators": 400, "max_depth": 16, "min_samples_leaf": 1, "max_features": "sqrt"},
+            {
+                "model_type": "random_forest",
+                "n_estimators": 300,
+                "max_depth": 12,
+                "min_samples_leaf": 2,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "random_forest",
+                "n_estimators": 600,
+                "max_depth": None,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 1000,
+                "max_depth": None,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
         ]
     )
 
     carbon_param_grid: List[Dict[str, Any]] = field(
         default_factory=lambda: [
             {
+                "model_type": "xgboost",
                 "n_estimators": 300,
                 "max_depth": 4,
                 "learning_rate": 0.05,
@@ -69,6 +88,7 @@ class PipelineConfig:
                 "reg_lambda": 1.0,
             },
             {
+                "model_type": "xgboost",
                 "n_estimators": 500,
                 "max_depth": 5,
                 "learning_rate": 0.03,
@@ -78,6 +98,7 @@ class PipelineConfig:
                 "reg_lambda": 1.0,
             },
             {
+                "model_type": "xgboost",
                 "n_estimators": 700,
                 "max_depth": 6,
                 "learning_rate": 0.02,
@@ -85,6 +106,72 @@ class PipelineConfig:
                 "colsample_bytree": 0.85,
                 "reg_alpha": 0.01,
                 "reg_lambda": 2.0,
+            },
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 1200,
+                "max_depth": None,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 900,
+                "max_depth": 20,
+                "min_samples_leaf": 1,
+                "max_features": 0.7,
+            },
+        ]
+    )
+
+    combined_power_param_grid: List[Dict[str, Any]] = field(
+        default_factory=lambda: [
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 900,
+                "max_depth": None,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "random_forest",
+                "n_estimators": 600,
+                "max_depth": 20,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 700,
+                "max_depth": 24,
+                "min_samples_leaf": 1,
+                "max_features": 0.7,
+            },
+        ]
+    )
+
+    energy_param_grid: List[Dict[str, Any]] = field(
+        default_factory=lambda: [
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 700,
+                "max_depth": None,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "random_forest",
+                "n_estimators": 500,
+                "max_depth": 18,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+            },
+            {
+                "model_type": "extra_trees",
+                "n_estimators": 600,
+                "max_depth": 22,
+                "min_samples_leaf": 1,
+                "max_features": 0.7,
             },
         ]
     )

@@ -102,6 +102,15 @@ class CarbonEmissionsPipeline:
         self.scalers = {}
         self.features = {}
         self.metrics = {}
+
+    @staticmethod
+    def _causal_fill(df):
+        """
+        Causal missing-value handling for time series.
+        Uses forward-fill only (past -> future) and then constant fill for any
+        remaining leading NaNs. This avoids future leakage from backward fill.
+        """
+        return df.ffill().fillna(0.0)
         
     def _create_autoregressive_features(self, df, col, lags=[1, 2, 3, 5, 10]):
         """
@@ -191,8 +200,8 @@ class CarbonEmissionsPipeline:
         # Create physics-based targets
         df = self._create_physics_targets(df)
         
-        # Fill NaN from lag features
-        df = df.fillna(method='bfill').fillna(method='ffill')
+        # Causal fill only: no backward-fill to avoid future leakage.
+        df = self._causal_fill(df)
         
         # ═══════════════════════════════════════════════════════════════════
         # STAGE 1: CPU UTILIZATION — Random Forest with AR Features
@@ -351,7 +360,7 @@ class CarbonEmissionsPipeline:
         
         # Create carbon intensity AR features
         df = self._create_carbon_ar_features(df)
-        df = df.fillna(method='bfill').fillna(method='ffill')
+        df = self._causal_fill(df)
         
         # Carbon intensity features: AR lags + rolling stats + time patterns
         carbon_ar_feats = [c for c in df.columns if 'carbon_lag' in c or 'carbon_roll' in c or 'carbon_ewm' in c]
@@ -452,7 +461,7 @@ class CarbonEmissionsPipeline:
         
         # Create AR features for carbon intensity
         df = self._create_carbon_ar_features(df)
-        df = df.fillna(method='bfill').fillna(method='ffill')
+        df = self._causal_fill(df)
         
         # Create physics targets for evaluation
         df = self._create_physics_targets(df)

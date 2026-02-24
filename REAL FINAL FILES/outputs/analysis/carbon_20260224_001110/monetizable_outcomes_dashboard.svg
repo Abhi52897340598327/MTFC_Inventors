@@ -1,0 +1,41 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1500' height='860' viewBox='0 0 1500 860'>
+<rect x='0' y='0' width='1500' height='860' fill='#ececec'/>
+<text x='750.00' y='52.00' font-family='Helvetica, Arial, sans-serif' font-size='25' font-weight='700' text-anchor='middle' fill='#222'>Monetizable Outcomes Dashboard</text>
+<text x='750.00' y='84.00' font-family='Helvetica, Arial, sans-serif' font-size='13' font-weight='600' text-anchor='middle' fill='#222'>Risk-to-Dollar Translation for Datacenter Carbon Strategy</text>
+<rect x='70.00' y='130.00' width='430.00' height='220.00' fill='#f8f8f8' stroke='#b8b8b8' stroke-width='1.20' rx='10.00' opacity='1.000'/>
+<rect x='70.00' y='130.00' width='430.00' height='8.00' fill='#4e79a7' stroke='none' stroke-width='1.00' rx='10.00' opacity='1.000'/>
+<text x='88.00' y='164.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='700' text-anchor='start' fill='#222'>Baseline Annual Cost</text>
+<text x='88.00' y='200.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>$51,231,688</text>
+<text x='88.00' y='228.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Carbon: $20,775,750</text>
+<text x='88.00' y='256.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Energy: $22,429,982</text>
+<text x='88.00' y='284.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Risk Premium: $726,314</text>
+<rect x='535.00' y='130.00' width='430.00' height='220.00' fill='#f8f8f8' stroke='#b8b8b8' stroke-width='1.20' rx='10.00' opacity='1.000'/>
+<rect x='535.00' y='130.00' width='430.00' height='8.00' fill='#2ca02c' stroke='none' stroke-width='1.00' rx='10.00' opacity='1.000'/>
+<text x='553.00' y='164.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='700' text-anchor='start' fill='#222'>Efficient Scenario Delta</text>
+<text x='553.00' y='200.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Total: $-8,706,693</text>
+<text x='553.00' y='228.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Carbon: $-5,095,972</text>
+<text x='553.00' y='256.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Energy: $-2,500,903</text>
+<text x='553.00' y='284.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Risk: $-127,721</text>
+<rect x='1000.00' y='130.00' width='430.00' height='220.00' fill='#f8f8f8' stroke='#b8b8b8' stroke-width='1.20' rx='10.00' opacity='1.000'/>
+<rect x='1000.00' y='130.00' width='430.00' height='8.00' fill='#d62728' stroke='none' stroke-width='1.00' rx='10.00' opacity='1.000'/>
+<text x='1018.00' y='164.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='700' text-anchor='start' fill='#222'>Combined Portfolio</text>
+<text x='1018.00' y='200.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>NPV(10y): $55,823,070</text>
+<text x='1018.00' y='228.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>NPV band: $26,617,310 to $89,640,266</text>
+<text x='1018.00' y='256.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Annual Net: $10,584,532</text>
+<text x='1018.00' y='284.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Payback: 1.4 years</text>
+<text x='1018.00' y='312.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='start' fill='#222'>Carbon Avoided: 45,816 t/yr</text>
+<rect x='70.00' y='400.00' width='1360.00' height='360.00' fill='#f8f8f8' stroke='#b8b8b8' stroke-width='1.20' rx='10.00' opacity='1.000'/>
+<text x='95.00' y='438.00' font-family='Helvetica, Arial, sans-serif' font-size='13' font-weight='700' text-anchor='start' fill='#222'>Mitigation Annual Net Benefit (USD/yr)</text>
+<rect x='180.00' y='470.00' width='1150.00' height='36.25' fill='#2ca02c' stroke='#333' stroke-width='0.90' rx='3.00' opacity='1.000'/>
+<text x='168.00' y='495.38' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Combined Portfolio</text>
+<text x='1338.00' y='495.38' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$10,584,532</text>
+<rect x='180.00' y='532.50' width='483.29' height='36.25' fill='#a2ad7a' stroke='#333' stroke-width='0.90' rx='3.00' opacity='1.000'/>
+<text x='168.00' y='557.88' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>PUE Optimization (Cooling)</text>
+<text x='671.29' y='557.88' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$6,236,082</text>
+<rect x='180.00' y='595.00' width='44.60' height='36.25' fill='#efb5ad' stroke='#333' stroke-width='0.90' rx='3.00' opacity='1.000'/>
+<text x='168.00' y='620.38' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Cleaner Grid Contracts</text>
+<text x='232.60' y='620.38' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$3,374,815</text>
+<rect x='180.00' y='657.50' width='0.00' height='36.25' fill='#f7b6b2' stroke='#333' stroke-width='0.90' rx='3.00' opacity='1.000'/>
+<text x='168.00' y='682.88' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Dynamic Workload Shifting</text>
+<text x='188.00' y='682.88' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$3,083,895</text>
+</svg>

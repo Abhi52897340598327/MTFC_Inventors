@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
 
 from utils import calc_metrics, get_logger, save_pickle
 
 
 DEFAULT_PARAMS = {
+    "model_type": "random_forest",
     "n_estimators": 300,
     "max_depth": 12,
     "min_samples_split": 2,
@@ -22,12 +23,17 @@ DEFAULT_PARAMS = {
 }
 
 
-def build_model(params: Optional[Dict] = None) -> RandomForestRegressor:
-    """Build a RandomForestRegressor from defaults + overrides."""
+def build_model(params: Optional[Dict] = None):
+    """Build a tree ensemble model from defaults + overrides."""
     merged = dict(DEFAULT_PARAMS)
     if params:
         merged.update(params)
-    return RandomForestRegressor(**merged)
+    model_type = str(merged.pop("model_type", "random_forest")).lower()
+    if model_type in {"rf", "random_forest"}:
+        return RandomForestRegressor(**merged)
+    if model_type in {"et", "extra_trees"}:
+        return ExtraTreesRegressor(**merged)
+    raise ValueError(f"Unsupported model_type='{model_type}' for stage1 model.")
 
 
 def fit(

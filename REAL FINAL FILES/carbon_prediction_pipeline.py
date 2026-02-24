@@ -1,4 +1,4 @@
-"""Leak-free, OOF-evaluated 6-stage carbon forecasting pipeline.
+"""Leak-free, OOF-evaluated carbon forecasting pipeline with energy forecasting.
 
 Stages:
 1) Stage 1 (ML): CPU utilization forecast (t+h)
@@ -7,6 +7,8 @@ Stages:
 4) Stage 4 (Physics): Total power = IT power * PUE
 5) Stage 5 (ML): Carbon intensity forecast (t+h)
 6) Stage 6 (Physics): Emissions = Total power * predicted carbon intensity
+7) Stage 4b (ML): Combined total power model (learned Stage 2/3/4 alternative)
+8) Stage 7 (ML): Energy usage forecast (MWh at t+h)
 """
 
 from __future__ import annotations
@@ -74,6 +76,7 @@ class CarbonForecastPipeline:
 
         self.horizon_steps: int = config.forecast_horizon_hours
         self.seasonal_period_steps: int = 24
+        self.step_hours: float = 1.0
 
         self.models: Dict[str, Any] = {}
         self.best_params: Dict[str, Dict[str, Any]] = {}
@@ -101,6 +104,18 @@ class CarbonForecastPipeline:
         self.using_optional_features: bool = False
         self.required_future_exog_columns: List[str] = ["timestamp", "temperature_c"]
         self.sanity_checks: Dict[str, Any] = {}
+        self.model_blend_weights: Dict[str, float] = {
+            "stage1_cpu": 1.0,
+            "stage5_ci": 1.0,
+            "stage4_combined_power": 1.0,
+            "stage7_energy": 1.0,
+        }
+        self.model_blend_source: Dict[str, str] = {
+            "stage1_cpu": "model_only",
+            "stage5_ci": "model_only",
+            "stage4_combined_power": "model_only",
+            "stage7_energy": "model_only",
+        }
 
         self.use_grid_exog_request = use_grid_exog
         self.use_weather_exog_request = use_weather_exog
@@ -225,11 +240,13 @@ class CarbonForecastPipeline:
         if len(deltas) == 0:
             self.horizon_steps = 1
             self.seasonal_period_steps = 24
+            self.step_hours = 1.0
             return
 
         median_seconds = float(np.median(deltas))
         if median_seconds <= 0:
             median_seconds = 3600.0
+        self.step_hours = float(median_seconds / 3600.0)
 
         steps_per_hour = max(1, int(round(3600.0 / median_seconds)))
         proposed_h = self.config.forecast_horizon_hours * steps_per_hour
@@ -931,6 +948,159 @@ class CarbonForecastPipeline:
 
         return dfx, feature_cols, lag_map, allow_zero
 
+    def _build_power_features(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str], Dict[str, int], set]:
+        """Features for learned combined-power and energy forecasting models.
+
+        All features are strictly past-derived (lags/rolling stats/time features) to avoid leakage.
+        """
+        dfx = df.copy()
+        lag_map: Dict[str, int] = {}
+        allow_zero: set = set()
+
+        if "observed_power_util" not in dfx.columns:
+            return dfx, [], lag_map, allow_zero
+
+        for lag in [1, 2, 3, 6, 12, 24, 48]:
+            col = f"obs_power_lag_{lag}"
+            dfx[col] = dfx["observed_power_util"].shift(lag)
+            lag_map[col] = lag
+
+        shifted_power = dfx["observed_power_util"].shift(1)
+        for window in [3, 6, 12, 24]:
+            col_mean = f"obs_power_roll_mean_{window}"
+            col_std = f"obs_power_roll_std_{window}"
+            dfx[col_mean] = shifted_power.rolling(window, min_periods=window).mean()
+            dfx[col_std] = shifted_power.rolling(window, min_periods=window).std()
+            lag_map[col_mean] = 1
+            lag_map[col_std] = 1
+
+        dfx["obs_power_ewm_12"] = shifted_power.ewm(span=12, adjust=False, min_periods=12).mean()
+        lag_map["obs_power_ewm_12"] = 1
+
+        # Minimal, mostly data-driven covariates with lag-only usage.
+        dfx["cpu_lag1_for_power"] = dfx["avg_cpu_utilization"].shift(1)
+        dfx["ci_lag1_for_power"] = dfx["carbon_intensity"].shift(1)
+        dfx["temperature_f_lag1_for_power"] = dfx["temperature_f"].shift(1)
+        dfx["tasks_lag1_for_power"] = dfx["num_tasks_sampled"].shift(1)
+        lag_map["cpu_lag1_for_power"] = 1
+        lag_map["ci_lag1_for_power"] = 1
+        lag_map["temperature_f_lag1_for_power"] = 1
+        lag_map["tasks_lag1_for_power"] = 1
+
+        if "dew_point_f" in dfx.columns:
+            dfx["dew_point_f_lag1_for_power"] = dfx["dew_point_f"].shift(1)
+            lag_map["dew_point_f_lag1_for_power"] = 1
+        if "wind_speed_mps" in dfx.columns:
+            dfx["wind_speed_lag1_for_power"] = dfx["wind_speed_mps"].shift(1)
+            lag_map["wind_speed_lag1_for_power"] = 1
+
+        time_cols = [
+            "hour_sin",
+            "hour_cos",
+            "dow_sin",
+            "dow_cos",
+            "is_weekend",
+            "is_business_hour",
+        ]
+        for col in time_cols:
+            lag_map[col] = 0
+            allow_zero.add(col)
+
+        feature_cols = [
+            c
+            for c in [
+                "obs_power_lag_1",
+                "obs_power_lag_2",
+                "obs_power_lag_3",
+                "obs_power_lag_6",
+                "obs_power_lag_12",
+                "obs_power_lag_24",
+                "obs_power_lag_48",
+                "obs_power_roll_mean_3",
+                "obs_power_roll_mean_6",
+                "obs_power_roll_mean_12",
+                "obs_power_roll_mean_24",
+                "obs_power_roll_std_3",
+                "obs_power_roll_std_6",
+                "obs_power_roll_std_12",
+                "obs_power_roll_std_24",
+                "obs_power_ewm_12",
+                "cpu_lag1_for_power",
+                "ci_lag1_for_power",
+                "temperature_f_lag1_for_power",
+                "tasks_lag1_for_power",
+                "dew_point_f_lag1_for_power",
+                "wind_speed_lag1_for_power",
+                "hour_sin",
+                "hour_cos",
+                "dow_sin",
+                "dow_cos",
+                "is_weekend",
+                "is_business_hour",
+            ]
+            if c in dfx.columns
+        ]
+        return dfx, feature_cols, lag_map, allow_zero
+
+    def _build_power_energy_views(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Build supervised views for learned combined-power and energy forecasting stages."""
+        dfx, power_features, power_lag_map, power_allow_zero = self._build_power_features(df)
+
+        if "observed_power_util" not in dfx.columns or not power_features:
+            self.feature_cols["stage4_combined_power"] = []
+            self.feature_cols["stage7_energy"] = []
+            self.feature_lag_map["stage4_combined_power"] = {}
+            self.feature_lag_map["stage7_energy"] = {}
+            self.zero_lag_allow["stage4_combined_power"] = set()
+            self.zero_lag_allow["stage7_energy"] = set()
+            return pd.DataFrame(), pd.DataFrame()
+
+        horizon = self.horizon_steps
+        seasonal_shift = max(1, self.seasonal_period_steps - horizon)
+
+        dfx["target_power_util"] = dfx["observed_power_util"].shift(-horizon)
+        dfx["target_total_power_mw"] = dfx["target_power_util"] * float(self.config.facility_mw)
+        dfx["target_energy_mwh"] = dfx["target_total_power_mw"] * float(self.step_hours)
+
+        dfx["baseline_power_util_persistence"] = dfx["observed_power_util"]
+        dfx["baseline_power_util_seasonal"] = dfx["observed_power_util"].shift(seasonal_shift)
+        dfx["baseline_total_power_mw_persistence"] = dfx["baseline_power_util_persistence"] * float(
+            self.config.facility_mw
+        )
+        dfx["baseline_total_power_mw_seasonal"] = dfx["baseline_power_util_seasonal"] * float(self.config.facility_mw)
+        dfx["baseline_energy_mwh_persistence"] = dfx["baseline_total_power_mw_persistence"] * float(self.step_hours)
+        dfx["baseline_energy_mwh_seasonal"] = dfx["baseline_total_power_mw_seasonal"] * float(self.step_hours)
+
+        power_cols = [
+            "timestamp",
+            "target_total_power_mw",
+            "baseline_total_power_mw_persistence",
+            "baseline_total_power_mw_seasonal",
+        ] + power_features
+        energy_cols = [
+            "timestamp",
+            "target_energy_mwh",
+            "baseline_energy_mwh_persistence",
+            "baseline_energy_mwh_seasonal",
+        ] + power_features
+
+        power_cols = [c for c in power_cols if c in dfx.columns]
+        energy_cols = [c for c in energy_cols if c in dfx.columns]
+
+        power_view = dfx[power_cols].dropna(subset=power_features + ["target_total_power_mw"]).copy()
+        energy_view = dfx[energy_cols].dropna(subset=power_features + ["target_energy_mwh"]).copy()
+
+        self.feature_cols["stage4_combined_power"] = list(power_features)
+        self.feature_cols["stage7_energy"] = list(power_features)
+        self.feature_lag_map["stage4_combined_power"] = dict(power_lag_map)
+        self.feature_lag_map["stage7_energy"] = dict(power_lag_map)
+        self.zero_lag_allow["stage4_combined_power"] = set(power_allow_zero)
+        self.zero_lag_allow["stage7_energy"] = set(power_allow_zero)
+
+        assert_strictly_past_features(power_lag_map, allow_zero_for=power_allow_zero)
+
+        return power_view, energy_view
+
     def _build_supervised_views(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         dfx, cpu_features, cpu_lag_map, cpu_allow_zero = self._build_cpu_features(df)
         dfx, ci_features, ci_lag_map, ci_allow_zero = self._build_carbon_features(dfx)
@@ -1054,6 +1224,32 @@ class CarbonForecastPipeline:
         if mode not in valid:
             raise ValueError(f"Invalid stage6_target_mode='{mode}'. Expected one of {sorted(valid)}.")
         return mode
+
+    @staticmethod
+    def _best_model_blend_weight(
+        y_true: np.ndarray,
+        y_model: np.ndarray,
+        y_persistence: np.ndarray,
+    ) -> Tuple[float, float]:
+        y_true_arr = np.asarray(y_true, dtype=float).ravel()
+        y_model_arr = np.asarray(y_model, dtype=float).ravel()
+        y_persist_arr = np.asarray(y_persistence, dtype=float).ravel()
+        mask = np.isfinite(y_true_arr) & np.isfinite(y_model_arr) & np.isfinite(y_persist_arr)
+        y_true_arr = y_true_arr[mask]
+        y_model_arr = y_model_arr[mask]
+        y_persist_arr = y_persist_arr[mask]
+        if len(y_true_arr) < 30:
+            return 1.0, float("nan")
+
+        best_w = 1.0
+        best_rmse = float("inf")
+        for w in np.linspace(0.0, 1.0, 101):
+            y_hat = w * y_model_arr + (1.0 - w) * y_persist_arr
+            rmse = float(np.sqrt(np.mean((y_true_arr - y_hat) ** 2)))
+            if rmse < best_rmse:
+                best_rmse = rmse
+                best_w = float(w)
+        return best_w, best_rmse
 
     @staticmethod
     def _build_required_future_exog_columns(feature_cols_stage5: List[str]) -> List[str]:
@@ -1369,8 +1565,15 @@ class CarbonForecastPipeline:
         validate_merged_columns(df_train)
 
         cpu_view, ci_view, _ = self._build_supervised_views(df_train)
+        power_view, energy_view = self._build_power_energy_views(df_train)
 
-        self.log.info("Training samples: Stage1=%s Stage5=%s", len(cpu_view), len(ci_view))
+        self.log.info(
+            "Training samples: Stage1=%s Stage5=%s Stage4Combined=%s Stage7Energy=%s",
+            len(cpu_view),
+            len(ci_view),
+            len(power_view),
+            len(energy_view),
+        )
 
         cpu_model, cpu_params, cpu_cv_df, cpu_oof = self._select_params_and_train(
             cpu_view,
@@ -1392,17 +1595,71 @@ class CarbonForecastPipeline:
             predict_ci_model,
         )
 
+        power_cv_df = pd.DataFrame()
+        energy_cv_df = pd.DataFrame()
+        power_oof = np.array([], dtype=float)
+        energy_oof = np.array([], dtype=float)
+
+        if len(power_view) >= (self.config.cv_splits + 1) * 20 and self.feature_cols.get("stage4_combined_power"):
+            power_model, power_params, power_cv_df, power_oof = self._select_params_and_train(
+                power_view,
+                self.feature_cols["stage4_combined_power"],
+                "target_total_power_mw",
+                "stage4_combined_power",
+                self.config.combined_power_param_grid,
+                fit_cpu_model,
+                predict_cpu_model,
+            )
+            self.models["stage4_combined_power"] = power_model
+            self.best_params["stage4_combined_power"] = power_params
+        else:
+            self.log.warning(
+                "Skipping Stage4 combined power model: insufficient observed power samples or features."
+            )
+
+        if len(energy_view) >= (self.config.cv_splits + 1) * 20 and self.feature_cols.get("stage7_energy"):
+            energy_model, energy_params, energy_cv_df, energy_oof = self._select_params_and_train(
+                energy_view,
+                self.feature_cols["stage7_energy"],
+                "target_energy_mwh",
+                "stage7_energy",
+                self.config.energy_param_grid,
+                fit_cpu_model,
+                predict_cpu_model,
+            )
+            self.models["stage7_energy"] = energy_model
+            self.best_params["stage7_energy"] = energy_params
+        else:
+            self.log.warning(
+                "Skipping Stage7 energy model: insufficient observed power samples or features."
+            )
+
         self.models["stage1_cpu"] = cpu_model
         self.models["stage5_ci"] = ci_model
         self.best_params["stage1_cpu"] = cpu_params
         self.best_params["stage5_ci"] = ci_params
 
-        self.cv_metrics_df = pd.concat([cpu_cv_df, ci_cv_df], ignore_index=True)
+        cv_parts = [cpu_cv_df, ci_cv_df]
+        if not power_cv_df.empty:
+            cv_parts.append(power_cv_df)
+        if not energy_cv_df.empty:
+            cv_parts.append(energy_cv_df)
+        self.cv_metrics_df = pd.concat(cv_parts, ignore_index=True)
 
         max_lag = max(
-            max(v for v in self.feature_lag_map["stage1_cpu"].values()),
-            max(v for v in self.feature_lag_map["stage5_ci"].values()),
-            self.seasonal_period_steps,
+            [self.seasonal_period_steps]
+            + [max(v for v in self.feature_lag_map["stage1_cpu"].values())]
+            + [max(v for v in self.feature_lag_map["stage5_ci"].values())]
+            + (
+                [max(v for v in self.feature_lag_map["stage4_combined_power"].values())]
+                if self.feature_lag_map.get("stage4_combined_power")
+                else []
+            )
+            + (
+                [max(v for v in self.feature_lag_map["stage7_energy"].values())]
+                if self.feature_lag_map.get("stage7_energy")
+                else []
+            )
         )
         self.context_rows = max_lag + self.horizon_steps + 5
         self.train_context_df = df_train.tail(self.context_rows).copy()
@@ -1417,6 +1674,112 @@ class CarbonForecastPipeline:
         if ci_oof_mask.any():
             ci_oof_metrics = calc_metrics(ci_view.loc[ci_oof_mask, "target_ci"], ci_oof[ci_oof_mask])
             self.log.info("Stage5 OOF RMSE=%.6f R2=%.6f", ci_oof_metrics["RMSE"], ci_oof_metrics["R2"])
+        if len(power_oof) > 0:
+            power_oof_mask = np.isfinite(power_oof)
+            if power_oof_mask.any():
+                power_oof_metrics = calc_metrics(
+                    power_view.loc[power_oof_mask, "target_total_power_mw"],
+                    power_oof[power_oof_mask],
+                )
+                self.log.info(
+                    "Stage4 combined OOF RMSE=%.6f R2=%.6f",
+                    power_oof_metrics["RMSE"],
+                    power_oof_metrics["R2"],
+                )
+        if len(energy_oof) > 0:
+            energy_oof_mask = np.isfinite(energy_oof)
+            if energy_oof_mask.any():
+                energy_oof_metrics = calc_metrics(
+                    energy_view.loc[energy_oof_mask, "target_energy_mwh"],
+                    energy_oof[energy_oof_mask],
+                )
+                self.log.info(
+                    "Stage7 energy OOF RMSE=%.6f R2=%.6f",
+                    energy_oof_metrics["RMSE"],
+                    energy_oof_metrics["R2"],
+                )
+
+        # Learn leakage-safe blend between model and persistence using OOF only.
+        cpu_persistence = cpu_view["baseline_cpu_persistence"].to_numpy(dtype=float)
+        ci_persistence = ci_view["baseline_ci_persistence"].to_numpy(dtype=float)
+        cpu_weight, cpu_blend_rmse = self._best_model_blend_weight(
+            cpu_view["target_cpu"].to_numpy(dtype=float),
+            cpu_oof,
+            cpu_persistence,
+        )
+        ci_weight, ci_blend_rmse = self._best_model_blend_weight(
+            ci_view["target_ci"].to_numpy(dtype=float),
+            ci_oof,
+            ci_persistence,
+        )
+        self.model_blend_weights["stage1_cpu"] = float(cpu_weight)
+        self.model_blend_weights["stage5_ci"] = float(ci_weight)
+        self.model_blend_source["stage1_cpu"] = (
+            "model_only"
+            if np.isclose(cpu_weight, 1.0)
+            else "persistence_only"
+            if np.isclose(cpu_weight, 0.0)
+            else "blended_model_persistence"
+        )
+        self.model_blend_source["stage5_ci"] = (
+            "model_only"
+            if np.isclose(ci_weight, 1.0)
+            else "persistence_only"
+            if np.isclose(ci_weight, 0.0)
+            else "blended_model_persistence"
+        )
+        self.log.info(
+            "Stage1 blend: model_weight=%.2f source=%s oof_blend_rmse=%s",
+            self.model_blend_weights["stage1_cpu"],
+            self.model_blend_source["stage1_cpu"],
+            f"{cpu_blend_rmse:.6f}" if np.isfinite(cpu_blend_rmse) else "nan",
+        )
+        self.log.info(
+            "Stage5 blend: model_weight=%.2f source=%s oof_blend_rmse=%s",
+            self.model_blend_weights["stage5_ci"],
+            self.model_blend_source["stage5_ci"],
+            f"{ci_blend_rmse:.6f}" if np.isfinite(ci_blend_rmse) else "nan",
+        )
+        if len(power_oof) > 0 and not power_view.empty:
+            power_weight, power_blend_rmse = self._best_model_blend_weight(
+                power_view["target_total_power_mw"].to_numpy(dtype=float),
+                power_oof,
+                power_view["baseline_total_power_mw_persistence"].to_numpy(dtype=float),
+            )
+            self.model_blend_weights["stage4_combined_power"] = float(power_weight)
+            self.model_blend_source["stage4_combined_power"] = (
+                "model_only"
+                if np.isclose(power_weight, 1.0)
+                else "persistence_only"
+                if np.isclose(power_weight, 0.0)
+                else "blended_model_persistence"
+            )
+            self.log.info(
+                "Stage4 combined blend: model_weight=%.2f source=%s oof_blend_rmse=%s",
+                self.model_blend_weights["stage4_combined_power"],
+                self.model_blend_source["stage4_combined_power"],
+                f"{power_blend_rmse:.6f}" if np.isfinite(power_blend_rmse) else "nan",
+            )
+        if len(energy_oof) > 0 and not energy_view.empty:
+            energy_weight, energy_blend_rmse = self._best_model_blend_weight(
+                energy_view["target_energy_mwh"].to_numpy(dtype=float),
+                energy_oof,
+                energy_view["baseline_energy_mwh_persistence"].to_numpy(dtype=float),
+            )
+            self.model_blend_weights["stage7_energy"] = float(energy_weight)
+            self.model_blend_source["stage7_energy"] = (
+                "model_only"
+                if np.isclose(energy_weight, 1.0)
+                else "persistence_only"
+                if np.isclose(energy_weight, 0.0)
+                else "blended_model_persistence"
+            )
+            self.log.info(
+                "Stage7 energy blend: model_weight=%.2f source=%s oof_blend_rmse=%s",
+                self.model_blend_weights["stage7_energy"],
+                self.model_blend_source["stage7_energy"],
+                f"{energy_blend_rmse:.6f}" if np.isfinite(energy_blend_rmse) else "nan",
+            )
 
         self._fit_physics_calibration(cpu_view, cpu_oof)
         if hasattr(self.models["stage5_ci"], "feature_importances_"):
@@ -1462,6 +1825,25 @@ class CarbonForecastPipeline:
             )
 
         return cpu_eval, ci_eval
+
+    def _prepare_eval_power_energy_views(self, df_holdout: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        if self.train_context_df is None:
+            raise RuntimeError("train_context_df missing. Fit the pipeline first.")
+
+        holdout_sorted = df_holdout.copy().sort_values("timestamp").reset_index(drop=True)
+        validate_monotonic_timestamp(holdout_sorted, "timestamp")
+
+        combined = pd.concat([self.train_context_df, holdout_sorted], ignore_index=True)
+        combined = combined.sort_values("timestamp").reset_index(drop=True)
+
+        power_view, energy_view = self._build_power_energy_views(combined)
+        if power_view.empty or energy_view.empty:
+            return pd.DataFrame(), pd.DataFrame()
+
+        holdout_ts = set(holdout_sorted["timestamp"])
+        power_eval = power_view[power_view["timestamp"].isin(holdout_ts)].copy()
+        energy_eval = energy_view[energy_view["timestamp"].isin(holdout_ts)].copy()
+        return power_eval, energy_eval
 
     def _stage_metric_row(
         self,
@@ -1516,12 +1898,19 @@ class CarbonForecastPipeline:
             raise RuntimeError("Pipeline must be fitted before evaluation.")
 
         cpu_eval, ci_eval = self._prepare_eval_views(df_holdout)
+        power_eval, energy_eval = self._prepare_eval_power_energy_views(df_holdout)
 
         X_cpu = cpu_eval[self.feature_cols["stage1_cpu"]].to_numpy(dtype=float)
-        pred_cpu = predict_cpu_model(self.models["stage1_cpu"], X_cpu)
+        pred_cpu_model = predict_cpu_model(self.models["stage1_cpu"], X_cpu)
+        cpu_persistence = cpu_eval["baseline_cpu_persistence"].to_numpy(dtype=float)
+        cpu_weight = float(self.model_blend_weights.get("stage1_cpu", 1.0))
+        pred_cpu = cpu_weight * pred_cpu_model + (1.0 - cpu_weight) * cpu_persistence
 
         X_ci = ci_eval[self.feature_cols["stage5_ci"]].to_numpy(dtype=float)
-        pred_ci = predict_ci_model(self.models["stage5_ci"], X_ci)
+        pred_ci_model = predict_ci_model(self.models["stage5_ci"], X_ci)
+        ci_persistence = ci_eval["baseline_ci_persistence"].to_numpy(dtype=float)
+        ci_weight = float(self.model_blend_weights.get("stage5_ci", 1.0))
+        pred_ci = ci_weight * pred_ci_model + (1.0 - ci_weight) * ci_persistence
 
         stage1_keep_cols = [
             "timestamp",
@@ -1541,6 +1930,77 @@ class CarbonForecastPipeline:
 
         merged = stage1_df.merge(stage5_df, on="timestamp", how="inner")
         merged = merged.sort_values("timestamp").reset_index(drop=True)
+
+        stage4_combined_predictions = pd.DataFrame(
+            columns=[
+                "timestamp",
+                "actual_total_power_mw",
+                "pred_total_power_mw",
+                "baseline_total_power_mw_persistence",
+                "baseline_total_power_mw_seasonal",
+            ]
+        )
+        stage7_energy_predictions = pd.DataFrame(
+            columns=[
+                "timestamp",
+                "actual_energy_mwh",
+                "pred_energy_mwh",
+                "baseline_energy_mwh_persistence",
+                "baseline_energy_mwh_seasonal",
+            ]
+        )
+        if (
+            "stage4_combined_power" in self.models
+            and not power_eval.empty
+            and self.feature_cols.get("stage4_combined_power")
+        ):
+            X_power = power_eval[self.feature_cols["stage4_combined_power"]].to_numpy(dtype=float)
+            pred_total_power_combined_model = predict_cpu_model(self.models["stage4_combined_power"], X_power)
+            power_weight = float(self.model_blend_weights.get("stage4_combined_power", 1.0))
+            pred_total_power_combined = (
+                power_weight * pred_total_power_combined_model
+                + (1.0 - power_weight) * power_eval["baseline_total_power_mw_persistence"].to_numpy(dtype=float)
+            )
+            stage4_combined_predictions = power_eval[
+                [
+                    "timestamp",
+                    "target_total_power_mw",
+                    "baseline_total_power_mw_persistence",
+                    "baseline_total_power_mw_seasonal",
+                ]
+            ].copy()
+            stage4_combined_predictions["pred_total_power_mw"] = pred_total_power_combined
+            stage4_combined_predictions = stage4_combined_predictions.rename(
+                columns={"target_total_power_mw": "actual_total_power_mw"}
+            )
+            merged = merged.merge(
+                stage4_combined_predictions[["timestamp", "actual_total_power_mw", "pred_total_power_mw"]],
+                on="timestamp",
+                how="left",
+            )
+
+        if (
+            "stage7_energy" in self.models
+            and not energy_eval.empty
+            and self.feature_cols.get("stage7_energy")
+        ):
+            X_energy = energy_eval[self.feature_cols["stage7_energy"]].to_numpy(dtype=float)
+            pred_energy_model = predict_cpu_model(self.models["stage7_energy"], X_energy)
+            energy_weight = float(self.model_blend_weights.get("stage7_energy", 1.0))
+            pred_energy = (
+                energy_weight * pred_energy_model
+                + (1.0 - energy_weight) * energy_eval["baseline_energy_mwh_persistence"].to_numpy(dtype=float)
+            )
+            stage7_energy_predictions = energy_eval[
+                [
+                    "timestamp",
+                    "target_energy_mwh",
+                    "baseline_energy_mwh_persistence",
+                    "baseline_energy_mwh_seasonal",
+                ]
+            ].copy()
+            stage7_energy_predictions["pred_energy_mwh"] = pred_energy
+            stage7_energy_predictions = stage7_energy_predictions.rename(columns={"target_energy_mwh": "actual_energy_mwh"})
 
         dew = (
             merged["dew_point_f_t_plus_h"]
@@ -1584,6 +2044,10 @@ class CarbonForecastPipeline:
             merged.loc[obs_mask, "actual_total_power"] = merged.loc[obs_mask, "actual_total_power_observed"]
         merged["pred_emissions"] = merged["pred_total_power"] * merged["pred_ci"]
         merged["actual_emissions"] = merged["actual_total_power"] * merged["target_ci"]
+        if "pred_total_power_mw" in merged.columns:
+            merged["pred_emissions_combined_ml"] = merged["pred_total_power_mw"] * merged["pred_ci"]
+            if "actual_total_power_mw" in merged.columns:
+                merged["actual_emissions_combined_ml"] = merged["actual_total_power_mw"] * merged["target_ci"]
 
         # Baselines: stage-specific and propagated to emissions.
         merged["baseline_it_power_persistence"] = self._physics_it_power(merged["baseline_cpu_persistence"])
@@ -1631,7 +2095,7 @@ class CarbonForecastPipeline:
             self._stage_metric_row(
                 "Stage1_CPU",
                 "holdout",
-                "RandomForest",
+                f"RandomForest[{self.model_blend_source.get('stage1_cpu', 'model_only')}]",
                 merged["target_cpu"].to_numpy(),
                 merged["pred_cpu"].to_numpy(),
                 defensible=stage1_defensible,
@@ -1668,6 +2132,36 @@ class CarbonForecastPipeline:
             )
         )
 
+        stage4_combined_uplift = float("nan")
+        stage4_combined_defensible = None
+        if not stage4_combined_predictions.empty:
+            stage4_model_metrics = calc_metrics(
+                stage4_combined_predictions["actual_total_power_mw"],
+                stage4_combined_predictions["pred_total_power_mw"],
+            )
+            stage4_persist_metrics = calc_metrics(
+                stage4_combined_predictions["actual_total_power_mw"],
+                stage4_combined_predictions["baseline_total_power_mw_persistence"],
+            )
+            stage4_combined_uplift = relative_rmse_improvement(
+                stage4_persist_metrics["RMSE"], stage4_model_metrics["RMSE"]
+            )
+            stage4_combined_defensible = bool(
+                np.isfinite(stage4_combined_uplift)
+                and stage4_combined_uplift >= self.config.min_relative_rmse_improvement
+            )
+            metric_rows.append(
+                self._stage_metric_row(
+                    "Stage4_TotalPower_CombinedML",
+                    "holdout",
+                    f"CombinedPowerML[{self.model_blend_source.get('stage4_combined_power', 'model_only')}]",
+                    stage4_combined_predictions["actual_total_power_mw"].to_numpy(),
+                    stage4_combined_predictions["pred_total_power_mw"].to_numpy(),
+                    defensible=stage4_combined_defensible,
+                    uplift_vs_persistence=stage4_combined_uplift,
+                )
+            )
+
         # Stage 5
         stage5_model_metrics = calc_metrics(merged["target_ci"], merged["pred_ci"])
         stage5_persist_metrics = calc_metrics(merged["target_ci"], merged["baseline_ci_persistence"])
@@ -1678,7 +2172,7 @@ class CarbonForecastPipeline:
             self._stage_metric_row(
                 "Stage5_CarbonIntensity",
                 "holdout",
-                "XGBoost",
+                f"XGBoost[{self.model_blend_source.get('stage5_ci', 'model_only')}]",
                 merged["target_ci"].to_numpy(),
                 merged["pred_ci"].to_numpy(),
                 defensible=stage5_defensible,
@@ -1703,6 +2197,63 @@ class CarbonForecastPipeline:
                 uplift_vs_persistence=stage6_uplift,
             )
         )
+
+        if {"actual_emissions_combined_ml", "pred_emissions_combined_ml"}.issubset(merged.columns):
+            mask_combined = np.isfinite(merged["actual_emissions_combined_ml"]) & np.isfinite(
+                merged["pred_emissions_combined_ml"]
+            )
+            if mask_combined.any():
+                y_true_comb = merged.loc[mask_combined, "actual_emissions_combined_ml"].to_numpy(dtype=float)
+                y_pred_comb = merged.loc[mask_combined, "pred_emissions_combined_ml"].to_numpy(dtype=float)
+                y_persist_comb = merged.loc[mask_combined, "baseline_emissions_persistence"].to_numpy(dtype=float)
+                stage6_combined_metrics = calc_metrics(y_true_comb, y_pred_comb)
+                stage6_combined_persist = calc_metrics(y_true_comb, y_persist_comb)
+                stage6_combined_uplift = relative_rmse_improvement(
+                    stage6_combined_persist["RMSE"],
+                    stage6_combined_metrics["RMSE"],
+                )
+                stage6_combined_defensible = bool(
+                    np.isfinite(stage6_combined_uplift)
+                    and stage6_combined_uplift >= self.config.min_relative_rmse_improvement
+                )
+                metric_rows.append(
+                    self._stage_metric_row(
+                        "Stage6_Emissions_CombinedPowerML",
+                        "holdout",
+                        f"CombinedPowerML[{self.model_blend_source.get('stage4_combined_power', 'model_only')}]+CI",
+                        y_true_comb,
+                        y_pred_comb,
+                        defensible=stage6_combined_defensible,
+                        uplift_vs_persistence=stage6_combined_uplift,
+                    )
+                )
+
+        stage7_uplift = float("nan")
+        stage7_defensible = None
+        if not stage7_energy_predictions.empty:
+            stage7_model_metrics = calc_metrics(
+                stage7_energy_predictions["actual_energy_mwh"],
+                stage7_energy_predictions["pred_energy_mwh"],
+            )
+            stage7_persist_metrics = calc_metrics(
+                stage7_energy_predictions["actual_energy_mwh"],
+                stage7_energy_predictions["baseline_energy_mwh_persistence"],
+            )
+            stage7_uplift = relative_rmse_improvement(stage7_persist_metrics["RMSE"], stage7_model_metrics["RMSE"])
+            stage7_defensible = bool(
+                np.isfinite(stage7_uplift) and stage7_uplift >= self.config.min_relative_rmse_improvement
+            )
+            metric_rows.append(
+                self._stage_metric_row(
+                    "Stage7_EnergyUsageML",
+                    "holdout",
+                    f"EnergyUsageML[{self.model_blend_source.get('stage7_energy', 'model_only')}]",
+                    stage7_energy_predictions["actual_energy_mwh"].to_numpy(),
+                    stage7_energy_predictions["pred_energy_mwh"].to_numpy(),
+                    defensible=stage7_defensible,
+                    uplift_vs_persistence=stage7_uplift,
+                )
+            )
 
         # Baseline comparisons.
         def _safe_metrics(y_true: pd.Series, y_pred: pd.Series) -> Dict[str, float]:
@@ -1741,6 +2292,80 @@ class CarbonForecastPipeline:
                 "defensible": stage6_defensible,
             }
         )
+        if not stage4_combined_predictions.empty:
+            stage4_model_metrics = calc_metrics(
+                stage4_combined_predictions["actual_total_power_mw"],
+                stage4_combined_predictions["pred_total_power_mw"],
+            )
+            stage4_persist_metrics = calc_metrics(
+                stage4_combined_predictions["actual_total_power_mw"],
+                stage4_combined_predictions["baseline_total_power_mw_persistence"],
+            )
+            baseline_rows.append(
+                {
+                    "stage": "Stage4_TotalPower_CombinedML",
+                    "model_rmse": stage4_model_metrics["RMSE"],
+                    "persistence_rmse": stage4_persist_metrics["RMSE"],
+                    "seasonal_rmse": _safe_metrics(
+                        stage4_combined_predictions["actual_total_power_mw"],
+                        stage4_combined_predictions["baseline_total_power_mw_seasonal"],
+                    )["RMSE"],
+                    "uplift_vs_persistence": stage4_combined_uplift,
+                    "defensible": stage4_combined_defensible,
+                }
+            )
+        if not stage7_energy_predictions.empty:
+            stage7_model_metrics = calc_metrics(
+                stage7_energy_predictions["actual_energy_mwh"],
+                stage7_energy_predictions["pred_energy_mwh"],
+            )
+            stage7_persist_metrics = calc_metrics(
+                stage7_energy_predictions["actual_energy_mwh"],
+                stage7_energy_predictions["baseline_energy_mwh_persistence"],
+            )
+            baseline_rows.append(
+                {
+                    "stage": "Stage7_EnergyUsageML",
+                    "model_rmse": stage7_model_metrics["RMSE"],
+                    "persistence_rmse": stage7_persist_metrics["RMSE"],
+                    "seasonal_rmse": _safe_metrics(
+                        stage7_energy_predictions["actual_energy_mwh"],
+                        stage7_energy_predictions["baseline_energy_mwh_seasonal"],
+                    )["RMSE"],
+                    "uplift_vs_persistence": stage7_uplift,
+                    "defensible": stage7_defensible,
+                }
+            )
+        if {"actual_emissions_combined_ml", "pred_emissions_combined_ml"}.issubset(merged.columns):
+            mask_combined = np.isfinite(merged["actual_emissions_combined_ml"]) & np.isfinite(
+                merged["pred_emissions_combined_ml"]
+            )
+            if mask_combined.any():
+                y_true_comb = merged.loc[mask_combined, "actual_emissions_combined_ml"].to_numpy(dtype=float)
+                y_pred_comb = merged.loc[mask_combined, "pred_emissions_combined_ml"].to_numpy(dtype=float)
+                y_persist_comb = merged.loc[mask_combined, "baseline_emissions_persistence"].to_numpy(dtype=float)
+                stage6_combined_metrics = calc_metrics(y_true_comb, y_pred_comb)
+                stage6_combined_persist = calc_metrics(y_true_comb, y_persist_comb)
+                stage6_combined_uplift = relative_rmse_improvement(
+                    stage6_combined_persist["RMSE"],
+                    stage6_combined_metrics["RMSE"],
+                )
+                baseline_rows.append(
+                    {
+                        "stage": "Stage6_Emissions_CombinedPowerML",
+                        "model_rmse": stage6_combined_metrics["RMSE"],
+                        "persistence_rmse": stage6_combined_persist["RMSE"],
+                        "seasonal_rmse": _safe_metrics(
+                            pd.Series(y_true_comb),
+                            merged.loc[mask_combined, "baseline_emissions_seasonal"],
+                        )["RMSE"],
+                        "uplift_vs_persistence": stage6_combined_uplift,
+                        "defensible": bool(
+                            np.isfinite(stage6_combined_uplift)
+                            and stage6_combined_uplift >= self.config.min_relative_rmse_improvement
+                        ),
+                    }
+                )
 
         metrics_summary_df = pd.DataFrame([asdict(row) for row in metric_rows])
         baseline_comparison_df = pd.DataFrame(baseline_rows)
@@ -1769,6 +2394,8 @@ class CarbonForecastPipeline:
             "timestamp",
             "actual_emissions",
             "pred_emissions",
+            "actual_emissions_combined_ml",
+            "pred_emissions_combined_ml",
             "baseline_emissions_persistence",
             "baseline_emissions_seasonal",
             "actual_total_power",
@@ -1777,6 +2404,8 @@ class CarbonForecastPipeline:
             "pred_it_power",
             "pred_pue",
             "pred_total_power",
+            "actual_total_power_mw",
+            "pred_total_power_mw",
             "pred_ci",
             "temperature_f_t_plus_h",
             "observed_total_power_mw_t_plus_h",
@@ -1788,6 +2417,11 @@ class CarbonForecastPipeline:
                 "actual_total_power_observed": "actual_total_power_observed_mw",
             }
         )
+
+        if not stage4_combined_predictions.empty:
+            stage4_combined_predictions = stage4_combined_predictions.sort_values("timestamp").reset_index(drop=True)
+        if not stage7_energy_predictions.empty:
+            stage7_energy_predictions = stage7_energy_predictions.sort_values("timestamp").reset_index(drop=True)
 
         self.sanity_checks = self._compute_sanity_checks(merged, self.required_future_exog_columns)
 
@@ -1805,6 +2439,8 @@ class CarbonForecastPipeline:
             "feature_set": {
                 "stage1_cpu": list(self.feature_cols.get("stage1_cpu", [])),
                 "stage5_ci": list(self.feature_cols.get("stage5_ci", [])),
+                "stage4_combined_power": list(self.feature_cols.get("stage4_combined_power", [])),
+                "stage7_energy": list(self.feature_cols.get("stage7_energy", [])),
             },
             "stage6_target_mode": resolved_stage6_mode,
             "stage6_target_mode_used_for_variant_gate": resolved_stage6_mode,
@@ -1814,6 +2450,25 @@ class CarbonForecastPipeline:
             "calibration_reason": self.calibration_reason,
             "required_future_exog_columns": list(self.required_future_exog_columns),
             "sanity_checks_passed": bool(self.sanity_checks.get("passed", False)),
+            "blend_weights": {
+                "stage1_cpu_model_weight": float(self.model_blend_weights.get("stage1_cpu", 1.0)),
+                "stage5_ci_model_weight": float(self.model_blend_weights.get("stage5_ci", 1.0)),
+                "stage4_combined_power_model_weight": float(
+                    self.model_blend_weights.get("stage4_combined_power", 1.0)
+                ),
+                "stage7_energy_model_weight": float(self.model_blend_weights.get("stage7_energy", 1.0)),
+            },
+            "blend_sources": {
+                "stage1_cpu": self.model_blend_source.get("stage1_cpu", "model_only"),
+                "stage5_ci": self.model_blend_source.get("stage5_ci", "model_only"),
+                "stage4_combined_power": self.model_blend_source.get("stage4_combined_power", "model_only"),
+                "stage7_energy": self.model_blend_source.get("stage7_energy", "model_only"),
+            },
+            "combined_models_available": {
+                "stage4_combined_power": "stage4_combined_power" in self.models,
+                "stage7_energy": "stage7_energy" in self.models,
+            },
+            "step_hours": float(self.step_hours),
         }
 
         report = {
@@ -1823,6 +2478,8 @@ class CarbonForecastPipeline:
             "stage1_predictions": stage1_predictions,
             "stage5_predictions": stage5_predictions,
             "stage6_predictions": stage6_predictions,
+            "stage4_combined_predictions": stage4_combined_predictions,
+            "stage7_energy_predictions": stage7_energy_predictions,
             "stage5_feature_importance_df": self.stage5_feature_importance_df.copy(),
             "stage1_physics_calibration_df": self.physics_calibration_df.copy(),
             "data_coverage_report_df": self.coverage_report_df.copy(),
@@ -2004,6 +2661,73 @@ class CarbonForecastPipeline:
             raise ValueError("NaN in point carbon features during prediction.")
         return vector.reshape(1, -1)
 
+    def _build_point_power_features(
+        self,
+        timestamp: pd.Timestamp,
+        power_util_hist: List[float],
+        cpu_hist: List[float],
+        ci_hist: List[float],
+        task_hist: List[float],
+        temp_hist_f: List[float],
+        dew_hist_f: Optional[List[float]] = None,
+        wind_hist_mps: Optional[List[float]] = None,
+    ) -> np.ndarray:
+        values: Dict[str, float] = {}
+        time_feats = self._time_feature_dict(timestamp)
+        feature_cols = self.feature_cols.get("stage4_combined_power", [])
+        for name in feature_cols:
+            lag = self._lag_from_name(name, "obs_power")
+            if lag is not None:
+                values[name] = float(power_util_hist[-lag])
+                continue
+
+            roll_mean_w = self._roll_window_from_name(name, "obs_power", "mean")
+            if roll_mean_w is not None:
+                values[name] = float(np.mean(power_util_hist[-roll_mean_w:]))
+                continue
+
+            roll_std_w = self._roll_window_from_name(name, "obs_power", "std")
+            if roll_std_w is not None:
+                values[name] = float(np.std(power_util_hist[-roll_std_w:], ddof=1))
+                continue
+
+            if name == "obs_power_ewm_12":
+                values[name] = float(pd.Series(power_util_hist).ewm(span=12, adjust=False, min_periods=1).mean().iloc[-1])
+                continue
+
+            if name == "cpu_lag1_for_power":
+                values[name] = float(cpu_hist[-1])
+                continue
+            if name == "ci_lag1_for_power":
+                values[name] = float(ci_hist[-1])
+                continue
+            if name == "temperature_f_lag1_for_power":
+                values[name] = float(temp_hist_f[-1])
+                continue
+            if name == "tasks_lag1_for_power":
+                values[name] = float(task_hist[-1])
+                continue
+            if name == "dew_point_f_lag1_for_power":
+                if not dew_hist_f:
+                    raise ValueError("dew_hist_f is required for dew-point power features.")
+                values[name] = float(dew_hist_f[-1])
+                continue
+            if name == "wind_speed_lag1_for_power":
+                if not wind_hist_mps:
+                    raise ValueError("wind_hist_mps is required for wind power features.")
+                values[name] = float(wind_hist_mps[-1])
+                continue
+            if name in time_feats:
+                values[name] = float(time_feats[name])
+                continue
+
+            raise KeyError(f"Unhandled combined-power feature: {name}")
+
+        vector = np.array([values[c] for c in feature_cols], dtype=float)
+        if np.isnan(vector).any():
+            raise ValueError("NaN in point power features during prediction.")
+        return vector.reshape(1, -1)
+
     def predict(
         self,
         df_history: pd.DataFrame,
@@ -2046,10 +2770,15 @@ class CarbonForecastPipeline:
                 "Provide at least horizon_hours rows of future exogenous data."
             )
 
-        max_required_lag = max(
+        required_lags: List[int] = [
             max(v for v in self.feature_lag_map["stage1_cpu"].values()),
             max(v for v in self.feature_lag_map["stage5_ci"].values()),
-        )
+        ]
+        if "stage4_combined_power" in self.models and self.feature_lag_map.get("stage4_combined_power"):
+            required_lags.append(max(v for v in self.feature_lag_map["stage4_combined_power"].values()))
+        if "stage7_energy" in self.models and self.feature_lag_map.get("stage7_energy"):
+            required_lags.append(max(v for v in self.feature_lag_map["stage7_energy"].values()))
+        max_required_lag = max(required_lags)
         if len(history) < max_required_lag:
             raise ValueError(
                 f"df_history has {len(history)} rows but at least {max_required_lag} rows are required "
@@ -2060,6 +2789,12 @@ class CarbonForecastPipeline:
         ci_hist = history["carbon_intensity"].astype(float).tolist()
         task_hist = history["num_tasks_sampled"].astype(float).tolist()
         temp_hist_f = (history["temperature_c"].astype(float) * 9.0 / 5.0 + 32.0).tolist()
+        dew_hist_f: Optional[List[float]] = None
+        if "dew_point_c" in history.columns:
+            dew_hist_f = (history["dew_point_c"].astype(float).ffill() * 9.0 / 5.0 + 32.0).tolist()
+        wind_hist_mps: Optional[List[float]] = None
+        if "wind_speed_mps" in history.columns:
+            wind_hist_mps = history["wind_speed_mps"].astype(float).ffill().tolist()
         if "observed_power_util" in history.columns:
             power_util_hist = history["observed_power_util"].astype(float).ffill().fillna(0.0).tolist()
         elif "measured_power_util" in history.columns:
@@ -2166,8 +2901,12 @@ class CarbonForecastPipeline:
             )
             x_ci = self._build_point_ci_features(ts, ci_hist, temp_hist_f, exog_hist=exog_hist)
 
-            pred_cpu = float(predict_cpu_model(self.models["stage1_cpu"], x_cpu)[0])
-            pred_ci = float(predict_ci_model(self.models["stage5_ci"], x_ci)[0])
+            pred_cpu_model = float(predict_cpu_model(self.models["stage1_cpu"], x_cpu)[0])
+            pred_ci_model = float(predict_ci_model(self.models["stage5_ci"], x_ci)[0])
+            cpu_weight = float(self.model_blend_weights.get("stage1_cpu", 1.0))
+            ci_weight = float(self.model_blend_weights.get("stage5_ci", 1.0))
+            pred_cpu = float(cpu_weight * pred_cpu_model + (1.0 - cpu_weight) * float(cpu_hist[-1]))
+            pred_ci = float(ci_weight * pred_ci_model + (1.0 - ci_weight) * float(ci_hist[-1]))
 
             pred_it = float(self._physics_it_power(np.array([pred_cpu]))[0])
             dew_f = None
@@ -2193,6 +2932,49 @@ class CarbonForecastPipeline:
             pred_total = float(pred_total_arr[0])
             pred_emissions = float(pred_total * pred_ci)
 
+            pred_total_power_combined_ml = float("nan")
+            pred_energy_mwh_ml = float("nan")
+            x_power = None
+            if "stage4_combined_power" in self.models and self.feature_cols.get("stage4_combined_power"):
+                x_power = self._build_point_power_features(
+                    ts,
+                    power_util_hist=power_util_hist,
+                    cpu_hist=cpu_hist,
+                    ci_hist=ci_hist,
+                    task_hist=task_hist,
+                    temp_hist_f=temp_hist_f,
+                    dew_hist_f=dew_hist_f,
+                    wind_hist_mps=wind_hist_mps,
+                )
+                pred_total_power_combined_model = float(
+                    predict_cpu_model(self.models["stage4_combined_power"], x_power)[0]
+                )
+                power_persistence = float(power_util_hist[-1] * self.config.facility_mw)
+                power_weight = float(self.model_blend_weights.get("stage4_combined_power", 1.0))
+                pred_total_power_combined_ml = float(
+                    power_weight * pred_total_power_combined_model + (1.0 - power_weight) * power_persistence
+                )
+                pred_total_power_combined_ml = float(max(0.0, pred_total_power_combined_ml))
+            if "stage7_energy" in self.models and self.feature_cols.get("stage7_energy"):
+                if x_power is None:
+                    x_power = self._build_point_power_features(
+                        ts,
+                        power_util_hist=power_util_hist,
+                        cpu_hist=cpu_hist,
+                        ci_hist=ci_hist,
+                        task_hist=task_hist,
+                        temp_hist_f=temp_hist_f,
+                        dew_hist_f=dew_hist_f,
+                        wind_hist_mps=wind_hist_mps,
+                    )
+                pred_energy_model = float(predict_cpu_model(self.models["stage7_energy"], x_power)[0])
+                energy_persistence = float(power_util_hist[-1] * self.config.facility_mw * self.step_hours)
+                energy_weight = float(self.model_blend_weights.get("stage7_energy", 1.0))
+                pred_energy_mwh_ml = float(energy_weight * pred_energy_model + (1.0 - energy_weight) * energy_persistence)
+                pred_energy_mwh_ml = float(max(0.0, pred_energy_mwh_ml))
+            if np.isfinite(pred_total_power_combined_ml) and not np.isfinite(pred_energy_mwh_ml):
+                pred_energy_mwh_ml = float(pred_total_power_combined_ml * self.step_hours)
+
             rows.append(
                 {
                     "timestamp": ts,
@@ -2203,6 +2985,8 @@ class CarbonForecastPipeline:
                     "pred_pue": pred_pue,
                     "pred_total_power": pred_total,
                     "pred_emissions": pred_emissions,
+                    "pred_total_power_combined_ml": pred_total_power_combined_ml,
+                    "pred_energy_mwh_ml": pred_energy_mwh_ml,
                 }
             )
 
@@ -2210,7 +2994,18 @@ class CarbonForecastPipeline:
             ci_hist.append(pred_ci)
             task_hist.append(future_tasks)
             temp_hist_f.append(temp_f)
-            power_util_hist.append(float(pred_total / max(self.config.facility_mw, 1e-6)))
+            next_power_mw = pred_total_power_combined_ml if np.isfinite(pred_total_power_combined_ml) else pred_total
+            power_util_hist.append(float(next_power_mw / max(self.config.facility_mw, 1e-6)))
+            if dew_hist_f is not None:
+                if hasattr(row, "dew_point_c") and np.isfinite(getattr(row, "dew_point_c")):
+                    dew_hist_f.append(float(getattr(row, "dew_point_c") * 9.0 / 5.0 + 32.0))
+                else:
+                    dew_hist_f.append(float(dew_hist_f[-1]))
+            if wind_hist_mps is not None:
+                if hasattr(row, "wind_speed_mps") and np.isfinite(getattr(row, "wind_speed_mps")):
+                    wind_hist_mps.append(float(getattr(row, "wind_speed_mps")))
+                else:
+                    wind_hist_mps.append(float(wind_hist_mps[-1]))
             for base in cpu_exog_bases:
                 if base in future_slice.columns:
                     raw_value = getattr(row, base)
@@ -2289,14 +3084,20 @@ class CarbonForecastPipeline:
         for _, row in metrics_df.iterrows():
             stage_to_r2[row["stage"]] = row["r2"]
 
-        labels = [
+        preferred_order = [
             "Stage1_CPU",
             "Stage2_ITPower",
             "Stage3_PUE",
             "Stage4_TotalPower",
+            "Stage4_TotalPower_CombinedML",
             "Stage5_CarbonIntensity",
             "Stage6_Emissions",
+            "Stage6_Emissions_CombinedPowerML",
+            "Stage7_EnergyUsageML",
         ]
+        labels = [stage for stage in preferred_order if stage in stage_to_r2]
+        if not labels:
+            labels = list(stage_to_r2.keys())
 
         fig, ax = plt.subplots(figsize=(12, 7))
         ax.axis("off")
@@ -2317,7 +3118,11 @@ class CarbonForecastPipeline:
                 arrowprops=dict(arrowstyle="->", linewidth=1.5),
             )
 
-        ax.set_title("6-Stage Pipeline (Run-Computed Holdout Metrics)", fontsize=14, fontweight="bold")
+        ax.set_title(
+            f"{len(labels)}-Stage Pipeline (Run-Computed Holdout Metrics)",
+            fontsize=14,
+            fontweight="bold",
+        )
         save_figure(fig, path)
 
     def _build_model_card(self, report: Dict[str, Any]) -> str:
@@ -2325,7 +3130,15 @@ class CarbonForecastPipeline:
         baseline_df = report["baseline_comparison_df"]
         metadata = report["metadata"]
 
-        headline = metrics_df[metrics_df["stage"].isin(["Stage1_CPU", "Stage5_CarbonIntensity", "Stage6_Emissions"])]
+        headline_stages = [
+            "Stage1_CPU",
+            "Stage4_TotalPower_CombinedML",
+            "Stage5_CarbonIntensity",
+            "Stage6_Emissions",
+            "Stage6_Emissions_CombinedPowerML",
+            "Stage7_EnergyUsageML",
+        ]
+        headline = metrics_df[metrics_df["stage"].isin(headline_stages)]
 
         lines = []
         lines.append("# Model Card")
@@ -2357,6 +3170,7 @@ class CarbonForecastPipeline:
         lines.append("## Methodology")
         lines.append("- Stage 1 and Stage 5 are ML forecasters with rolling time-series CV.")
         lines.append("- Stages 2, 3, 4, and 6 are deterministic physics transformations.")
+        lines.append("- Additional learned models: combined total power (Stage4_CombinedML) and energy usage (Stage7).")
         lines.append("- Holdout metrics are computed on a strict final chronological split.")
         lines.append("")
         lines.append("## Leakage Guards")
@@ -2417,6 +3231,14 @@ class CarbonForecastPipeline:
         files["stage6_predictions"] = str(
             save_dataframe(report["stage6_predictions"], result_dir / "stage6_emissions_holdout_predictions.csv")
         )
+        if not report.get("stage4_combined_predictions", pd.DataFrame()).empty:
+            files["stage4_combined_predictions"] = str(
+                save_dataframe(report["stage4_combined_predictions"], result_dir / "stage4_combined_power_holdout_predictions.csv")
+            )
+        if not report.get("stage7_energy_predictions", pd.DataFrame()).empty:
+            files["stage7_energy_predictions"] = str(
+                save_dataframe(report["stage7_energy_predictions"], result_dir / "stage7_energy_holdout_predictions.csv")
+            )
         files["baseline_comparison"] = str(
             save_dataframe(report["baseline_comparison_df"], result_dir / "baseline_comparison.csv")
         )
@@ -2440,6 +3262,14 @@ class CarbonForecastPipeline:
 
         files["stage1_model"] = str(save_pickle(self.models["stage1_cpu"], model_dir / "stage1_cpu_model.pkl"))
         files["stage5_model"] = str(save_pickle(self.models["stage5_ci"], model_dir / "stage5_carbon_model.pkl"))
+        if "stage4_combined_power" in self.models:
+            files["stage4_combined_model"] = str(
+                save_pickle(self.models["stage4_combined_power"], model_dir / "stage4_combined_power_model.pkl")
+            )
+        if "stage7_energy" in self.models:
+            files["stage7_energy_model"] = str(
+                save_pickle(self.models["stage7_energy"], model_dir / "stage7_energy_model.pkl")
+            )
 
         # Figures: actual vs pred
         self._plot_actual_vs_pred(
@@ -2468,6 +3298,24 @@ class CarbonForecastPipeline:
             figure_dir / "stage6_actual_vs_pred.png",
         )
         files["fig_stage6_actual_vs_pred"] = str(figure_dir / "stage6_actual_vs_pred.png")
+        if not report.get("stage4_combined_predictions", pd.DataFrame()).empty:
+            self._plot_actual_vs_pred(
+                report["stage4_combined_predictions"],
+                "actual_total_power_mw",
+                "pred_total_power_mw",
+                "Stage 4 Combined Power (ML) Holdout - Actual vs Predicted",
+                figure_dir / "stage4_combined_actual_vs_pred.png",
+            )
+            files["fig_stage4_combined_actual_vs_pred"] = str(figure_dir / "stage4_combined_actual_vs_pred.png")
+        if not report.get("stage7_energy_predictions", pd.DataFrame()).empty:
+            self._plot_actual_vs_pred(
+                report["stage7_energy_predictions"],
+                "actual_energy_mwh",
+                "pred_energy_mwh",
+                "Stage 7 Energy Usage (ML) Holdout - Actual vs Predicted",
+                figure_dir / "stage7_energy_actual_vs_pred.png",
+            )
+            files["fig_stage7_energy_actual_vs_pred"] = str(figure_dir / "stage7_energy_actual_vs_pred.png")
 
         # Figures: residual diagnostics
         self._plot_residual_hist(
@@ -2496,6 +3344,24 @@ class CarbonForecastPipeline:
             figure_dir / "stage6_residuals.png",
         )
         files["fig_stage6_residuals"] = str(figure_dir / "stage6_residuals.png")
+        if not report.get("stage4_combined_predictions", pd.DataFrame()).empty:
+            self._plot_residual_hist(
+                report["stage4_combined_predictions"],
+                "actual_total_power_mw",
+                "pred_total_power_mw",
+                "Stage 4 Combined Power (ML) Residual Diagnostics",
+                figure_dir / "stage4_combined_residuals.png",
+            )
+            files["fig_stage4_combined_residuals"] = str(figure_dir / "stage4_combined_residuals.png")
+        if not report.get("stage7_energy_predictions", pd.DataFrame()).empty:
+            self._plot_residual_hist(
+                report["stage7_energy_predictions"],
+                "actual_energy_mwh",
+                "pred_energy_mwh",
+                "Stage 7 Energy Usage (ML) Residual Diagnostics",
+                figure_dir / "stage7_energy_residuals.png",
+            )
+            files["fig_stage7_energy_residuals"] = str(figure_dir / "stage7_energy_residuals.png")
 
         # Figures: calibration/reliability
         self._plot_calibration(
@@ -2524,6 +3390,24 @@ class CarbonForecastPipeline:
             figure_dir / "stage6_reliability.png",
         )
         files["fig_stage6_reliability"] = str(figure_dir / "stage6_reliability.png")
+        if not report.get("stage4_combined_predictions", pd.DataFrame()).empty:
+            self._plot_calibration(
+                report["stage4_combined_predictions"],
+                "actual_total_power_mw",
+                "pred_total_power_mw",
+                "Stage 4 Combined Power (ML) Reliability",
+                figure_dir / "stage4_combined_reliability.png",
+            )
+            files["fig_stage4_combined_reliability"] = str(figure_dir / "stage4_combined_reliability.png")
+        if not report.get("stage7_energy_predictions", pd.DataFrame()).empty:
+            self._plot_calibration(
+                report["stage7_energy_predictions"],
+                "actual_energy_mwh",
+                "pred_energy_mwh",
+                "Stage 7 Energy Usage (ML) Reliability",
+                figure_dir / "stage7_energy_reliability.png",
+            )
+            files["fig_stage7_energy_reliability"] = str(figure_dir / "stage7_energy_reliability.png")
 
         # Dynamic pipeline diagram
         self._plot_pipeline_diagram(report["metrics_summary_df"], figure_dir / "pipeline_diagram_dynamic.png")
@@ -2658,7 +3542,16 @@ def run_train_eval(pipeline: CarbonForecastPipeline) -> Tuple[CarbonForecastPipe
     artifacts = selected_pipeline.save_artifacts(selected_report)
 
     headline = selected_report["metrics_summary_df"][
-        selected_report["metrics_summary_df"]["stage"].isin(["Stage1_CPU", "Stage5_CarbonIntensity", "Stage6_Emissions"])
+        selected_report["metrics_summary_df"]["stage"].isin(
+            [
+                "Stage1_CPU",
+                "Stage4_TotalPower_CombinedML",
+                "Stage5_CarbonIntensity",
+                "Stage6_Emissions",
+                "Stage6_Emissions_CombinedPowerML",
+                "Stage7_EnergyUsageML",
+            ]
+        )
     ]
     for _, row in headline.iterrows():
         selected_pipeline.log.info(

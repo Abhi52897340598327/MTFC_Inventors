@@ -1,0 +1,55 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='980' viewBox='0 0 1400 980'>
+<rect x='0' y='0' width='1400' height='980' fill='#e9e9e9'/>
+<text x='700.00' y='54.00' font-family='Helvetica, Arial, sans-serif' font-size='24' font-weight='700' text-anchor='middle' fill='#222222'>Scenario Comparison (Normalized to Baseline)</text>
+<text x='700.00' y='88.00' font-family='Helvetica, Arial, sans-serif' font-size='14' font-weight='600' text-anchor='middle' fill='#222222'>Recommendations Lens: Power, Emissions, Peak, and Cooling</text>
+<circle cx='620.00' cy='500.00' r='72.00' fill='none' stroke='#bfbfbf' stroke-width='1.40' opacity='1.000'/>
+<text x='702.00' y='504.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#666'>0.5x</text>
+<circle cx='620.00' cy='500.00' r='144.00' fill='none' stroke='#bfbfbf' stroke-width='1.40' opacity='1.000'/>
+<text x='774.00' y='504.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#666'>1.0x</text>
+<circle cx='620.00' cy='500.00' r='216.00' fill='none' stroke='#bfbfbf' stroke-width='1.40' opacity='1.000'/>
+<text x='846.00' y='504.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#666'>1.5x</text>
+<circle cx='620.00' cy='500.00' r='288.00' fill='none' stroke='#bfbfbf' stroke-width='1.40' opacity='1.000'/>
+<text x='918.00' y='504.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#666'>2.0x</text>
+<circle cx='620.00' cy='500.00' r='360.00' fill='none' stroke='#bfbfbf' stroke-width='1.40' opacity='1.000'/>
+<text x='990.00' y='504.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#666'>2.5x</text>
+<line x1='620.00' y1='500.00' x2='620.00' y2='140.00' stroke='#b7b7b7' stroke-width='1.40' opacity='1.000'/>
+<text x='620.00' y='92.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='normal' text-anchor='middle' fill='#222222'>Total Power</text>
+<line x1='620.00' y1='500.00' x2='980.00' y2='500.00' stroke='#b7b7b7' stroke-width='1.40' opacity='1.000'/>
+<text x='1028.00' y='500.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='normal' text-anchor='middle' fill='#222222'>Carbon Emissions</text>
+<line x1='620.00' y1='500.00' x2='620.00' y2='860.00' stroke='#b7b7b7' stroke-width='1.40' opacity='1.000'/>
+<text x='620.00' y='908.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='normal' text-anchor='middle' fill='#222222'>Peak Demand</text>
+<line x1='620.00' y1='500.00' x2='260.00' y2='500.00' stroke='#b7b7b7' stroke-width='1.40' opacity='1.000'/>
+<text x='212.00' y='500.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='normal' text-anchor='middle' fill='#222222'>Cooling Load</text>
+<polygon points='620.00,356.00 764.00,500.00 620.00,644.00 476.00,500.00' fill='#2c7fb8' stroke='#2c7fb8' stroke-width='3.20' opacity='0.180'/>
+<circle cx='620.00' cy='356.00' r='6.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='764.00' cy='500.00' r='6.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='620.00' cy='644.00' r='6.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='476.00' cy='500.00' r='6.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<polygon points='620.00,372.06 728.68,500.00 620.00,624.63 504.07,500.00' fill='#2dbf6f' stroke='#2dbf6f' stroke-width='3.20' opacity='0.180'/>
+<circle cx='620.00' cy='372.06' r='6.00' fill='#2dbf6f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='728.68' cy='500.00' r='6.00' fill='#2dbf6f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='620.00' cy='624.63' r='6.00' fill='#2dbf6f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='504.07' cy='500.00' r='6.00' fill='#2dbf6f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<polygon points='620.00,342.90 792.92,500.00 620.00,659.92 444.81,500.00' fill='#de4b39' stroke='#de4b39' stroke-width='3.20' opacity='0.180'/>
+<circle cx='620.00' cy='342.90' r='6.00' fill='#de4b39' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='792.92' cy='500.00' r='6.00' fill='#de4b39' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='620.00' cy='659.92' r='6.00' fill='#de4b39' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='444.81' cy='500.00' r='6.00' fill='#de4b39' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<polygon points='620.00,344.22 788.51,500.00 620.00,661.74 392.75,500.00' fill='#8c55b5' stroke='#8c55b5' stroke-width='3.20' opacity='0.180'/>
+<circle cx='620.00' cy='344.22' r='6.00' fill='#8c55b5' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='788.51' cy='500.00' r='6.00' fill='#8c55b5' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='620.00' cy='661.74' r='6.00' fill='#8c55b5' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='392.75' cy='500.00' r='6.00' fill='#8c55b5' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<line x1='1060.00' y1='210.00' x2='1104.00' y2='210.00' stroke='#2c7fb8' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1082.00' cy='210.00' r='6.00' fill='#2c7fb8' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<text x='1118.00' y='216.00' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='start' fill='#222222'>Current (Baseline)</text>
+<line x1='1060.00' y1='252.00' x2='1104.00' y2='252.00' stroke='#2dbf6f' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1082.00' cy='252.00' r='6.00' fill='#2dbf6f' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<text x='1118.00' y='258.00' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='start' fill='#222222'>Efficient (Lower PUE + CI)</text>
+<line x1='1060.00' y1='294.00' x2='1104.00' y2='294.00' stroke='#de4b39' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1082.00' cy='294.00' r='6.00' fill='#de4b39' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<text x='1118.00' y='300.00' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='start' fill='#222222'>High Growth</text>
+<line x1='1060.00' y1='336.00' x2='1104.00' y2='336.00' stroke='#8c55b5' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1082.00' cy='336.00' r='6.00' fill='#8c55b5' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<text x='1118.00' y='342.00' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='start' fill='#222222'>Climate Stress</text>
+</svg>

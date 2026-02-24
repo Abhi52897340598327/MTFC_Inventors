@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import numpy as np
+from sklearn.ensemble import ExtraTreesRegressor
 
 from utils import calc_metrics, get_logger, save_pickle
 
@@ -19,6 +20,7 @@ else:
 
 
 DEFAULT_PARAMS = {
+    "model_type": "xgboost",
     "n_estimators": 500,
     "max_depth": 5,
     "learning_rate": 0.03,
@@ -34,15 +36,28 @@ DEFAULT_PARAMS = {
 
 def build_model(params: Optional[Dict] = None):
     """Build an XGBRegressor from defaults + overrides."""
-    if xgb is None:  # pragma: no cover
-        raise ImportError(
-            "xgboost is required for stage 5 carbon model. Install xgboost to proceed."
-        ) from _XGB_IMPORT_ERROR
-
     merged = dict(DEFAULT_PARAMS)
     if params:
         merged.update(params)
-    return xgb.XGBRegressor(**merged)
+    model_type = str(merged.pop("model_type", "xgboost")).lower()
+    if model_type in {"xgb", "xgboost"}:
+        if xgb is None:  # pragma: no cover
+            raise ImportError(
+                "xgboost is required for stage 5 carbon model. Install xgboost to proceed."
+            ) from _XGB_IMPORT_ERROR
+        return xgb.XGBRegressor(**merged)
+    if model_type in {"et", "extra_trees"}:
+        et_params = {
+            "n_estimators": int(merged.get("n_estimators", 1200)),
+            "max_depth": merged.get("max_depth", None),
+            "min_samples_split": int(merged.get("min_samples_split", 2)),
+            "min_samples_leaf": int(merged.get("min_samples_leaf", 1)),
+            "max_features": merged.get("max_features", "sqrt"),
+            "random_state": int(merged.get("random_state", 42)),
+            "n_jobs": int(merged.get("n_jobs", -1)),
+        }
+        return ExtraTreesRegressor(**et_params)
+    raise ValueError(f"Unsupported model_type='{model_type}' for stage5 model.")
 
 
 def fit(
@@ -58,9 +73,10 @@ def fit(
     """Fit model and optionally evaluate on validation data."""
     log = get_logger("Stage5Carbon")
     model = build_model(params=params)
+    model_is_xgb = bool(xgb is not None and isinstance(model, xgb.XGBRegressor))
 
     fit_kwargs = {}
-    if X_val is not None and y_val is not None and len(y_val) > 0:
+    if model_is_xgb and X_val is not None and y_val is not None and len(y_val) > 0:
         fit_kwargs["eval_set"] = [(X_val, y_val)]
         fit_kwargs["verbose"] = False
 

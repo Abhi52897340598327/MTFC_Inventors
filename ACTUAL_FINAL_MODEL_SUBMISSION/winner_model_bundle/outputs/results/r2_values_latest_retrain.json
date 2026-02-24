@@ -1,0 +1,22 @@
+{
+  "dataset_rows_total": 2000,
+  "train_rows": 1700,
+  "test_rows": 300,
+  "r2_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/ACTUAL_FINAL_MODEL_SUBMISSION/winner_model_bundle/outputs/results/r2_values_latest_retrain.csv",
+  "train_stage_r2_raw": {
+    "Stage1_CPU": 0.9582651257187559,
+    "Stage2_IT_Power": 0.9922496835865955,
+    "Stage3_PUE": 0.9968262316311766,
+    "Stage4_TotalPower": 0.9673067375236283,
+    "Stage5_CarbonIntensity": 1.0,
+    "Stage6_Emissions_FINAL": 0.997242388252779
+  },
+  "test_stage_r2": {
+    "Stage1_CPU": 0.8401944859654036,
+    "Stage2_ITPower": 0.8400077450859338,
+    "Stage3_PUE": 0.8335933653265516,
+    "Stage4_TotalPower": 0.7948348876387161,
+    "Stage5_CarbonIntensity": 1.0,
+    "Stage6_Emissions": 0.8303556388002546
+  }
+}
