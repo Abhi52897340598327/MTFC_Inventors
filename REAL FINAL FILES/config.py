@@ -51,46 +51,56 @@ class PipelineConfig:
 
     cpu_param_grid: List[Dict[str, Any]] = field(
         default_factory=lambda: [
-            {"n_estimators": 200, "max_depth": 10, "min_samples_leaf": 2, "max_features": "sqrt"},
-            {"n_estimators": 300, "max_depth": 12, "min_samples_leaf": 2, "max_features": "sqrt"},
-            {"n_estimators": 400, "max_depth": 16, "min_samples_leaf": 1, "max_features": "sqrt"},
+            {"n_estimators": 300, "max_depth": 8,  "min_samples_leaf": 1, "max_features": "sqrt"},
+            {"n_estimators": 500, "max_depth": 12, "min_samples_leaf": 1, "max_features": "sqrt"},
+            {"n_estimators": 700, "max_depth": 16, "min_samples_leaf": 1, "max_features": 0.5},
+            {"n_estimators": 500, "max_depth": 20, "min_samples_leaf": 1, "max_features": "sqrt"},
         ]
     )
 
     carbon_param_grid: List[Dict[str, Any]] = field(
         default_factory=lambda: [
             {
-                "n_estimators": 300,
+                "n_estimators": 500,
                 "max_depth": 4,
                 "learning_rate": 0.05,
-                "subsample": 0.9,
-                "colsample_bytree": 0.9,
-                "reg_alpha": 0.0,
-                "reg_lambda": 1.0,
-            },
-            {
-                "n_estimators": 500,
-                "max_depth": 5,
-                "learning_rate": 0.03,
-                "subsample": 0.9,
-                "colsample_bytree": 0.9,
-                "reg_alpha": 0.01,
+                "subsample": 0.8,
+                "colsample_bytree": 0.8,
+                "reg_alpha": 0.1,
                 "reg_lambda": 1.0,
             },
             {
                 "n_estimators": 700,
-                "max_depth": 6,
-                "learning_rate": 0.02,
+                "max_depth": 5,
+                "learning_rate": 0.03,
                 "subsample": 0.85,
                 "colsample_bytree": 0.85,
                 "reg_alpha": 0.01,
+                "reg_lambda": 1.0,
+            },
+            {
+                "n_estimators": 1000,
+                "max_depth": 6,
+                "learning_rate": 0.02,
+                "subsample": 0.8,
+                "colsample_bytree": 0.8,
+                "reg_alpha": 0.05,
                 "reg_lambda": 2.0,
+            },
+            {
+                "n_estimators": 500,
+                "max_depth": 3,
+                "learning_rate": 0.08,
+                "subsample": 0.9,
+                "colsample_bytree": 0.9,
+                "reg_alpha": 0.0,
+                "reg_lambda": 0.5,
             },
         ]
     )
 
     facility_mw: float = 100.0
-    idle_power_fraction: float = 0.30
+    idle_power_fraction: float = 0.70  # Google cluster: ~70% of capacity at idle (observed ~75% util at ~1% CPU)
     cooling_threshold_f: float = 65.0
     base_pue: float = 1.10
     max_pue: float = 2.00

@@ -1,0 +1,47 @@
+{
+  "nan_counts": {
+    "pred_cpu": 0,
+    "pred_ci": 0,
+    "pred_it_power": 0,
+    "pred_pue": 0,
+    "pred_total_power": 0,
+    "pred_emissions": 0
+  },
+  "inf_counts": {
+    "pred_cpu": 0,
+    "pred_ci": 0,
+    "pred_it_power": 0,
+    "pred_pue": 0,
+    "pred_total_power": 0,
+    "pred_emissions": 0
+  },
+  "negative_counts": {
+    "pred_it_power": 0,
+    "pred_pue": 0,
+    "pred_total_power": 0,
+    "pred_emissions": 0
+  },
+  "physics_identity_max_abs_error": {
+    "total_power_vs_it_times_pue": 12.486625047170023,
+    "emissions_vs_total_times_ci": 0.0
+  },
+  "required_future_exog_columns": [
+    "demand_forecast_error_mwh",
+    "demand_forecast_mwh",
+    "demand_mwh",
+    "demand_mwh_raw",
+    "fuel_col_share",
+    "fuel_ng_share",
+    "fuel_nuc_share",
+    "fuel_oth_share",
+    "fuel_sun_share",
+    "fuel_wat_share",
+    "fuel_wnd_share",
+    "interchange_mwh",
+    "net_generation_mwh",
+    "temperature_c",
+    "timestamp"
+  ],
+  "predict_feature_contract_ready": true,
+  "passed": false
+}

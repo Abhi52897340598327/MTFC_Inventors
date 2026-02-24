@@ -26,8 +26,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from config import PipelineConfig, make_config
-from random_forest_model import fit as fit_cpu_model
-from random_forest_model import predict as predict_cpu_model
+from stage1_cpu_model import fit as fit_cpu_model
+from stage1_cpu_model import predict as predict_cpu_model
+from stage1_cpu_model import fit as fit_power_model  # same RF architecture for Stage 4
+from stage1_cpu_model import predict as predict_power_model
 from schema import (
     RunArtifacts,
     StageMetrics,
@@ -52,8 +54,13 @@ from utils import (
     save_json,
     save_pickle,
 )
-from xgboost_model import fit as fit_ci_model
-from xgboost_model import predict as predict_ci_model
+from stage5_carbon_model import fit as fit_ci_model
+from stage5_carbon_model import predict as predict_ci_model
+from stage2_it_power import compute_it_power_from_config
+from stage3_pue import compute_pue_from_config
+from stage4_total_power import apply_calibration as apply_power_calibration
+from stage4_total_power import compute_total_power
+from stage6_emissions import compute_emissions
 
 
 class CarbonForecastPipeline:
@@ -77,6 +84,7 @@ class CarbonForecastPipeline:
 
         self.models: Dict[str, Any] = {}
         self.best_params: Dict[str, Dict[str, Any]] = {}
+        self.stage_prediction_policy: Dict[str, Dict[str, Any]] = {}
 
         self.feature_cols: Dict[str, List[str]] = {}
         self.feature_lag_map: Dict[str, Dict[str, int]] = {}
@@ -931,6 +939,64 @@ class CarbonForecastPipeline:
 
         return dfx, feature_cols, lag_map, allow_zero
 
+    def _build_power_features(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str], Dict[str, int], set]:
+        """Build lagged features for Stage 4 direct total-power ML prediction.
+
+        Uses lagged observed_power_util as the primary signal, supplemented by
+        CPU lags and time features.  Only constructed when power data is available.
+        """
+        dfx = df.copy()
+        lag_map: Dict[str, int] = {}
+        allow_zero: set = set()
+
+        if "observed_power_util" not in dfx.columns:
+            return dfx, [], lag_map, allow_zero
+
+        for lag in [1, 2, 3, 6, 12, 24]:
+            col = f"pw_lag_{lag}"
+            dfx[col] = dfx["observed_power_util"].shift(lag)
+            lag_map[col] = lag
+
+        shifted_pw = dfx["observed_power_util"].shift(1)
+        for window in [3, 6, 12, 24]:
+            col_mean = f"pw_roll_mean_{window}"
+            col_std = f"pw_roll_std_{window}"
+            dfx[col_mean] = shifted_pw.rolling(window, min_periods=window).mean()
+            dfx[col_std] = shifted_pw.rolling(window, min_periods=window).std()
+            lag_map[col_mean] = 1
+            lag_map[col_std] = 1
+
+        dfx["pw_ewm_12"] = shifted_pw.ewm(span=12, adjust=False, min_periods=12).mean()
+        lag_map["pw_ewm_12"] = 1
+
+        for lag in [1, 6, 24]:
+            col = f"cpu_for_pw_lag_{lag}"
+            dfx[col] = dfx["avg_cpu_utilization"].shift(lag)
+            lag_map[col] = lag
+
+        dfx["temp_f_lag1_for_pw"] = dfx["temperature_f"].shift(1)
+        lag_map["temp_f_lag1_for_pw"] = 1
+
+        time_cols = ["hour_sin", "hour_cos", "dow_sin", "dow_cos", "is_weekend", "is_business_hour"]
+        for col in time_cols:
+            lag_map[col] = 0
+            allow_zero.add(col)
+
+        feature_cols = [
+            c for c in [
+                "pw_lag_1", "pw_lag_2", "pw_lag_3", "pw_lag_6", "pw_lag_12", "pw_lag_24",
+                "pw_roll_mean_3", "pw_roll_mean_6", "pw_roll_mean_12", "pw_roll_mean_24",
+                "pw_roll_std_3", "pw_roll_std_6", "pw_roll_std_12", "pw_roll_std_24",
+                "pw_ewm_12",
+                "cpu_for_pw_lag_1", "cpu_for_pw_lag_6", "cpu_for_pw_lag_24",
+                "temp_f_lag1_for_pw",
+                "hour_sin", "hour_cos", "dow_sin", "dow_cos", "is_weekend", "is_business_hour",
+            ]
+            if c in dfx.columns
+        ]
+
+        return dfx, feature_cols, lag_map, allow_zero
+
     def _build_supervised_views(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         dfx, cpu_features, cpu_lag_map, cpu_allow_zero = self._build_cpu_features(df)
         dfx, ci_features, ci_lag_map, ci_allow_zero = self._build_carbon_features(dfx)
@@ -948,6 +1014,9 @@ class CarbonForecastPipeline:
         if "observed_power_util" in dfx.columns:
             dfx["observed_power_util_t_plus_h"] = dfx["observed_power_util"].shift(-horizon)
             dfx["observed_total_power_mw_t_plus_h"] = dfx["observed_power_util_t_plus_h"] * float(self.config.facility_mw)
+            dfx["baseline_total_power_observed_persistence"] = (
+                dfx["observed_power_util"] * float(self.config.facility_mw)
+            )
 
         dfx["baseline_cpu_persistence"] = dfx["avg_cpu_utilization"]
         dfx["baseline_ci_persistence"] = dfx["carbon_intensity"]
@@ -965,6 +1034,7 @@ class CarbonForecastPipeline:
             "wind_speed_mps_t_plus_h",
             "observed_power_util_t_plus_h",
             "observed_total_power_mw_t_plus_h",
+            "baseline_total_power_observed_persistence",
         ] + cpu_features
         ci_cols = ["timestamp", "target_ci", "baseline_ci_persistence", "baseline_ci_seasonal"] + ci_features
 
@@ -993,6 +1063,7 @@ class CarbonForecastPipeline:
             "wind_speed_mps_t_plus_h",
             "observed_power_util_t_plus_h",
             "observed_total_power_mw_t_plus_h",
+            "baseline_total_power_observed_persistence",
             "baseline_cpu_persistence",
             "baseline_ci_persistence",
             "baseline_cpu_seasonal",
@@ -1003,13 +1074,11 @@ class CarbonForecastPipeline:
         return cpu_view, ci_view, merged_targets
 
     # ------------------------------------------------------------------
-    # Physics stages
+    # Physics stages (delegated to stage2_it_power, stage3_pue)
     # ------------------------------------------------------------------
     def _physics_it_power(self, cpu_util: np.ndarray | pd.Series) -> np.ndarray:
-        cpu_util_arr = np.asarray(cpu_util, dtype=float)
-        return self.config.facility_mw * (
-            self.config.idle_power_fraction + (1.0 - self.config.idle_power_fraction) * cpu_util_arr
-        )
+        """Stage 2: IT power in MW from CPU utilization (delegates to stage2_it_power)."""
+        return compute_it_power_from_config(np.asarray(cpu_util, dtype=float), self.config)
 
     def _physics_pue(
         self,
@@ -1018,18 +1087,14 @@ class CarbonForecastPipeline:
         dew_point_f: Optional[np.ndarray | pd.Series] = None,
         wind_speed_mps: Optional[np.ndarray | pd.Series] = None,
     ) -> np.ndarray:
-        cpu_util_arr = np.asarray(cpu_util, dtype=float)
-        temp_f_arr = np.asarray(temp_f, dtype=float)
-        temp_above = np.maximum(0.0, temp_f_arr - self.config.cooling_threshold_f)
-        pue = self.config.base_pue + self.config.pue_temp_coef * temp_above + self.config.pue_cpu_coef * cpu_util_arr
-        if dew_point_f is not None:
-            dew_arr = np.asarray(dew_point_f, dtype=float)
-            dew_above = np.maximum(0.0, dew_arr - self.config.dew_point_threshold_f)
-            pue = pue + self.config.pue_dewpoint_coef * dew_above
-        if wind_speed_mps is not None:
-            wind_arr = np.asarray(wind_speed_mps, dtype=float)
-            pue = pue - self.config.pue_wind_coef * np.maximum(0.0, wind_arr)
-        return np.clip(pue, self.config.base_pue, self.config.max_pue)
+        """Stage 3: PUE from CPU utilization and temperature (delegates to stage3_pue)."""
+        return compute_pue_from_config(
+            np.asarray(cpu_util, dtype=float),
+            np.asarray(temp_f, dtype=float),
+            self.config,
+            dew_point_f=np.asarray(dew_point_f, dtype=float) if dew_point_f is not None else None,
+            wind_speed_mps=np.asarray(wind_speed_mps, dtype=float) if wind_speed_mps is not None else None,
+        )
 
     def _set_identity_calibration(self, reason: str, calibration_valid: bool) -> None:
         self.physics_calibration = {
@@ -1094,11 +1159,13 @@ class CarbonForecastPipeline:
             if c in merged.columns
         }
 
+        total_col = "pred_total_power_raw" if "pred_total_power_raw" in merged.columns else "pred_total_power"
+        it_col = "pred_it_power_raw" if "pred_it_power_raw" in merged.columns else "pred_it_power"
         residual_total = float(
             np.max(
                 np.abs(
-                    merged["pred_total_power"].to_numpy(dtype=float)
-                    - merged["pred_it_power"].to_numpy(dtype=float) * merged["pred_pue"].to_numpy(dtype=float)
+                    merged[total_col].to_numpy(dtype=float)
+                    - merged[it_col].to_numpy(dtype=float) * merged["pred_pue"].to_numpy(dtype=float)
                 )
             )
         )
@@ -1151,6 +1218,95 @@ class CarbonForecastPipeline:
             intercept = 0.0
         return slope, intercept
 
+    @staticmethod
+    def _fit_blend_weight(
+        y_true: np.ndarray,
+        y_model: np.ndarray,
+        y_baseline: np.ndarray,
+    ) -> float:
+        """Closed-form blend weight for y = w*model + (1-w)*baseline."""
+        true_arr = np.asarray(y_true, dtype=float).ravel()
+        model_arr = np.asarray(y_model, dtype=float).ravel()
+        base_arr = np.asarray(y_baseline, dtype=float).ravel()
+        delta = model_arr - base_arr
+        denom = float(np.dot(delta, delta))
+        if denom <= 1e-12:
+            return 0.0
+        numer = float(np.dot(delta, true_arr - base_arr))
+        return float(np.clip(numer / denom, 0.0, 1.0))
+
+    def _select_stage_prediction_policy(
+        self,
+        stage_key: str,
+        y_true: np.ndarray,
+        y_model: np.ndarray,
+        y_baseline: np.ndarray,
+    ) -> Dict[str, Any]:
+        """Select model/persistence/blend based on OOF RMSE."""
+        true_arr = np.asarray(y_true, dtype=float).ravel()
+        model_arr = np.asarray(y_model, dtype=float).ravel()
+        base_arr = np.asarray(y_baseline, dtype=float).ravel()
+        mask = np.isfinite(true_arr) & np.isfinite(model_arr) & np.isfinite(base_arr)
+        if int(mask.sum()) < 20:
+            return {
+                "mode": "model",
+                "blend_weight": 1.0,
+                "oof_rows_used": int(mask.sum()),
+                "oof_rmse_model": float("nan"),
+                "oof_rmse_persistence": float("nan"),
+                "oof_rmse_blend": float("nan"),
+            }
+
+        true_use = true_arr[mask]
+        model_use = model_arr[mask]
+        base_use = base_arr[mask]
+
+        rmse_model = float(calc_metrics(true_use, model_use)["RMSE"])
+        rmse_persistence = float(calc_metrics(true_use, base_use)["RMSE"])
+
+        blend_weight = self._fit_blend_weight(true_use, model_use, base_use)
+        blend_use = blend_weight * model_use + (1.0 - blend_weight) * base_use
+        rmse_blend = float(calc_metrics(true_use, blend_use)["RMSE"])
+
+        best_mode = "model"
+        best_weight = 1.0
+        best_rmse = rmse_model
+        eps = 1e-12
+        if rmse_persistence + eps < best_rmse:
+            best_mode = "persistence"
+            best_weight = 0.0
+            best_rmse = rmse_persistence
+        if rmse_blend + eps < best_rmse:
+            best_mode = "blend"
+            best_weight = blend_weight
+
+        return {
+            "mode": best_mode,
+            "blend_weight": float(best_weight),
+            "oof_rows_used": int(mask.sum()),
+            "oof_rmse_model": rmse_model,
+            "oof_rmse_persistence": rmse_persistence,
+            "oof_rmse_blend": rmse_blend,
+        }
+
+    def _apply_stage_prediction_policy(
+        self,
+        stage_key: str,
+        model_pred: np.ndarray,
+        persistence_pred: np.ndarray,
+    ) -> np.ndarray:
+        """Apply selected stage prediction policy at eval/predict time."""
+        model_arr = np.asarray(model_pred, dtype=float)
+        persistence_arr = np.asarray(persistence_pred, dtype=float)
+        policy = self.stage_prediction_policy.get(stage_key, {"mode": "model", "blend_weight": 1.0})
+        mode = str(policy.get("mode", "model"))
+        if mode == "persistence":
+            return persistence_arr
+        if mode == "blend":
+            w = float(np.clip(policy.get("blend_weight", 1.0), 0.0, 1.0))
+            return w * model_arr + (1.0 - w) * persistence_arr
+        return model_arr
+
     def _fit_physics_calibration(self, cpu_view: pd.DataFrame, cpu_oof: np.ndarray) -> None:
         if not self.optional_dataset_usage.get("power_calibration", False):
             self._set_identity_calibration("disabled_identity", calibration_valid=True)
@@ -1160,80 +1316,127 @@ class CarbonForecastPipeline:
             self._set_identity_calibration("missing_observed_power_target", calibration_valid=False)
             return
 
-        mask = np.isfinite(cpu_oof) & np.isfinite(cpu_view["observed_total_power_mw_t_plus_h"].to_numpy(dtype=float))
-        if not mask.any():
-            self._set_identity_calibration("no_finite_overlap_for_calibration", calibration_valid=False)
-            return
-
-        pred_cpu = cpu_oof[mask]
-        temp_f = cpu_view.loc[mask, "temperature_f_t_plus_h"].to_numpy(dtype=float)
-        dew_f = (
-            cpu_view.loc[mask, "dew_point_f_t_plus_h"].to_numpy(dtype=float)
+        observed = cpu_view["observed_total_power_mw_t_plus_h"].to_numpy(dtype=float)
+        temp_all = cpu_view["temperature_f_t_plus_h"].to_numpy(dtype=float)
+        dew_all = (
+            cpu_view["dew_point_f_t_plus_h"].to_numpy(dtype=float)
             if "dew_point_f_t_plus_h" in cpu_view.columns
             else None
         )
-        wind = (
-            cpu_view.loc[mask, "wind_speed_mps_t_plus_h"].to_numpy(dtype=float)
+        wind_all = (
+            cpu_view["wind_speed_mps_t_plus_h"].to_numpy(dtype=float)
             if "wind_speed_mps_t_plus_h" in cpu_view.columns
             else None
         )
-        y_total = cpu_view.loc[mask, "observed_total_power_mw_t_plus_h"].to_numpy(dtype=float)
-
-        pred_it = self._physics_it_power(pred_cpu)
-        pred_pue = self._physics_pue(pred_cpu, temp_f, dew_f, wind)
-        pred_total = pred_it * pred_pue
-
-        q = float(self.config.power_calibration_trim_quantile)
-        if 0.0 < q < 0.5 and len(pred_total) > 50:
-            lo = np.nanquantile(y_total, q)
-            hi = np.nanquantile(y_total, 1.0 - q)
-            keep = np.isfinite(y_total) & (y_total >= lo) & (y_total <= hi)
-            pred_it = pred_it[keep]
-            pred_total = pred_total[keep]
-            y_total = y_total[keep]
-        if len(y_total) < 20:
-            self._set_identity_calibration("insufficient_trimmed_samples", calibration_valid=False)
+        observed_mask = np.isfinite(observed)
+        if not observed_mask.any():
+            self._set_identity_calibration("no_finite_observed_power_target", calibration_valid=False)
             return
 
-        it_slope, it_intercept = self._fit_linear_calibration(pred_it, y_total)
-        total_slope, total_intercept = self._fit_linear_calibration(pred_total, y_total)
-        invalid_fit = (
-            (not np.isfinite(it_slope))
-            or (not np.isfinite(total_slope))
-            or (it_slope < 0.0)
-            or (total_slope < 0.0)
-        )
-        if invalid_fit:
-            self._set_identity_calibration("nonphysical_negative_slope", calibration_valid=False)
-            return
+        trim_q = float(self.config.power_calibration_trim_quantile)
 
-        self.physics_calibration = {
-            "it_power_slope": float(it_slope),
-            "it_power_intercept": float(it_intercept) if np.isfinite(it_intercept) else 0.0,
-            "total_power_slope": float(total_slope),
-            "total_power_intercept": float(total_intercept) if np.isfinite(total_intercept) else 0.0,
-            "calibration_valid": True,
-            "calibration_reason": "fitted",
-        }
-        self.calibration_valid = True
-        self.calibration_reason = "fitted"
-        self.physics_calibration_df = pd.DataFrame([self.physics_calibration])
+        def _fit_candidate(
+            cpu_signal: np.ndarray,
+            y_total: np.ndarray,
+            temp_signal: np.ndarray,
+            dew_signal: Optional[np.ndarray],
+            wind_signal: Optional[np.ndarray],
+            calibration_reason: str,
+        ) -> Tuple[Optional[Dict[str, float]], str]:
+            pred_it = self._physics_it_power(cpu_signal)
+            pred_pue = self._physics_pue(cpu_signal, temp_signal, dew_signal, wind_signal)
+            pred_total = compute_total_power(pred_it, pred_pue)
+            y_use = np.asarray(y_total, dtype=float)
+
+            if 0.0 < trim_q < 0.5 and len(pred_total) > 50:
+                lo = np.nanquantile(y_use, trim_q)
+                hi = np.nanquantile(y_use, 1.0 - trim_q)
+                keep = np.isfinite(y_use) & (y_use >= lo) & (y_use <= hi)
+                pred_it = pred_it[keep]
+                pred_total = pred_total[keep]
+                y_use = y_use[keep]
+            if len(y_use) < 20:
+                return None, "insufficient_trimmed_samples"
+
+            it_slope, it_intercept = self._fit_linear_calibration(pred_it, y_use)
+            total_slope, total_intercept = self._fit_linear_calibration(pred_total, y_use)
+            invalid_fit = (
+                (not np.isfinite(it_slope))
+                or (not np.isfinite(total_slope))
+                or (it_slope < 0.0)
+                or (total_slope < 0.0)
+            )
+            if invalid_fit:
+                return None, "nonphysical_negative_slope"
+
+            return (
+                {
+                    "it_power_slope": float(it_slope),
+                    "it_power_intercept": float(it_intercept) if np.isfinite(it_intercept) else 0.0,
+                    "total_power_slope": float(total_slope),
+                    "total_power_intercept": float(total_intercept) if np.isfinite(total_intercept) else 0.0,
+                    "calibration_valid": True,
+                    "calibration_reason": calibration_reason,
+                },
+                calibration_reason,
+            )
+
+        last_failure = "no_finite_overlap_for_calibration"
+        oof = np.asarray(cpu_oof, dtype=float).ravel()
+        if len(oof) == len(observed):
+            oof_mask = np.isfinite(oof) & observed_mask
+            if oof_mask.any():
+                candidate, reason = _fit_candidate(
+                    oof[oof_mask],
+                    observed[oof_mask],
+                    temp_all[oof_mask],
+                    dew_all[oof_mask] if dew_all is not None else None,
+                    wind_all[oof_mask] if wind_all is not None else None,
+                    "fitted_oof",
+                )
+                if candidate is not None:
+                    self.physics_calibration = candidate
+                    self.calibration_valid = True
+                    self.calibration_reason = str(candidate["calibration_reason"])
+                    self.physics_calibration_df = pd.DataFrame([candidate])
+                    return
+                last_failure = reason
+        else:
+            last_failure = "cpu_oof_length_mismatch"
+
+        if "target_cpu" in cpu_view.columns:
+            target_cpu = cpu_view["target_cpu"].to_numpy(dtype=float)
+            target_mask = np.isfinite(target_cpu) & observed_mask
+            if target_mask.any():
+                candidate, reason = _fit_candidate(
+                    target_cpu[target_mask],
+                    observed[target_mask],
+                    temp_all[target_mask],
+                    dew_all[target_mask] if dew_all is not None else None,
+                    wind_all[target_mask] if wind_all is not None else None,
+                    "fitted_target_cpu_fallback",
+                )
+                if candidate is not None:
+                    self.physics_calibration = candidate
+                    self.calibration_valid = True
+                    self.calibration_reason = str(candidate["calibration_reason"])
+                    self.physics_calibration_df = pd.DataFrame([candidate])
+                    return
+                last_failure = reason
+
+        self._set_identity_calibration(str(last_failure), calibration_valid=False)
 
     def _apply_physics_calibration(self, pred_it: np.ndarray, pred_total: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Stage 4: Apply optional linear calibration (delegates to stage4_total_power)."""
         if not self.optional_dataset_usage.get("power_calibration", False):
             return pred_it, pred_total
-
-        it = (
-            self.physics_calibration.get("it_power_slope", 1.0) * np.asarray(pred_it, dtype=float)
-            + self.physics_calibration.get("it_power_intercept", 0.0)
+        return apply_power_calibration(
+            pred_it,
+            pred_total,
+            calibration=self.physics_calibration,
+            facility_mw=float(self.config.facility_mw),
+            max_pue=float(self.config.max_pue),
         )
-        total = (
-            self.physics_calibration.get("total_power_slope", 1.0) * np.asarray(pred_total, dtype=float)
-            + self.physics_calibration.get("total_power_intercept", 0.0)
-        )
-        it = np.clip(it, 0.0, self.config.facility_mw * self.config.max_pue)
-        total = np.clip(total, 0.0, self.config.facility_mw * self.config.max_pue)
-        return it, total
 
     # ------------------------------------------------------------------
     # Training and CV
@@ -1418,7 +1621,83 @@ class CarbonForecastPipeline:
             ci_oof_metrics = calc_metrics(ci_view.loc[ci_oof_mask, "target_ci"], ci_oof[ci_oof_mask])
             self.log.info("Stage5 OOF RMSE=%.6f R2=%.6f", ci_oof_metrics["RMSE"], ci_oof_metrics["R2"])
 
-        self._fit_physics_calibration(cpu_view, cpu_oof)
+        cpu_baseline = cpu_view["baseline_cpu_persistence"].to_numpy(dtype=float)
+        ci_baseline = ci_view["baseline_ci_persistence"].to_numpy(dtype=float)
+
+        self.stage_prediction_policy["stage1_cpu"] = self._select_stage_prediction_policy(
+            "stage1_cpu",
+            cpu_view["target_cpu"].to_numpy(dtype=float),
+            cpu_oof,
+            cpu_baseline,
+        )
+        self.stage_prediction_policy["stage5_ci"] = self._select_stage_prediction_policy(
+            "stage5_ci",
+            ci_view["target_ci"].to_numpy(dtype=float),
+            ci_oof,
+            ci_baseline,
+        )
+        self.log.info(
+            "Stage1 policy=%s weight=%.4f | OOF RMSE model=%.6f persistence=%.6f blend=%.6f",
+            self.stage_prediction_policy["stage1_cpu"].get("mode"),
+            float(self.stage_prediction_policy["stage1_cpu"].get("blend_weight", 1.0)),
+            float(self.stage_prediction_policy["stage1_cpu"].get("oof_rmse_model", float("nan"))),
+            float(self.stage_prediction_policy["stage1_cpu"].get("oof_rmse_persistence", float("nan"))),
+            float(self.stage_prediction_policy["stage1_cpu"].get("oof_rmse_blend", float("nan"))),
+        )
+        self.log.info(
+            "Stage5 policy=%s weight=%.4f | OOF RMSE model=%.6f persistence=%.6f blend=%.6f",
+            self.stage_prediction_policy["stage5_ci"].get("mode"),
+            float(self.stage_prediction_policy["stage5_ci"].get("blend_weight", 1.0)),
+            float(self.stage_prediction_policy["stage5_ci"].get("oof_rmse_model", float("nan"))),
+            float(self.stage_prediction_policy["stage5_ci"].get("oof_rmse_persistence", float("nan"))),
+            float(self.stage_prediction_policy["stage5_ci"].get("oof_rmse_blend", float("nan"))),
+        )
+
+        cpu_oof_for_calibration = self._apply_stage_prediction_policy("stage1_cpu", cpu_oof, cpu_baseline)
+        self._fit_physics_calibration(cpu_view, cpu_oof_for_calibration)
+
+        self.stage_prediction_policy["stage4_total_power"] = {
+            "mode": "model",
+            "blend_weight": 1.0,
+            "oof_rows_used": 0,
+            "oof_rmse_model": float("nan"),
+            "oof_rmse_persistence": float("nan"),
+            "oof_rmse_blend": float("nan"),
+        }
+        if (
+            "observed_total_power_mw_t_plus_h" in cpu_view.columns
+            and "baseline_total_power_observed_persistence" in cpu_view.columns
+        ):
+            temp_oof = cpu_view["temperature_f_t_plus_h"].to_numpy(dtype=float)
+            dew_oof = (
+                cpu_view["dew_point_f_t_plus_h"].to_numpy(dtype=float)
+                if "dew_point_f_t_plus_h" in cpu_view.columns
+                else None
+            )
+            wind_oof = (
+                cpu_view["wind_speed_mps_t_plus_h"].to_numpy(dtype=float)
+                if "wind_speed_mps_t_plus_h" in cpu_view.columns
+                else None
+            )
+            pred_it_oof = self._physics_it_power(cpu_oof_for_calibration)
+            pred_pue_oof = self._physics_pue(cpu_oof_for_calibration, temp_oof, dew_oof, wind_oof)
+            pred_total_oof_raw = compute_total_power(pred_it_oof, pred_pue_oof)
+            _, pred_total_oof = self._apply_physics_calibration(pred_it_oof, pred_total_oof_raw)
+            self.stage_prediction_policy["stage4_total_power"] = self._select_stage_prediction_policy(
+                "stage4_total_power",
+                cpu_view["observed_total_power_mw_t_plus_h"].to_numpy(dtype=float),
+                pred_total_oof,
+                cpu_view["baseline_total_power_observed_persistence"].to_numpy(dtype=float),
+            )
+        self.log.info(
+            "Stage4 policy=%s weight=%.4f | OOF RMSE model=%.6f persistence=%.6f blend=%.6f",
+            self.stage_prediction_policy["stage4_total_power"].get("mode"),
+            float(self.stage_prediction_policy["stage4_total_power"].get("blend_weight", 1.0)),
+            float(self.stage_prediction_policy["stage4_total_power"].get("oof_rmse_model", float("nan"))),
+            float(self.stage_prediction_policy["stage4_total_power"].get("oof_rmse_persistence", float("nan"))),
+            float(self.stage_prediction_policy["stage4_total_power"].get("oof_rmse_blend", float("nan"))),
+        )
+
         if hasattr(self.models["stage5_ci"], "feature_importances_"):
             importances = np.asarray(getattr(self.models["stage5_ci"], "feature_importances_"), dtype=float)
             self.stage5_feature_importance_df = pd.DataFrame(
@@ -1518,16 +1797,29 @@ class CarbonForecastPipeline:
         cpu_eval, ci_eval = self._prepare_eval_views(df_holdout)
 
         X_cpu = cpu_eval[self.feature_cols["stage1_cpu"]].to_numpy(dtype=float)
-        pred_cpu = predict_cpu_model(self.models["stage1_cpu"], X_cpu)
+        pred_cpu_model = predict_cpu_model(self.models["stage1_cpu"], X_cpu)
+        pred_cpu = self._apply_stage_prediction_policy(
+            "stage1_cpu",
+            pred_cpu_model,
+            cpu_eval["baseline_cpu_persistence"].to_numpy(dtype=float),
+        )
+        pred_cpu = np.clip(np.asarray(pred_cpu, dtype=float), 0.0, 1.0)
 
         X_ci = ci_eval[self.feature_cols["stage5_ci"]].to_numpy(dtype=float)
-        pred_ci = predict_ci_model(self.models["stage5_ci"], X_ci)
+        pred_ci_model = predict_ci_model(self.models["stage5_ci"], X_ci)
+        pred_ci = self._apply_stage_prediction_policy(
+            "stage5_ci",
+            pred_ci_model,
+            ci_eval["baseline_ci_persistence"].to_numpy(dtype=float),
+        )
+        pred_ci = np.maximum(np.asarray(pred_ci, dtype=float), 1e-9)
 
         stage1_keep_cols = [
             "timestamp",
             "target_cpu",
             "baseline_cpu_persistence",
             "baseline_cpu_seasonal",
+            "baseline_total_power_observed_persistence",
             "temperature_f_t_plus_h",
             "dew_point_f_t_plus_h",
             "wind_speed_mps_t_plus_h",
@@ -1559,67 +1851,116 @@ class CarbonForecastPipeline:
         merged["pred_pue"] = self._physics_pue(merged["pred_cpu"], merged["temperature_f_t_plus_h"], dew, wind)
         merged["actual_pue"] = self._physics_pue(merged["target_cpu"], merged["temperature_f_t_plus_h"], dew, wind)
 
-        merged["pred_total_power_raw"] = merged["pred_it_power_raw"] * merged["pred_pue"]
-        cal_it, cal_total = self._apply_physics_calibration(
+        merged["pred_total_power_raw"] = compute_total_power(
+            merged["pred_it_power_raw"].to_numpy(dtype=float),
+            merged["pred_pue"].to_numpy(dtype=float),
+        )
+        _, cal_total = self._apply_physics_calibration(
             merged["pred_it_power_raw"].to_numpy(dtype=float),
             merged["pred_total_power_raw"].to_numpy(dtype=float),
         )
-        merged["pred_it_power"] = cal_it
+        # Keep Stage 2 as the raw physics transform from predicted CPU.
+        merged["pred_it_power"] = merged["pred_it_power_raw"].to_numpy(dtype=float)
         merged["pred_total_power"] = cal_total
+        if "baseline_total_power_observed_persistence" in merged.columns:
+            pred_total_blended = self._apply_stage_prediction_policy(
+                "stage4_total_power",
+                merged["pred_total_power"].to_numpy(dtype=float),
+                merged["baseline_total_power_observed_persistence"].to_numpy(dtype=float),
+            )
+            merged["pred_total_power"] = np.clip(
+                np.asarray(pred_total_blended, dtype=float),
+                0.0,
+                float(self.config.facility_mw) * float(self.config.max_pue),
+            )
         merged["actual_total_power_physics"] = merged["actual_it_power"] * merged["actual_pue"]
         observed_total = np.full(len(merged), np.nan, dtype=float)
         if "observed_total_power_mw_t_plus_h" in merged.columns:
             observed_total = merged["observed_total_power_mw_t_plus_h"].to_numpy(dtype=float)
         merged["actual_total_power_observed"] = observed_total
 
-        resolved_stage6_mode = self._resolve_stage6_target_mode(
+        requested_stage6_mode = self._resolve_stage6_target_mode(
             stage6_target_mode,
             self.config.stage6_target_mode_default,
         )
+        resolved_stage6_mode = requested_stage6_mode
+        if (
+            requested_stage6_mode == "observed_power_if_available"
+            and self.optional_dataset_usage.get("power_calibration", False)
+            and not self.calibration_valid
+        ):
+            self.log.warning(
+                "Falling back to stage6_target_mode='physics' because observed-power calibration is unavailable (%s).",
+                self.calibration_reason,
+            )
+            resolved_stage6_mode = "physics"
         if resolved_stage6_mode == "physics":
             merged["actual_total_power"] = merged["actual_total_power_physics"]
         else:
             merged["actual_total_power"] = merged["actual_total_power_physics"]
             obs_mask = np.isfinite(merged["actual_total_power_observed"].to_numpy(dtype=float))
             merged.loc[obs_mask, "actual_total_power"] = merged.loc[obs_mask, "actual_total_power_observed"]
-        merged["pred_emissions"] = merged["pred_total_power"] * merged["pred_ci"]
-        merged["actual_emissions"] = merged["actual_total_power"] * merged["target_ci"]
+        # Stage 6: emissions = total power × carbon intensity (delegates to stage6_emissions)
+        merged["pred_emissions"] = compute_emissions(
+            merged["pred_total_power"].to_numpy(dtype=float),
+            merged["pred_ci"].to_numpy(dtype=float),
+        )
+        merged["actual_emissions"] = compute_emissions(
+            merged["actual_total_power"].to_numpy(dtype=float),
+            merged["target_ci"].to_numpy(dtype=float),
+        )
 
         # Baselines: stage-specific and propagated to emissions.
         merged["baseline_it_power_persistence"] = self._physics_it_power(merged["baseline_cpu_persistence"])
         merged["baseline_pue_persistence"] = self._physics_pue(
             merged["baseline_cpu_persistence"], merged["temperature_f_t_plus_h"], dew, wind
         )
-        merged["baseline_total_power_persistence"] = (
-            merged["baseline_it_power_persistence"] * merged["baseline_pue_persistence"]
+        merged["baseline_total_power_persistence"] = compute_total_power(
+            merged["baseline_it_power_persistence"].to_numpy(dtype=float),
+            merged["baseline_pue_persistence"].to_numpy(dtype=float),
         )
         _, baseline_total_cal = self._apply_physics_calibration(
             merged["baseline_it_power_persistence"].to_numpy(dtype=float),
             merged["baseline_total_power_persistence"].to_numpy(dtype=float),
         )
         merged["baseline_total_power_persistence"] = baseline_total_cal
-        merged["baseline_emissions_persistence"] = (
-            merged["baseline_total_power_persistence"] * merged["baseline_ci_persistence"]
+        merged["baseline_emissions_persistence"] = compute_emissions(
+            merged["baseline_total_power_persistence"].to_numpy(dtype=float),
+            merged["baseline_ci_persistence"].to_numpy(dtype=float),
         )
 
         merged["baseline_it_power_seasonal"] = self._physics_it_power(merged["baseline_cpu_seasonal"])
         merged["baseline_pue_seasonal"] = self._physics_pue(
             merged["baseline_cpu_seasonal"], merged["temperature_f_t_plus_h"], dew, wind
         )
-        merged["baseline_total_power_seasonal"] = (
-            merged["baseline_it_power_seasonal"] * merged["baseline_pue_seasonal"]
+        merged["baseline_total_power_seasonal"] = compute_total_power(
+            merged["baseline_it_power_seasonal"].to_numpy(dtype=float),
+            merged["baseline_pue_seasonal"].to_numpy(dtype=float),
         )
         _, baseline_total_seasonal_cal = self._apply_physics_calibration(
             merged["baseline_it_power_seasonal"].to_numpy(dtype=float),
             merged["baseline_total_power_seasonal"].to_numpy(dtype=float),
         )
         merged["baseline_total_power_seasonal"] = baseline_total_seasonal_cal
-        merged["baseline_emissions_seasonal"] = (
-            merged["baseline_total_power_seasonal"] * merged["baseline_ci_seasonal"]
+        merged["baseline_emissions_seasonal"] = compute_emissions(
+            merged["baseline_total_power_seasonal"].to_numpy(dtype=float),
+            merged["baseline_ci_seasonal"].to_numpy(dtype=float),
         )
 
         metric_rows: List[StageMetrics] = []
         baseline_rows: List[Dict[str, Any]] = []
+        stage1_mode = str(self.stage_prediction_policy.get("stage1_cpu", {}).get("mode", "model"))
+        stage5_mode = str(self.stage_prediction_policy.get("stage5_ci", {}).get("mode", "model"))
+        stage1_model_label = {
+            "model": "RandomForest",
+            "persistence": "Persistence",
+            "blend": "RandomForest+PersistenceBlend",
+        }.get(stage1_mode, "RandomForest")
+        stage5_model_label = {
+            "model": "XGBoost",
+            "persistence": "Persistence",
+            "blend": "XGBoost+PersistenceBlend",
+        }.get(stage5_mode, "XGBoost")
 
         # Stage 1
         stage1_model_metrics = calc_metrics(merged["target_cpu"], merged["pred_cpu"])
@@ -1631,7 +1972,7 @@ class CarbonForecastPipeline:
             self._stage_metric_row(
                 "Stage1_CPU",
                 "holdout",
-                "RandomForest",
+                stage1_model_label,
                 merged["target_cpu"].to_numpy(),
                 merged["pred_cpu"].to_numpy(),
                 defensible=stage1_defensible,
@@ -1678,7 +2019,7 @@ class CarbonForecastPipeline:
             self._stage_metric_row(
                 "Stage5_CarbonIntensity",
                 "holdout",
-                "XGBoost",
+                stage5_model_label,
                 merged["target_ci"].to_numpy(),
                 merged["pred_ci"].to_numpy(),
                 defensible=stage5_defensible,
@@ -1806,6 +2147,8 @@ class CarbonForecastPipeline:
                 "stage1_cpu": list(self.feature_cols.get("stage1_cpu", [])),
                 "stage5_ci": list(self.feature_cols.get("stage5_ci", [])),
             },
+            "stage_prediction_policy": dict(self.stage_prediction_policy),
+            "stage6_target_mode_requested": requested_stage6_mode,
             "stage6_target_mode": resolved_stage6_mode,
             "stage6_target_mode_used_for_variant_gate": resolved_stage6_mode,
             "coverage_rows": int(len(self.coverage_report_df)),
@@ -2166,8 +2509,25 @@ class CarbonForecastPipeline:
             )
             x_ci = self._build_point_ci_features(ts, ci_hist, temp_hist_f, exog_hist=exog_hist)
 
-            pred_cpu = float(predict_cpu_model(self.models["stage1_cpu"], x_cpu)[0])
-            pred_ci = float(predict_ci_model(self.models["stage5_ci"], x_ci)[0])
+            pred_cpu_model = float(predict_cpu_model(self.models["stage1_cpu"], x_cpu)[0])
+            pred_cpu = float(
+                self._apply_stage_prediction_policy(
+                    "stage1_cpu",
+                    np.array([pred_cpu_model], dtype=float),
+                    np.array([float(cpu_hist[-1])], dtype=float),
+                )[0]
+            )
+            pred_cpu = float(np.clip(pred_cpu, 0.0, 1.0))
+
+            pred_ci_model = float(predict_ci_model(self.models["stage5_ci"], x_ci)[0])
+            pred_ci = float(
+                self._apply_stage_prediction_policy(
+                    "stage5_ci",
+                    np.array([pred_ci_model], dtype=float),
+                    np.array([float(ci_hist[-1])], dtype=float),
+                )[0]
+            )
+            pred_ci = float(max(pred_ci, 1e-9))
 
             pred_it = float(self._physics_it_power(np.array([pred_cpu]))[0])
             dew_f = None
@@ -2185,11 +2545,10 @@ class CarbonForecastPipeline:
                 )[0]
             )
             pred_total_raw = float(pred_it * pred_pue)
-            pred_it_arr, pred_total_arr = self._apply_physics_calibration(
+            _, pred_total_arr = self._apply_physics_calibration(
                 np.array([pred_it], dtype=float),
                 np.array([pred_total_raw], dtype=float),
             )
-            pred_it = float(pred_it_arr[0])
             pred_total = float(pred_total_arr[0])
             pred_emissions = float(pred_total * pred_ci)
 
@@ -2604,11 +2963,19 @@ def run_train_eval(pipeline: CarbonForecastPipeline) -> Tuple[CarbonForecastPipe
         uplift_s5 = relative_rmse_improvement(rmse_core_s5, rmse_enh_s5)
         uplift_s6 = relative_rmse_improvement(rmse_core_s6, rmse_enh_s6)
         passes_leakage = all(bool(v) for v in pipeline.leakage_checks.values())
+        min_uplift = float(pipeline.config.min_relative_rmse_improvement)
+        max_degradation = float(pipeline.config.max_stage6_rmse_degradation)
+        stage5_ok = bool(np.isfinite(uplift_s5) and uplift_s5 >= min_uplift)
+        stage6_ok = bool(np.isfinite(uplift_s6) and uplift_s6 >= min_uplift)
+        stage5_not_worse = bool(np.isfinite(uplift_s5) and uplift_s5 >= -max_degradation)
+        stage6_not_worse = bool(np.isfinite(uplift_s6) and uplift_s6 >= -max_degradation)
         enhanced_promoted = bool(
             np.isfinite(uplift_s5)
             and np.isfinite(uplift_s6)
-            and uplift_s5 >= pipeline.config.min_relative_rmse_improvement
-            and uplift_s6 >= -float(pipeline.config.max_stage6_rmse_degradation)
+            and (
+                (stage5_ok and stage6_not_worse)
+                or (stage6_ok and stage5_not_worse)
+            )
             and passes_leakage
         )
 
@@ -2634,6 +3001,8 @@ def run_train_eval(pipeline: CarbonForecastPipeline) -> Tuple[CarbonForecastPipe
             "exog_enhanced_stage6_rmse": rmse_enh_s6,
             "uplift_stage5_vs_core": uplift_s5,
             "uplift_stage6_vs_core": uplift_s6,
+            "stage5_meets_threshold": stage5_ok,
+            "stage6_meets_threshold": stage6_ok,
             "enhanced_promoted": enhanced_promoted,
             "passes_leakage_checks": passes_leakage,
             "stage6_target_mode_used_for_variant_gate": gate_mode,
