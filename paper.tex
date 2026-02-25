@@ -1,0 +1,341 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.9in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\sisetup{group-separator={,},group-minimum-digits=4,round-mode=places,round-precision=4}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+\onehalfspacing
+
+\title{Forecasting Carbon Liability and Operational Risk in AI Datacenters\\\large Physics-Informed Modeling, Strict Leakage Controls, and Post-hoc Sensitivity + Monetization}
+\author{Team ID: [Insert 5-digit ID]}
+\date{February 24, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\textbf{Run ID (source of truth): \texttt{carbon\_20260224\_162633}} \\
+\textbf{Synthetic data used: None} \\
+\textbf{Post-hoc analyses retraining status: No retraining}
+\end{center}
+
+\section*{Executive Summary}
+We implemented a strict no-leakage, no-synthetic-data, six-stage hybrid pipeline for datacenter carbon forecasting and risk analysis. The pipeline combines ML (Stage 1 CPU, Stage 5 carbon intensity) with deterministic physics (Stages 2, 3, 4, and 6). We then redid Sobol variance decomposition, deterministic tornado OAT, copula tail dependence, integrated energy forecasting, and deep monetization/cost-benefit analysis using fixed model outputs.
+
+Holdout performance on the active run is:
+\begin{itemize}[leftmargin=1.2em]
+  \item Stage1 \(R^2=0.6501\)
+  \item Stage5 \(R^2=0.8144\)
+  \item Stage6 \(R^2=0.9513\)
+\end{itemize}
+
+Under strict chronology and leakage guards, Stage1 and Stage5 remain below \(R^2=0.9\); Stage6 exceeds \(0.9\). We report this transparently and do not inflate metrics through leakage, synthetic data, or split manipulation.
+
+\section{Model Definition and Integrity}
+\subsection{Active model}
+The active architecture in \texttt{REAL FINAL FILES/carbon\_prediction\_pipeline.py} is:
+\begin{enumerate}[leftmargin=1.2em]
+  \item Stage 1 (ML): CPU utilization forecasting (tree ensemble + leakage-safe persistence blend)
+  \item Stage 2 (Physics): IT power from CPU
+  \item Stage 3 (Physics): PUE from CPU and temperature
+  \item Stage 4 (Physics): total power from IT power and PUE
+  \item Stage 5 (ML): carbon intensity forecasting (tree ensemble + leakage-safe persistence blend)
+  \item Stage 6 (Physics): emissions from predicted total power and predicted carbon intensity
+\end{enumerate}
+
+\subsection{Leakage controls}
+Run metadata confirms:
+\begin{itemize}[leftmargin=1.2em]
+  \item \texttt{no\_bfill\_in\_source}: PASS
+  \item \texttt{strict\_past\_stage1}: PASS
+  \item \texttt{strict\_past\_stage5}: PASS
+\end{itemize}
+Evaluation uses a strict final chronological holdout window.
+
+\section{Iteration Results}
+\subsection{Holdout metrics}
+\begin{table}[H]
+\centering
+\caption{Holdout metrics by stage (run \texttt{carbon\_20260224\_162633})}
+\begin{tabular}{llrrc}
+\toprule
+Stage & Model & RMSE & $R^2$ & Defensible \\
+\midrule
+Stage1\_CPU & RandomForest[blended\_model\_persistence] & 0.000275 & 0.6501 & True \\
+Stage2\_ITPower & Physics & 0.019269 & 0.6501 & - \\
+Stage3\_PUE & Physics & 0.000014 & 1.0000 & - \\
+Stage4\_TotalPower & Physics & 0.023697 & 0.9999 & - \\
+Stage5\_CarbonIntensity & XGBoost[blended\_model\_persistence] & 10.7863 & 0.8144 & True \\
+Stage6\_Emissions & PhysicsFromPredictions & 396.0462 & 0.9513 & True \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Persistence-baseline uplift}
+\begin{tabular}{lrrr}
+\toprule
+Stage & Model RMSE & Persistence RMSE & Uplift vs Persistence \\
+\midrule
+Stage1\_CPU & 0.000275 & 0.000279 & +1.46\% \\
+Stage5\_CarbonIntensity & 10.7863 & 12.0194 & +10.26\% \\
+Stage6\_Emissions & 396.0462 & 436.5651 & +9.28\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{paper_assets/figures/model_performance_dashboard.png}
+\caption{Model performance dashboard (R$^2$, residuals, calibration plots).}
+\end{figure}
+
+\subsection{Target feasibility note}
+Requested target was $R^2 > 0.9$ for all learned stages. Under strict no-leakage constraints, we did not achieve this for Stage1 and Stage5. We kept the process honest and reproducible instead of forcing optimistic leakage.
+
+\section{Sensitivity Analysis}
+All sensitivity is post-hoc and deterministic on fixed model outputs.
+
+\subsection{Sobol indices (variance-based)}
+\begin{table}[H]
+\centering
+\caption{Sobol indices for emissions}
+\begin{tabular}{lrr}
+\toprule
+Parameter & $S_1$ & $S_T$ \\
+\midrule
+idle\_power\_fraction & 0.4942 & 0.4470 \\
+temperature\_f & 0.3101 & 0.2208 \\
+carbon\_intensity & 0.3059 & 0.3201 \\
+pue\_temp\_coef & 0.0000 & 0.0134 \\
+cpu\_utilization & 0.0000 & 0.0002 \\
+pue\_cpu\_coef & 0.0000 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Sobol indices for annual energy}
+\begin{tabular}{lrr}
+\toprule
+Parameter & $S_1$ & $S_T$ \\
+\midrule
+idle\_power\_fraction & 0.7186 & 0.6611 \\
+temperature\_f & 0.4653 & 0.3272 \\
+pue\_temp\_coef & 0.0000 & 0.0197 \\
+cpu\_utilization & 0.0000 & 0.0003 \\
+pue\_cpu\_coef & 0.0001 & 0.0000 \\
+carbon\_intensity & 0.0000 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/sobol_global_sensitivity.png}
+\caption{Carbon liability Sobol}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/sobol_energy_sensitivity.png}
+\caption{Energy Sobol}
+\end{subfigure}
+\caption{Global variance decomposition.}
+\end{figure}
+
+\subsection{Tornado (deterministic OAT)}
+\begin{table}[H]
+\centering
+\caption{Top deterministic OAT swings}
+\begin{tabular}{lrrr}
+\toprule
+Parameter & Swing (kg/h) & Low vs Baseline & High vs Baseline \\
+\midrule
+idle\_power\_fraction & 3949.05 & -16.16\% & +16.16\% \\
+carbon\_intensity & 3182.65 & -16.54\% & +9.51\% \\
+temperature\_f & 2444.42 & -1.48\% & +18.52\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/tornado_oat_emissions.png}
+\caption{Emissions tornado}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/tornado_oat_energy.png}
+\caption{Energy tornado}
+\end{subfigure}
+\caption{Deterministic one-at-a-time sensitivity.}
+\end{figure}
+
+\subsection{Copulas (tail dependence)}
+\begin{table}[H]
+\centering
+\caption{Empirical copula tail dependence at $q=0.95$}
+\begin{tabular}{lrr}
+\toprule
+Pair & $\lambda_U(0.95)$ & $\lambda_L(0.05)$ \\
+\midrule
+temp\_vs\_energy & 0.9730 & 0.0270 \\
+temp\_vs\_emissions & 0.7838 & 0.0000 \\
+carbon\_vs\_emissions & 0.4865 & 0.9459 \\
+temp\_vs\_carbon & 0.2973 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.70\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/copula_tail_dashboard.png}
+\caption{Copula domains and tail curves}
+\end{subfigure}
+\\
+\begin{subfigure}{0.55\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/copula_energy_tail_bars.png}
+\caption{Energy-linked tail dependence bars}
+\end{subfigure}
+\caption{Copula analysis confirms compound extreme co-movement.}
+\end{figure}
+
+\section{Energy Forecasting Integration}
+Forecast trajectories were integrated directly into risk and cost outputs.
+
+\begin{table}[H]
+\centering
+\caption{Energy and peak forecast snapshots}
+\begin{tabular}{lrrr}
+\toprule
+Scenario & Year & Annual Energy (GWh) & Peak (MW) \\
+\midrule
+Conservative 5\% & 2026 & 311.53 & 40.55 \\
+Conservative 5\% & 2030 & 378.66 & 45.20 \\
+Conservative 5\% & 2035 & 483.28 & 51.77 \\
+Moderate 15\% & 2026 & 311.53 & 40.55 \\
+Moderate 15\% & 2030 & 544.86 & 55.69 \\
+Moderate 15\% & 2035 & 1095.92 & 82.77 \\
+Aggressive 30\% & 2026 & 311.53 & 40.55 \\
+Aggressive 30\% & 2030 & 889.75 & 74.70 \\
+Aggressive 30\% & 2035 & 3303.59 & 160.31 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{paper_assets/figures/recommendation_energy_peak_projection.png}
+\caption{Energy and peak-demand projection views.}
+\end{figure}
+
+\section{Monetizable Outcomes and Cost-Benefit}
+\subsection{Scenario monetization}
+\begin{table}[H]
+\centering
+\caption{Scenario annualized cost outcomes}
+\begin{tabular}{lrrr}
+\toprule
+Scenario & Total Annual Cost & Carbon Liability & Risk Premium \\
+\midrule
+Current (Baseline) & \$51.23M & \$20.78M & \$0.73M \\
+Efficient (Lower PUE + CI) & \$42.52M & \$15.68M & \$0.60M \\
+High Growth & \$59.11M & \$24.95M & \$1.59M \\
+Climate Stress & \$59.29M & \$24.31M & \$2.51M \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Mitigation economics}
+\begin{table}[H]
+\centering
+\caption{10-year mitigation economics (ranked by NPV)}
+\begin{tabular}{lrrrr}
+\toprule
+Lever & Capex & Annual Net Benefit & Payback (y) & NPV (10y) \\
+\midrule
+Combined Portfolio & \$15.20M & \$10.58M & 1.44 & \$55.82M \\
+PUE Optimization (Cooling) & \$14.00M & \$6.24M & 2.24 & \$27.84M \\
+Cleaner Grid Contracts & \$0.20M & \$3.37M & 0.06 & \$22.45M \\
+Dynamic Workload Shifting & \$0.60M & \$3.08M & 0.19 & \$20.09M \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Forecasted cost risk}
+Maximum projected annual cost is \$505.42M in 2035 under Aggressive 30\% growth (from \texttt{energy\_forecast\_costs.csv}).
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/scenario_cost_stack.png}
+\caption{Scenario cost stacks}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/scenario_carbon_price_band.png}
+\caption{Carbon-price sensitivity band}
+\end{subfigure}
+\\
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/energy_forecast_costs.png}
+\caption{Forecast cost trajectories}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{paper_assets/figures/mitigation_npv_payback.png}
+\caption{NPV and payback}
+\end{subfigure}
+\caption{Monetization outputs and uncertainty-aware economics.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{paper_assets/figures/monetizable_outcomes_dashboard.png}
+\caption{Executive monetizable outcomes dashboard.}
+\end{figure}
+
+\section{Strict Adversarial Reviewer Critique and Response}
+A strict adversarial PhD-level audit was applied to the full pipeline, math assumptions, and writing.
+
+\textbf{Reviewer findings:}
+\begin{enumerate}[leftmargin=1.2em]
+  \item Do not claim universal $R^2>0.9$ when Stage1/Stage5 remain below that threshold under strict holdout.
+  \item Clearly separate physical certainty (Stages 3/4/6) from learnable stochastic stages (1/5).
+  \item Present cost-benefit with explicit assumption dependency and low/base/high carbon-price bands.
+  \item Keep visual design readable and consistent for publication.
+\end{enumerate}
+
+\textbf{Changes applied:}
+\begin{enumerate}[leftmargin=1.2em]
+  \item Stage6 target mode standardized to physics for robustness.
+  \item Leakage-safe OOF blending added for Stage1 and Stage5.
+  \item Full analysis stack regenerated from latest run outputs.
+  \item All key charts re-rendered using matplotlib/seaborn with smaller fonts.
+\end{enumerate}
+
+\section{Conclusion}
+This final package is fully synced to run \texttt{carbon\_20260224\_162633}. It includes strict no-leakage training/evaluation, refreshed sensitivity analyses (Sobol, Tornado, Copula), integrated energy forecasting, deep monetizable outcomes, and publication-readable figures. Stage6 exceeds $R^2=0.9$; Stage1 and Stage5 do not, and this limitation is reported transparently without data leakage or synthetic augmentation.
+
+\section*{Artifact Index}
+\begin{itemize}[leftmargin=1.2em]
+  \item Results: \texttt{REAL FINAL FILES/outputs/results/carbon\_20260224\_162633}
+  \item Analysis: \texttt{REAL FINAL FILES/outputs/analysis/carbon\_20260224\_162633}
+  \item Monetary master CSV: \texttt{REAL FINAL FILES/outputs/analysis/carbon\_20260224\_162633/monetary\_numbers.csv}
+  \item Graph manifest: \texttt{REAL FINAL FILES/outputs/analysis/carbon\_20260224\_162633/graph\_format\_manifest.json}
+\end{itemize}
+
+\end{document}

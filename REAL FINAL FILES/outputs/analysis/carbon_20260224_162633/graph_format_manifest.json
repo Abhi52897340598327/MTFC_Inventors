@@ -1,0 +1,23 @@
+{
+  "run_id": "carbon_20260224_162633",
+  "renderer": "matplotlib_seaborn",
+  "small_font_style": true,
+  "generated_png_files": [
+    "carbon_intensity_heatmap.png",
+    "copula_energy_tail_bars.png",
+    "copula_tail_dashboard.png",
+    "energy_forecast_costs.png",
+    "mitigation_npv_payback.png",
+    "model_performance_dashboard.png",
+    "monetizable_outcomes_dashboard.png",
+    "recommendation_energy_peak_projection.png",
+    "recommendation_mitigation_impact.png",
+    "recommendation_scenario_radar.png",
+    "scenario_carbon_price_band.png",
+    "scenario_cost_stack.png",
+    "sobol_energy_sensitivity.png",
+    "sobol_global_sensitivity.png",
+    "tornado_oat_emissions.png",
+    "tornado_oat_energy.png"
+  ]
+}

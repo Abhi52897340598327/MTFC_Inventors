@@ -1,0 +1,51 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1320' height='780' viewBox='0 0 1320 780'>
+<rect x='0' y='0' width='1320' height='780' fill='#e9e9e9'/>
+<text x='660.00' y='50.00' font-family='Helvetica, Arial, sans-serif' font-size='25' font-weight='700' text-anchor='middle' fill='#222222'>Recommendation Impact Ranking</text>
+<text x='660.00' y='86.00' font-family='Helvetica, Arial, sans-serif' font-size='15' font-weight='600' text-anchor='middle' fill='#222222'>Estimated Annual Carbon Reduction Potential</text>
+<line x1='280.00' y1='120.00' x2='280.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='280.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>0%</text>
+<line x1='464.00' y1='120.00' x2='464.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='464.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>10%</text>
+<line x1='648.00' y1='120.00' x2='648.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='648.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>19%</text>
+<line x1='832.00' y1='120.00' x2='832.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='832.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>29%</text>
+<line x1='1016.00' y1='120.00' x2='1016.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1016.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>39%</text>
+<line x1='1200.00' y1='120.00' x2='1200.00' y2='680.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1200.00' y='708.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>48%</text>
+<rect x='280.00' y='145.20' width='219.57' height='89.60' fill='#2fbf71' stroke='#222' stroke-width='1.20' rx='3.00' opacity='1.000'/>
+<text x='268.00' y='206.13' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='end' fill='#222222'>Dynamic Workload Shifting</text>
+<text x='509.57' y='206.13' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='700' text-anchor='start' fill='#222222'>11.5%</text>
+<circle cx='1234.00' cy='190.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1248.00' cy='190.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1262.00' cy='190.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1276.00' cy='190.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1290.00' cy='190.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<rect x='280.00' y='285.20' width='358.95' height='89.60' fill='#2fbf71' stroke='#222' stroke-width='1.20' rx='3.00' opacity='1.000'/>
+<text x='268.00' y='346.13' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='end' fill='#222222'>PUE Optimization (Cooling)</text>
+<text x='648.95' y='346.13' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='700' text-anchor='start' fill='#222222'>18.8%</text>
+<circle cx='1234.00' cy='330.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1248.00' cy='330.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1262.00' cy='330.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1276.00' cy='330.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1290.00' cy='330.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<rect x='280.00' y='425.20' width='427.68' height='89.60' fill='#2fbf71' stroke='#222' stroke-width='1.20' rx='3.00' opacity='1.000'/>
+<text x='268.00' y='486.13' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='end' fill='#222222'>Cleaner Grid Contracts</text>
+<text x='717.68' y='486.13' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='700' text-anchor='start' fill='#222222'>22.4%</text>
+<circle cx='1234.00' cy='470.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1248.00' cy='470.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1262.00' cy='470.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1276.00' cy='470.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1290.00' cy='470.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<rect x='280.00' y='565.20' width='800.00' height='89.60' fill='#e34a33' stroke='#222' stroke-width='1.20' rx='3.00' opacity='1.000'/>
+<text x='268.00' y='626.13' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='end' fill='#222222'>Combined Portfolio</text>
+<text x='1090.00' y='626.13' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='700' text-anchor='start' fill='#222222'>41.9%</text>
+<circle cx='1234.00' cy='610.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1248.00' cy='610.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1262.00' cy='610.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1276.00' cy='610.00' r='5.20' fill='#455a64' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<circle cx='1290.00' cy='610.00' r='5.20' fill='#c8d0d4' stroke='none' stroke-width='0.00' opacity='1.000'/>
+<text x='740.00' y='752.00' font-family='Helvetica, Arial, sans-serif' font-size='13' font-weight='normal' text-anchor='middle' fill='#222222'>Estimated Annual Carbon Reduction (%)</text>
+<text x='1250.00' y='108.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>Difficulty</text>
+</svg>

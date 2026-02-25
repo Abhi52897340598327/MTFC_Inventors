@@ -1,0 +1,16 @@
+Model Performance Summary (Deterministic Training)
+===================================================
+
+Model           MAE      RMSE     MAPE      R2
+-----------------------------------------------
+XGBoost        0.1234   0.1534   0.159%   0.9997
+RandomForest   0.1108   0.2158   0.144%   0.9994
+GRU            2.6287   3.2445   3.371%   0.8651
+
+Notes:
+- XGBoost and Random Forest achieve near-perfect R² (>0.999)
+- GRU replaced LSTM (faster training, fewer parameters: 30,497 vs 40,097)
+- GRU uses deterministic training (shuffle=False, fixed seeds)
+- Random Forest replaced SARIMAX (which had negative R²)
+- All models trained on real data (NOAA, EIA-930, Google Cluster)
+- BiGRU R²=0.87 is good for a recurrent model on this dataset size

@@ -1,0 +1,105 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='860' viewBox='0 0 1600 860'>
+<rect x='0' y='0' width='1600' height='860' fill='#ececec'/>
+<text x='800.00' y='52.00' font-family='Helvetica, Arial, sans-serif' font-size='24' font-weight='700' text-anchor='middle' fill='#222'>Projected Annual Cost from Energy Forecast</text>
+<text x='800.00' y='86.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='600' text-anchor='middle' fill='#222'>Electricity + Demand + Carbon + Volatility + Peak-Breach Penalties</text>
+<line x1='140.00' y1='740.00' x2='1420.00' y2='740.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='744.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$49.1M</text>
+<line x1='140.00' y1='618.00' x2='1420.00' y2='618.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='622.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$145.4M</text>
+<line x1='140.00' y1='496.00' x2='1420.00' y2='496.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='500.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$241.7M</text>
+<line x1='140.00' y1='374.00' x2='1420.00' y2='374.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='378.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$338.0M</text>
+<line x1='140.00' y1='252.00' x2='1420.00' y2='252.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='256.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$434.4M</text>
+<line x1='140.00' y1='130.00' x2='1420.00' y2='130.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='130.00' y='134.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222'>$530.7M</text>
+<line x1='140.00' y1='130.00' x2='140.00' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='140.00' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2026</text>
+<line x1='282.22' y1='130.00' x2='282.22' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='282.22' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2027</text>
+<line x1='424.44' y1='130.00' x2='424.44' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='424.44' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2028</text>
+<line x1='566.67' y1='130.00' x2='566.67' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='566.67' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2029</text>
+<line x1='708.89' y1='130.00' x2='708.89' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='708.89' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2030</text>
+<line x1='851.11' y1='130.00' x2='851.11' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='851.11' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2031</text>
+<line x1='993.33' y1='130.00' x2='993.33' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='993.33' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2032</text>
+<line x1='1135.56' y1='130.00' x2='1135.56' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='1135.56' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2033</text>
+<line x1='1277.78' y1='130.00' x2='1277.78' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='1277.78' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2034</text>
+<line x1='1420.00' y1='130.00' x2='1420.00' y2='740.00' stroke='#ececec' stroke-width='1.00'/>
+<text x='1420.00' y='764.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>2035</text>
+<line x1='140.00' y1='736.73' x2='282.22' y2='717.90' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='282.22' y1='717.90' x2='424.44' y2='693.70' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='424.44' y1='693.70' x2='566.67' y2='662.54' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='566.67' y1='662.54' x2='708.89' y2='622.40' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='708.89' y1='622.40' x2='851.11' y2='570.64' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='851.11' y1='570.64' x2='993.33' y2='503.85' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='993.33' y1='503.85' x2='1135.56' y2='417.59' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='1135.56' y1='417.59' x2='1277.78' y2='306.13' stroke='#2e9f44' stroke-width='3.20'/>
+<line x1='1277.78' y1='306.13' x2='1420.00' y2='162.01' stroke='#2e9f44' stroke-width='3.20'/>
+<circle cx='140.00' cy='736.73' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='282.22' cy='717.90' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='424.44' cy='693.70' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='566.67' cy='662.54' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='708.89' cy='622.40' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='851.11' cy='570.64' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='993.33' cy='503.85' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1135.56' cy='417.59' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1277.78' cy='306.13' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1420.00' cy='162.01' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<line x1='140.00' y1='736.73' x2='282.22' y2='733.59' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='282.22' y1='733.59' x2='424.44' y2='730.30' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='424.44' y1='730.30' x2='566.67' y2='726.86' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='566.67' y1='726.86' x2='708.89' y2='723.25' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='708.89' y1='723.25' x2='851.11' y2='719.47' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='851.11' y1='719.47' x2='993.33' y2='715.51' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='993.33' y1='715.51' x2='1135.56' y2='711.36' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='1135.56' y1='711.36' x2='1277.78' y2='707.01' stroke='#2c7fb8' stroke-width='3.20'/>
+<line x1='1277.78' y1='707.01' x2='1420.00' y2='702.45' stroke='#2c7fb8' stroke-width='3.20'/>
+<circle cx='140.00' cy='736.73' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='282.22' cy='733.59' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='424.44' cy='730.30' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='566.67' cy='726.86' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='708.89' cy='723.25' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='851.11' cy='719.47' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='993.33' cy='715.51' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1135.56' cy='711.36' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1277.78' cy='707.01' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1420.00' cy='702.45' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<line x1='140.00' y1='736.73' x2='282.22' y2='727.32' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='282.22' y1='727.32' x2='424.44' y2='716.56' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='424.44' y1='716.56' x2='566.67' y2='704.26' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='566.67' y1='704.26' x2='708.89' y2='690.19' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='708.89' y1='690.19' x2='851.11' y2='674.10' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='851.11' y1='674.10' x2='993.33' y2='655.69' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='993.33' y1='655.69' x2='1135.56' y2='634.61' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='1135.56' y1='634.61' x2='1277.78' y2='610.49' stroke='#f47a1f' stroke-width='3.20'/>
+<line x1='1277.78' y1='610.49' x2='1420.00' y2='582.85' stroke='#f47a1f' stroke-width='3.20'/>
+<circle cx='140.00' cy='736.73' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='282.22' cy='727.32' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='424.44' cy='716.56' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='566.67' cy='704.26' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='708.89' cy='690.19' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='851.11' cy='674.10' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='993.33' cy='655.69' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1135.56' cy='634.61' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1277.78' cy='610.49' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<circle cx='1420.00' cy='582.85' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<line x1='1396.00' y1='146.00' x2='1426.00' y2='146.00' stroke='#2c7fb8' stroke-width='3.20'/>
+<circle cx='1411.00' cy='146.00' r='4.80' fill='#2c7fb8' stroke='#fff' stroke-width='1.00'/>
+<text x='1440.00' y='150.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>Conservative 5%</text>
+<line x1='1396.00' y1='170.00' x2='1426.00' y2='170.00' stroke='#f47a1f' stroke-width='3.20'/>
+<circle cx='1411.00' cy='170.00' r='4.80' fill='#f47a1f' stroke='#fff' stroke-width='1.00'/>
+<text x='1440.00' y='174.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>Moderate 15%</text>
+<line x1='1396.00' y1='194.00' x2='1426.00' y2='194.00' stroke='#2e9f44' stroke-width='3.20'/>
+<circle cx='1411.00' cy='194.00' r='4.80' fill='#2e9f44' stroke='#fff' stroke-width='1.00'/>
+<text x='1440.00' y='198.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>Aggressive 30%</text>
+<text x='780.00' y='836.00' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='middle' fill='#222'>Forecast Year</text>
+<text x='50.00' y='435.00' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='middle' fill='#222'>Total Annual Cost (USD)</text>
+</svg>

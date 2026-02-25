@@ -77,3 +77,7 @@ Thumbs.db
 *.swp
 temp/
 tmp/
+
+# Track cleaned datasets
+!Data_Sources/cleaned/
+!Data_Sources/cleaned/**/*.csv

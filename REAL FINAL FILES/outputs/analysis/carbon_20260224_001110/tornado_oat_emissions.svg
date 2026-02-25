@@ -1,0 +1,73 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1700' height='1080' viewBox='0 0 1700 1080'>
+<rect x='0' y='0' width='1700' height='1080' fill='#e9e9e9'/>
+<text x='850.00' y='54.00' font-family='Helvetica, Arial, sans-serif' font-size='26' font-weight='700' text-anchor='middle' fill='#222222'>Sensitivity Analysis: Impact on Carbon Emissions</text>
+<text x='850.00' y='92.00' font-family='Helvetica, Arial, sans-serif' font-size='18' font-weight='600' text-anchor='middle' fill='#222222'>(Deterministic One-at-a-Time, Physics-Based)</text>
+<line x1='220.00' y1='120.00' x2='220.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='220.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>9.2</text>
+<line x1='494.00' y1='120.00' x2='494.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='494.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>10.5</text>
+<line x1='768.00' y1='120.00' x2='768.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='768.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>11.9</text>
+<line x1='1042.00' y1='120.00' x2='1042.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='1042.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>13.2</text>
+<line x1='1316.00' y1='120.00' x2='1316.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='1316.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>14.6</text>
+<line x1='1590.00' y1='120.00' x2='1590.00' y2='980.00' stroke='#d0d0d0' stroke-width='1.00' opacity='1.000'/>
+<text x='1590.00' y='1008.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>15.9</text>
+<line x1='220.00' y1='120.00' x2='1590.00' y2='120.00' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='186.15' x2='1590.00' y2='186.15' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='252.31' x2='1590.00' y2='252.31' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='318.46' x2='1590.00' y2='318.46' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='384.62' x2='1590.00' y2='384.62' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='450.77' x2='1590.00' y2='450.77' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='516.92' x2='1590.00' y2='516.92' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='583.08' x2='1590.00' y2='583.08' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='649.23' x2='1590.00' y2='649.23' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='715.38' x2='1590.00' y2='715.38' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='781.54' x2='1590.00' y2='781.54' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='847.69' x2='1590.00' y2='847.69' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='913.85' x2='1590.00' y2='913.85' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='220.00' y1='980.00' x2='1590.00' y2='980.00' stroke='#cccccc' stroke-width='1.00' opacity='1.000'/>
+<line x1='836.96' y1='120.00' x2='836.96' y2='980.00' stroke='#2d8dd6' stroke-width='4.00' opacity='1.000' stroke-dasharray='16,10'/>
+<text x='846.96' y='146.00' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='700' text-anchor='start' fill='#2d8dd6'>Baseline 12.22 tCO2/h</text>
+<rect x='436.32' y='129.92' width='400.63' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='161.41' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Idle Power Fraction (Low)</text>
+<text x='846.96' y='161.41' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-16.2%</text>
+<rect x='836.96' y='196.08' width='400.63' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='227.57' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Idle Power Fraction (High)</text>
+<text x='1247.59' y='227.57' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+16.2%</text>
+<rect x='426.89' y='262.23' width='410.07' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='293.72' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Carbon Intensity (Low)</text>
+<text x='846.96' y='293.72' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-16.5%</text>
+<rect x='836.96' y='328.38' width='235.70' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='359.87' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Carbon Intensity (High)</text>
+<text x='1082.65' y='359.87' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+9.5%</text>
+<rect x='800.21' y='394.54' width='36.75' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='426.03' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Temperature (Low)</text>
+<text x='846.96' y='426.03' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-1.5%</text>
+<rect x='836.96' y='460.69' width='459.23' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='492.18' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Temperature (High)</text>
+<text x='1306.18' y='492.18' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+18.5%</text>
+<rect x='824.71' y='526.85' width='12.25' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='558.34' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>PUE Temp Coef (Low)</text>
+<text x='846.96' y='558.34' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-0.5%</text>
+<rect x='836.96' y='593.00' width='12.25' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='624.49' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>PUE Temp Coef (High)</text>
+<text x='859.21' y='624.49' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+0.5%</text>
+<rect x='826.68' y='659.15' width='10.28' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='690.64' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>CPU (Low)</text>
+<text x='846.96' y='690.64' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-0.4%</text>
+<rect x='836.96' y='725.31' width='6.27' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='756.80' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>CPU (High)</text>
+<text x='853.23' y='756.80' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+0.3%</text>
+<rect x='836.54' y='791.46' width='2.00' height='46.31' fill='#2fbf71' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='822.95' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>PUE CPU Coef (Low)</text>
+<text x='846.96' y='822.95' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#146c2f'>-0.0%</text>
+<rect x='836.96' y='857.62' width='2.00' height='46.31' fill='#c5362a' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='889.10' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>PUE CPU Coef (High)</text>
+<text x='847.37' y='889.10' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+0.0%</text>
+<rect x='836.96' y='923.77' width='2.00' height='46.31' fill='#3b8ed0' stroke='#222222' stroke-width='1.50' rx='2.50' opacity='1.000'/>
+<text x='208.00' y='955.26' font-family='Helvetica, Arial, sans-serif' font-size='10' font-weight='normal' text-anchor='end' fill='#222222'>Baseline</text>
+<text x='846.96' y='955.26' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='700' text-anchor='start' fill='#8f1010'>+0.0%</text>
+<text x='905.00' y='1056.00' font-family='Helvetica, Arial, sans-serif' font-size='21' font-weight='normal' text-anchor='middle' fill='#222222'>Average Emissions (tons CO2/hr)</text>
+</svg>

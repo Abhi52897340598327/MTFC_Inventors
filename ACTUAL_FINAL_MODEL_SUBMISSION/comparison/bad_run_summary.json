@@ -1,0 +1,17 @@
+{
+  "model_name": "BAD_FINAL_MODEL_NO_USE",
+  "train_rows": 633,
+  "holdout_rows": 112,
+  "metrics_summary_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/real_vs_bad_comparison/bad_metrics_holdout_summary.csv",
+  "predictions_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/real_vs_bad_comparison/bad_holdout_predictions_same_data.csv",
+  "figures_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/BAD FINAL MODEL NO USE/outputs/figures",
+  "results_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/BAD FINAL MODEL NO USE/outputs/results",
+  "stage_r2_holdout": {
+    "Stage1_CPU": 0.8020467699757449,
+    "Stage2_ITPower": 0.819049300132605,
+    "Stage3_PUE": 0.993363242870848,
+    "Stage4_TotalPower": 0.9234313483985964,
+    "Stage5_CarbonIntensity": 0.9906562691755264,
+    "Stage6_Emissions": 0.9954213065908746
+  }
+}

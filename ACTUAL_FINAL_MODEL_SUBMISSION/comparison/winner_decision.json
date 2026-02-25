@@ -1,0 +1,14 @@
+{
+  "winner": "BAD_FINAL_MODEL_NO_USE",
+  "decision_rule": "Highest Stage6_Emissions holdout R2; tie-breaker mean holdout R2 across stages 1-6",
+  "real_final_r2": 0.9513185404412208,
+  "bad_final_r2": 0.9954213065908746,
+  "real_mean_r2": 0.8442879235412007,
+  "bad_mean_r2": 0.920661338952737,
+  "real_mean_nrmse": 0.30812129508828007,
+  "bad_mean_nrmse": 0.2321347198906846,
+  "common_dataset": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/real_vs_bad_comparison/common_dataset_same_for_both_models.csv",
+  "train_rows": 633,
+  "holdout_rows": 112,
+  "same_split_assertion": true
+}

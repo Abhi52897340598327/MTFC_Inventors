@@ -1,0 +1,51 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1500' height='760' viewBox='0 0 1500 760'>
+<rect x='0' y='0' width='1500' height='760' fill='#ececec'/>
+<text x='750.00' y='52.00' font-family='Helvetica, Arial, sans-serif' font-size='24' font-weight='700' text-anchor='middle' fill='#222'>Annual Cost Exposure Under Carbon Price Bands</text>
+<text x='750.00' y='86.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='600' text-anchor='middle' fill='#222'>Low/Base/High carbon liability assumptions ($95 / $190 / $300 per ton)</text>
+<line x1='220.00' y1='130.00' x2='220.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='220.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$33.0M</text>
+<line x1='410.00' y1='130.00' x2='410.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='410.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$40.3M</text>
+<line x1='600.00' y1='130.00' x2='600.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='600.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$47.7M</text>
+<line x1='790.00' y1='130.00' x2='790.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='790.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$55.1M</text>
+<line x1='980.00' y1='130.00' x2='980.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='980.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$62.5M</text>
+<line x1='1170.00' y1='130.00' x2='1170.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='1170.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$69.9M</text>
+<line x1='1360.00' y1='130.00' x2='1360.00' y2='640.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='1360.00' y='668.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$77.2M</text>
+<line x1='423.18' y1='193.75' x2='1000.23' y2='193.75' stroke='#4e79a7' stroke-width='4.00'/>
+<circle cx='690.59' cy='193.75' r='6.50' fill='#d62728' stroke='#fff' stroke-width='1.00'/>
+<circle cx='423.18' cy='193.75' r='4.00' fill='#2ca02c' stroke='none' stroke-width='0.00'/>
+<circle cx='1000.23' cy='193.75' r='4.00' fill='#ff7f0e' stroke='none' stroke-width='0.00'/>
+<text x='206.00' y='198.75' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Current (Baseline)</text>
+<text x='698.59' y='183.75' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>$51.23M</text>
+<line x1='264.64' y1='321.25' x2='700.15' y2='321.25' stroke='#4e79a7' stroke-width='4.00'/>
+<circle cx='466.46' cy='321.25' r='6.50' fill='#d62728' stroke='#fff' stroke-width='1.00'/>
+<circle cx='264.64' cy='321.25' r='4.00' fill='#2ca02c' stroke='none' stroke-width='0.00'/>
+<circle cx='700.15' cy='321.25' r='4.00' fill='#ff7f0e' stroke='none' stroke-width='0.00'/>
+<text x='206.00' y='326.25' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Efficient (Lower PUE + CI)</text>
+<text x='474.46' y='311.25' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>$42.52M</text>
+<line x1='572.41' y1='448.75' x2='1265.32' y2='448.75' stroke='#4e79a7' stroke-width='4.00'/>
+<circle cx='893.52' cy='448.75' r='6.50' fill='#d62728' stroke='#fff' stroke-width='1.00'/>
+<circle cx='572.41' cy='448.75' r='4.00' fill='#2ca02c' stroke='none' stroke-width='0.00'/>
+<circle cx='1265.32' cy='448.75' r='4.00' fill='#ff7f0e' stroke='none' stroke-width='0.00'/>
+<text x='206.00' y='453.75' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>High Growth</text>
+<text x='901.52' y='438.75' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>$59.11M</text>
+<line x1='585.05' y1='576.25' x2='1260.32' y2='576.25' stroke='#4e79a7' stroke-width='4.00'/>
+<circle cx='897.98' cy='576.25' r='6.50' fill='#d62728' stroke='#fff' stroke-width='1.00'/>
+<circle cx='585.05' cy='576.25' r='4.00' fill='#2ca02c' stroke='none' stroke-width='0.00'/>
+<circle cx='1260.32' cy='576.25' r='4.00' fill='#ff7f0e' stroke='none' stroke-width='0.00'/>
+<text x='206.00' y='581.25' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Climate Stress</text>
+<text x='905.98' y='566.25' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>$59.29M</text>
+<line x1='1200.00' y1='150.00' x2='1240.00' y2='150.00' stroke='#4e79a7' stroke-width='4.00'/>
+<circle cx='1220.00' cy='150.00' r='6.50' fill='#d62728' stroke='#fff' stroke-width='1.00'/>
+<text x='1248.00' y='154.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>Cost range with base marker</text>
+<circle cx='1204.00' cy='172.00' r='4.00' fill='#2ca02c' stroke='none' stroke-width='0.00'/>
+<text x='1216.00' y='176.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>Low carbon price</text>
+<circle cx='1204.00' cy='192.00' r='4.00' fill='#ff7f0e' stroke='none' stroke-width='0.00'/>
+<text x='1216.00' y='196.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222'>High carbon price</text>
+<text x='790.00' y='736.00' font-family='Helvetica, Arial, sans-serif' font-size='11' font-weight='normal' text-anchor='middle' fill='#222'>Total Annual Cost (USD)</text>
+</svg>

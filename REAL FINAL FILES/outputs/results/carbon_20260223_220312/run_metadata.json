@@ -1,0 +1,29 @@
+{
+  "run_id": "carbon_20260223_220312",
+  "horizon_steps": 1,
+  "seasonal_period_steps": 24,
+  "train_rows_context": 54,
+  "holdout_rows_evaluated": 299,
+  "best_params": {
+    "stage1_cpu": {
+      "n_estimators": 300,
+      "max_depth": 12,
+      "min_samples_leaf": 2,
+      "max_features": "sqrt"
+    },
+    "stage5_ci": {
+      "n_estimators": 300,
+      "max_depth": 4,
+      "learning_rate": 0.05,
+      "subsample": 0.9,
+      "colsample_bytree": 0.9,
+      "reg_alpha": 0.0,
+      "reg_lambda": 1.0
+    }
+  },
+  "leakage_checks": {
+    "no_bfill_in_source": true,
+    "strict_past_stage1": true,
+    "strict_past_stage5": true
+  }
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "name": ".DS_Store",
+    "path": "cluster-trace-v2018/.DS_Store",
+    "sha": "5008ddfcf53c02e82d7eee2e57c38e5672ef89f6",
+    "size": 6148,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/.DS_Store?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/.DS_Store",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/5008ddfcf53c02e82d7eee2e57c38e5672ef89f6",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/.DS_Store",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/.DS_Store?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/5008ddfcf53c02e82d7eee2e57c38e5672ef89f6",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/.DS_Store"
+    }
+  },
+  {
+    "name": "DAG.png",
+    "path": "cluster-trace-v2018/DAG.png",
+    "sha": "35b762cf6343b7b2a833e3d902c8f66695bc5a80",
+    "size": 383834,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/DAG.png?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/DAG.png",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/35b762cf6343b7b2a833e3d902c8f66695bc5a80",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/DAG.png",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/DAG.png?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/35b762cf6343b7b2a833e3d902c8f66695bc5a80",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/DAG.png"
+    }
+  },
+  {
+    "name": "fetchData.sh",
+    "path": "cluster-trace-v2018/fetchData.sh",
+    "sha": "d48bcd6c3d042cd7a8cc1d333280b15c8cfe2a07",
+    "size": 582,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/fetchData.sh?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/fetchData.sh",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/d48bcd6c3d042cd7a8cc1d333280b15c8cfe2a07",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/fetchData.sh",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/fetchData.sh?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/d48bcd6c3d042cd7a8cc1d333280b15c8cfe2a07",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/fetchData.sh"
+    }
+  },
+  {
+    "name": "schema.txt",
+    "path": "cluster-trace-v2018/schema.txt",
+    "sha": "0e9472965c0f8e84047aef3712de50f5c638e238",
+    "size": 8125,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/schema.txt?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/schema.txt",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/0e9472965c0f8e84047aef3712de50f5c638e238",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/schema.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/schema.txt?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/0e9472965c0f8e84047aef3712de50f5c638e238",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/schema.txt"
+    }
+  },
+  {
+    "name": "sigma-fuxi-collocation.jpg",
+    "path": "cluster-trace-v2018/sigma-fuxi-collocation.jpg",
+    "sha": "95a0a10bf92c3ad61092398ee030d450786b18ad",
+    "size": 2683866,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/sigma-fuxi-collocation.jpg?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/sigma-fuxi-collocation.jpg",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/95a0a10bf92c3ad61092398ee030d450786b18ad",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/sigma-fuxi-collocation.jpg",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/sigma-fuxi-collocation.jpg?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/95a0a10bf92c3ad61092398ee030d450786b18ad",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/sigma-fuxi-collocation.jpg"
+    }
+  },
+  {
+    "name": "trace_2018.md",
+    "path": "cluster-trace-v2018/trace_2018.md",
+    "sha": "74b52507a24bfef749a21d74066eee1d780a3167",
+    "size": 6527,
+    "url": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/trace_2018.md?ref=master",
+    "html_url": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/trace_2018.md",
+    "git_url": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/74b52507a24bfef749a21d74066eee1d780a3167",
+    "download_url": "https://raw.githubusercontent.com/alibaba/clusterdata/master/cluster-trace-v2018/trace_2018.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/alibaba/clusterdata/contents/cluster-trace-v2018/trace_2018.md?ref=master",
+      "git": "https://api.github.com/repos/alibaba/clusterdata/git/blobs/74b52507a24bfef749a21d74066eee1d780a3167",
+      "html": "https://github.com/alibaba/clusterdata/blob/master/cluster-trace-v2018/trace_2018.md"
+    }
+  }
+]
