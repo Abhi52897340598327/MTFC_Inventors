@@ -1,0 +1,19 @@
+ACTUAL SUBMISSION MODEL OUTPUTS
+Date: 2026-02-24
+
+Root output folder:
+ACTUAL_FINAL_MODEL_SUBMISSION/ACTUAL_SUBMISSION/model_outputs
+
+Sensitivity reruns (pipeline untouched):
+- advanced_sensitivity_analysis.py
+- advanced_monte_carlo_validation.py
+
+Key figures included:
+- sensitivity/tornado_diagram_carbon_tons.png
+- sensitivity/tornado_diagram_total_power_mw.png
+- sensitivity/sobol_sensitivity.png
+- sensitivity/copula_analysis.png
+- sensitivity/sensitivity_dashboard.png
+
+New Virginia datacenter map:
+- maps/virginia_datacenter_location_heatmap.png
