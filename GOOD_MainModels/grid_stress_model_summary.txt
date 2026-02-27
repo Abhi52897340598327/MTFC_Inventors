@@ -1,0 +1,12 @@
+MODEL 3 — Grid Stress / Peak Demand Exceedance Analysis
+Reserve margin requirement: 15%
+Peak price premium used: $300 per MWh
+Planning peak baseline q99.5 demand (MW): 140,814.78
+Minimum baseline reserve margin through forecast: 19.01%
+Maximum baseline stress hours in one year: 452
+Maximum baseline annual grid stress cost: $15,746,866
+
+Scenarios:
+- conservative uses Model 1 lower_95 energy path
+- baseline uses Model 1 point forecast path
+- aggressive uses Model 1 upper_95 energy path

@@ -1,0 +1,9 @@
+MODEL 4 — Monetization and Cost-Benefit Analysis
+SCC used: $51/tonne
+Electricity price used: $65/MWh
+Discount rate used: 7.0%
+Analysis horizon: 10 years
+10-year total baseline risk cost: $732,516,850
+
+Top recommendation by NPV:
+- PUE optimization: NPV=$36,990,760, payback=1.71 years

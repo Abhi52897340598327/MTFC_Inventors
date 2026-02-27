@@ -3,7 +3,7 @@
 Dep. Variable:                         energy_GWh   No. Observations:                   96
 Model:             SARIMAX(0, 0, 1)x(0, 1, 1, 12)   Log Likelihood                 -52.092
 Date:                            Fri, 27 Feb 2026   AIC                            118.185
-Time:                                    04:35:41   BIC                            133.924
+Time:                                    08:44:57   BIC                            133.924
 Sample:                                01-01-2015   HQIC                           124.437
                                      - 12-01-2022                                         
 Covariance Type:                              opg                                         

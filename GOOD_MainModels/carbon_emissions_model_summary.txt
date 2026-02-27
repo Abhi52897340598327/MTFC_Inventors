@@ -1,0 +1,11 @@
+MODEL 2 — SARIMAX Carbon Emissions Forecast
+History: 2019-01-01 to 2024-12-01 (72 months)
+ARIMA order: (0, 0, 0)
+Seasonal order: (2, 1, 0, 12)
+Test RMSE (tonnes/month): 264.0620
+Test MAE  (tonnes/month): 200.2716
+Test R2: 0.984123
+Forecast range: 2025-01-01 to 2035-12-01
+2035 annual forecast (tonnes): 180,322
+
+Exogenous variables: temp_c, carbon_intensity_g_per_kwh, cooling_degree_days, month_sin, month_cos
