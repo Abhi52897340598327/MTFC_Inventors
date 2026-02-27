@@ -1,0 +1,30 @@
+{
+  "latest_run_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/results/carbon_20260225_220525_5y_realdata",
+  "hourly_comparison_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/joint_risk_hourly_before_after.csv",
+  "summary_csv": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Recommendations/mitigation_impact_summary.csv",
+  "thresholds_json": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/danger_rule_thresholds.json",
+  "playbook_md": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Recommendations/joint_risk_operations_playbook.md",
+  "plots": {
+    "red_hours_before_after": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/danger_rule_red_hours_before_after.png",
+    "emissions_before_after": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/emissions_before_after_by_year.png",
+    "peak_stress_before_after": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/peak_stress_before_after_by_year.png",
+    "joint_risk_monthly_before_after": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Risk_Analysis/joint_risk_monthly_before_after.png",
+    "recommendations_red_hours_impact": "/Users/abhiraamvenigalla/MTFC_Inventors/MTFC_Sections/Recommendations/risk_mitigation_red_hours_impact.png"
+  },
+  "summary": {
+    "run_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/results/carbon_20260225_220525_5y_realdata",
+    "rows": 43800,
+    "baseline_red_hours": 5846,
+    "mitigated_red_hours": 2700,
+    "red_hour_reduction_abs": 3146.0,
+    "red_hour_reduction_pct": 53.814574067738626,
+    "baseline_peak_stress": 4.150046700184814,
+    "mitigated_peak_stress": 4.149955705338981,
+    "peak_stress_reduction_abs": 9.099484583252604e-05,
+    "peak_stress_reduction_pct": 0.0021926222138289138,
+    "baseline_total_emissions": 1123675750.9947429,
+    "mitigated_total_emissions": 1116089236.0660095,
+    "emissions_reduction_abs": 7586514.928733349,
+    "emissions_reduction_pct": 0.675151610419405
+  }
+}

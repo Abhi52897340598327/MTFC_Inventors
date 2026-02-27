@@ -1,0 +1,33 @@
+{
+  "run_id": "carbon_20260225_205759",
+  "analysis_dir": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/analysis/carbon_20260225_205759",
+  "retrained_any_model": false,
+  "generated_files": [
+    "carbon_intensity_heatmap.csv",
+    "carbon_intensity_heatmap.svg",
+    "copula_energy_tail_bars.svg",
+    "copula_tail_curves.csv",
+    "copula_tail_dashboard.svg",
+    "copula_tail_dependence.csv",
+    "energy_forecast_scenarios.csv",
+    "recommendation_energy_peak_projection.svg",
+    "recommendation_mitigation.csv",
+    "recommendation_mitigation_impact.svg",
+    "recommendation_scenario_radar.svg",
+    "recommendation_scenarios.csv",
+    "sensitivity_visual_report.md",
+    "sobol_energy_sensitivity.svg",
+    "sobol_global_sensitivity.svg",
+    "sobol_indices.csv",
+    "sobol_indices_energy.csv",
+    "tornado_oat.csv",
+    "tornado_oat_emissions.svg",
+    "tornado_oat_energy.csv",
+    "tornado_oat_energy.svg"
+  ],
+  "top_sobol_parameter": "idle_power_fraction",
+  "top_sobol_energy_parameter": "idle_power_fraction",
+  "top_tornado_parameter": "idle_power_fraction",
+  "top_tornado_energy_parameter": "idle_power_fraction",
+  "top_copula_pair": "temp_vs_energy"
+}

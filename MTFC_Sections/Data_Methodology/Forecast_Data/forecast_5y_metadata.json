@@ -1,0 +1,42 @@
+{
+  "run_id": "carbon_20260225_220525",
+  "output_tag": "carbon_20260225_220525_5y_realdata",
+  "history_start": "2019-05-01 06:00:00",
+  "history_end": "2019-06-01 06:00:00",
+  "forecast_start": "2019-06-01 07:00:00",
+  "forecast_end_exclusive": "2024-06-01 07:00:00",
+  "forecast_hours": 43800,
+  "required_future_exog_columns": [
+    "demand_forecast_error_mwh",
+    "demand_forecast_mwh",
+    "demand_mwh",
+    "demand_mwh_raw",
+    "dew_point_c",
+    "fuel_col_share",
+    "fuel_ng_share",
+    "fuel_nuc_share",
+    "fuel_oth_share",
+    "fuel_sun_share",
+    "fuel_wat_share",
+    "fuel_wnd_share",
+    "interchange_mwh",
+    "net_generation_mwh",
+    "temperature_c",
+    "timestamp",
+    "wind_speed_mps"
+  ],
+  "future_exog_fill_stats": {
+    "rows_total": 43848,
+    "rows_with_any_missing_before_fill": 308,
+    "total_missing_cells_before_fill": 2283,
+    "total_missing_cells_after_fill": 0
+  },
+  "plots": {
+    "emissions": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_emissions_by_year.png",
+    "energy": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_energy_by_year.png",
+    "grid_stress": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_grid_stress_by_year.png",
+    "emissions_hourly": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_hourly_emissions.png",
+    "energy_hourly": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_hourly_energy_mwh.png",
+    "grid_stress_hourly": "/Users/abhiraamvenigalla/MTFC_Inventors/REAL FINAL FILES/outputs/figures/carbon_20260225_220525_5y_realdata/forecast_5y_hourly_grid_stress_ratio.png"
+  }
+}

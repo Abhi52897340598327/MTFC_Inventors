@@ -1,0 +1,43 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1700' height='960' viewBox='0 0 1700 960'>
+<rect x='0' y='0' width='1700' height='960' fill='#ececec'/>
+<text x='850.00' y='52.00' font-family='Helvetica, Arial, sans-serif' font-size='26' font-weight='700' text-anchor='middle' fill='#222'>Mitigation Economics (10-Year Horizon)</text>
+<text x='850.00' y='88.00' font-family='Helvetica, Arial, sans-serif' font-size='15' font-weight='600' text-anchor='middle' fill='#222'>NPV Bars with Payback Overlay</text>
+<line x1='280.00' y1='120.00' x2='280.00' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='280.00' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$0.0M</text>
+<line x1='496.67' y1='120.00' x2='496.67' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='496.67' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$9.3M</text>
+<line x1='713.33' y1='120.00' x2='713.33' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='713.33' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$18.6M</text>
+<line x1='930.00' y1='120.00' x2='930.00' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='930.00' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$27.9M</text>
+<line x1='1146.67' y1='120.00' x2='1146.67' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='1146.67' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$37.2M</text>
+<line x1='1363.33' y1='120.00' x2='1363.33' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='1363.33' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$46.5M</text>
+<line x1='1580.00' y1='120.00' x2='1580.00' y2='820.00' stroke='#d0d0d0' stroke-width='1.00'/>
+<text x='1580.00' y='848.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>$55.8M</text>
+<line x1='280.00' y1='120.00' x2='280.00' y2='820.00' stroke='#2f77b4' stroke-width='2.50' stroke-dasharray='8,6'/>
+<text x='288.00' y='138.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#2f77b4'>NPV=0</text>
+<rect x='280.00' y='151.50' width='1300.00' height='108.50' fill='#2ca02c' stroke='#222' stroke-width='1.00' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='225.28' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Combined Portfolio</text>
+<text x='1588.00' y='225.28' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$55.82M</text>
+<rect x='1598.00' y='156.50' width='70.00' height='98.50' fill='#2ca02c' stroke='#222' stroke-width='0.80' rx='5.00' opacity='1.000'/>
+<text x='1633.00' y='223.11' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='middle' fill='#fff'>1.4y</text>
+<rect x='280.00' y='326.50' width='648.44' height='108.50' fill='#2ca02c' stroke='#222' stroke-width='1.00' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='400.28' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>PUE Optimization (Cooling)</text>
+<text x='936.44' y='400.28' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$27.84M</text>
+<rect x='1598.00' y='331.50' width='70.00' height='98.50' fill='#2ca02c' stroke='#222' stroke-width='0.80' rx='5.00' opacity='1.000'/>
+<text x='1633.00' y='398.11' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='middle' fill='#fff'>2.2y</text>
+<rect x='280.00' y='501.50' width='522.70' height='108.50' fill='#2ca02c' stroke='#222' stroke-width='1.00' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='575.28' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Cleaner Grid Contracts</text>
+<text x='810.70' y='575.28' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$22.45M</text>
+<rect x='1598.00' y='506.50' width='70.00' height='98.50' fill='#2ca02c' stroke='#222' stroke-width='0.80' rx='5.00' opacity='1.000'/>
+<text x='1633.00' y='573.11' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='middle' fill='#fff'>0.1y</text>
+<rect x='280.00' y='676.50' width='467.93' height='108.50' fill='#2ca02c' stroke='#222' stroke-width='1.00' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='750.28' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222'>Dynamic Workload Shifting</text>
+<text x='755.93' y='750.28' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222'>$20.09M</text>
+<rect x='1598.00' y='681.50' width='70.00' height='98.50' fill='#2ca02c' stroke='#222' stroke-width='0.80' rx='5.00' opacity='1.000'/>
+<text x='1633.00' y='748.11' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='middle' fill='#fff'>0.2y</text>
+<text x='930.00' y='936.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='normal' text-anchor='middle' fill='#222'>10-year NPV (USD)</text>
+<text x='1633.00' y='110.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222'>Payback</text>
+</svg>

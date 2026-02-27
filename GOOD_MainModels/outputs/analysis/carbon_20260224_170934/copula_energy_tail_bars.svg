@@ -1,0 +1,24 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1320' height='760' viewBox='0 0 1320 760'>
+<rect x='0' y='0' width='1320' height='760' fill='#e9e9e9'/>
+<text x='660.00' y='52.00' font-family='Helvetica, Arial, sans-serif' font-size='23' font-weight='700' text-anchor='middle' fill='#222222'>Energy Tail Dependence (Copula)</text>
+<text x='660.00' y='84.00' font-family='Helvetica, Arial, sans-serif' font-size='12' font-weight='600' text-anchor='middle' fill='#222222'>Upper vs Lower Tail Co-Exceedance for Energy-Linked Pairs</text>
+<line x1='740.00' y1='120.00' x2='740.00' y2='640.00' stroke='#2d8dd6' stroke-width='2.40' opacity='1.000'/>
+<text x='740.00' y='108.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#2d8dd6'>0</text>
+<rect x='740.00' y='151.20' width='423.20' height='110.93' fill='#d62728' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<rect x='728.24' y='151.20' width='11.76' height='110.93' fill='#1f77b4' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='226.63' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222222'>temp vs energy</text>
+<text x='1171.20' y='226.63' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222222'>0.973</text>
+<text x='720.24' y='226.63' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='end' fill='#222222'>0.027</text>
+<rect x='740.00' y='324.53' width='129.31' height='110.93' fill='#d62728' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<rect x='634.20' y='324.53' width='105.80' height='110.93' fill='#1f77b4' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='399.97' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222222'>carbon vs energy</text>
+<text x='877.31' y='399.97' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222222'>0.297</text>
+<text x='626.20' y='399.97' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='end' fill='#222222'>0.243</text>
+<rect x='740.00' y='497.87' width='58.78' height='110.93' fill='#d62728' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<rect x='399.09' y='497.87' width='340.91' height='110.93' fill='#1f77b4' stroke='#222' stroke-width='0.80' rx='2.00' opacity='1.000'/>
+<text x='268.00' y='573.30' font-family='Helvetica, Arial, sans-serif' font-size='9' font-weight='normal' text-anchor='end' fill='#222222'>cpu vs energy</text>
+<text x='806.78' y='573.30' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='start' fill='#222222'>0.135</text>
+<text x='391.09' y='573.30' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='700' text-anchor='end' fill='#222222'>0.784</text>
+<text x='942.40' y='670.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#d62728'>Upper Tail λU</text>
+<text x='537.60' y='670.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#1f77b4'>Lower Tail λL</text>
+</svg>

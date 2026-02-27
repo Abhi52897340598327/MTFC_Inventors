@@ -1,0 +1,112 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='760' viewBox='0 0 2000 760'>
+<rect x='0' y='0' width='2000' height='760' fill='#e9e9e9'/>
+<text x='1000.00' y='50.00' font-family='Helvetica, Arial, sans-serif' font-size='25' font-weight='700' text-anchor='middle' fill='#222222'>Recommendation Planning Projections</text>
+<rect x='70.00' y='95.00' width='900.00' height='610.00' fill='#f7f7f7' stroke='#b8b8b8' stroke-width='1.20' rx='0.00' opacity='1.000'/>
+<text x='520.00' y='129.00' font-family='Helvetica, Arial, sans-serif' font-size='13' font-weight='600' text-anchor='middle' fill='#222222'>Projected Annual Energy Consumption</text>
+<rect x='150.00' y='520.64' width='58.50' height='124.36' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='179.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2026</text>
+<rect x='228.00' y='501.98' width='58.50' height='143.02' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='257.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2027</text>
+<rect x='306.00' y='480.53' width='58.50' height='164.47' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='335.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2028</text>
+<rect x='384.00' y='455.86' width='58.50' height='189.14' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='413.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2029</text>
+<rect x='462.00' y='427.49' width='58.50' height='217.51' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='491.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2030</text>
+<rect x='540.00' y='394.86' width='58.50' height='250.14' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='569.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2031</text>
+<rect x='618.00' y='357.34' width='58.50' height='287.66' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='647.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2032</text>
+<rect x='696.00' y='314.19' width='58.50' height='330.81' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='725.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2033</text>
+<rect x='774.00' y='264.57' width='58.50' height='380.43' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='803.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2034</text>
+<rect x='852.00' y='207.50' width='58.50' height='437.50' fill='#2c7fb8' stroke='#1d4f72' stroke-width='1.00' rx='0.00' opacity='1.000'/>
+<text x='881.25' y='675.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2035</text>
+<line x1='140.00' y1='645.00' x2='950.00' y2='645.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='649.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>0</text>
+<line x1='140.00' y1='547.00' x2='950.00' y2='547.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='551.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>245</text>
+<line x1='140.00' y1='449.00' x2='950.00' y2='449.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='453.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>491</text>
+<line x1='140.00' y1='351.00' x2='950.00' y2='351.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='355.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>736</text>
+<line x1='140.00' y1='253.00' x2='950.00' y2='253.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='257.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>982</text>
+<line x1='140.00' y1='155.00' x2='950.00' y2='155.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='132.00' y='159.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>1227</text>
+<text x='100.00' y='400.00' font-family='Helvetica, Arial, sans-serif' font-size='15' font-weight='normal' text-anchor='middle' fill='#333'>Energy (GWh)</text>
+<rect x='1030.00' y='95.00' width='900.00' height='610.00' fill='#f7f7f7' stroke='#b8b8b8' stroke-width='1.20' rx='0.00' opacity='1.000'/>
+<text x='1480.00' y='129.00' font-family='Helvetica, Arial, sans-serif' font-size='13' font-weight='600' text-anchor='middle' fill='#222222'>Projected Peak Demand</text>
+<line x1='1110.00' y1='645.00' x2='1880.00' y2='645.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='649.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>0</text>
+<line x1='1110.00' y1='547.00' x2='1880.00' y2='547.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='551.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>35</text>
+<line x1='1110.00' y1='449.00' x2='1880.00' y2='449.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='453.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>71</text>
+<line x1='1110.00' y1='351.00' x2='1880.00' y2='351.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='355.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>106</text>
+<line x1='1110.00' y1='253.00' x2='1880.00' y2='253.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='257.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>141</text>
+<line x1='1110.00' y1='155.00' x2='1880.00' y2='155.00' stroke='#d2d2d2' stroke-width='1.00' opacity='1.000'/>
+<text x='1102.00' y='159.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='end' fill='#222222'>176</text>
+<line x1='1110.00' y1='645.00' x2='1110.00' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1110.00' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2026</text>
+<line x1='1195.56' y1='645.00' x2='1195.56' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1195.56' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2027</text>
+<line x1='1281.11' y1='645.00' x2='1281.11' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1281.11' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2028</text>
+<line x1='1366.67' y1='645.00' x2='1366.67' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1366.67' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2029</text>
+<line x1='1452.22' y1='645.00' x2='1452.22' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1452.22' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2030</text>
+<line x1='1537.78' y1='645.00' x2='1537.78' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1537.78' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2031</text>
+<line x1='1623.33' y1='645.00' x2='1623.33' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1623.33' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2032</text>
+<line x1='1708.89' y1='645.00' x2='1708.89' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1708.89' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2033</text>
+<line x1='1794.44' y1='645.00' x2='1794.44' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1794.44' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2034</text>
+<line x1='1880.00' y1='645.00' x2='1880.00' y2='155.00' stroke='#ebebeb' stroke-width='1.00' opacity='1.000'/>
+<text x='1880.00' y='669.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='middle' fill='#222222'>2035</text>
+<polyline points='1110.00,532.31 1195.56,529.22 1281.11,526.03 1366.67,522.76 1452.22,519.40 1537.78,515.94 1623.33,512.39 1708.89,508.75 1794.44,505.00 1880.00,501.15' fill='none' stroke='#2c7fb8' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1110.00' cy='532.31' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1195.56' cy='529.22' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1281.11' cy='526.03' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1366.67' cy='522.76' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1452.22' cy='519.40' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1537.78' cy='515.94' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1623.33' cy='512.39' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1708.89' cy='508.75' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1794.44' cy='505.00' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1880.00' cy='501.15' r='5.00' fill='#2c7fb8' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<polyline points='1110.00,532.31 1195.56,523.02 1281.11,512.95 1366.67,502.06 1452.22,490.27 1537.78,477.50 1623.33,463.68 1708.89,448.72 1794.44,432.53 1880.00,415.00' fill='none' stroke='#f47a1f' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1110.00' cy='532.31' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1195.56' cy='523.02' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1281.11' cy='512.95' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1366.67' cy='502.06' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1452.22' cy='490.27' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1537.78' cy='477.50' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1623.33' cy='463.68' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1708.89' cy='448.72' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1794.44' cy='432.53' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1880.00' cy='415.00' r='5.00' fill='#f47a1f' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<polyline points='1110.00,532.31 1195.56,513.72 1281.11,492.06 1366.67,466.82 1452.22,437.43 1537.78,403.18 1623.33,363.27 1708.89,316.79 1794.44,262.64 1880.00,199.55' fill='none' stroke='#2e9f44' stroke-width='4.00' opacity='1.000'/>
+<circle cx='1110.00' cy='532.31' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1195.56' cy='513.72' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1281.11' cy='492.06' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1366.67' cy='466.82' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1452.22' cy='437.43' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1537.78' cy='403.18' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1623.33' cy='363.27' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1708.89' cy='316.79' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1794.44' cy='262.64' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<circle cx='1880.00' cy='199.55' r='5.00' fill='#2e9f44' stroke='#fff' stroke-width='1.00' opacity='1.000'/>
+<line x1='1590.00' y1='161.00' x2='1624.00' y2='161.00' stroke='#2c7fb8' stroke-width='4.00' opacity='1.000'/>
+<text x='1634.00' y='166.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222222'>Conservative 5%</text>
+<line x1='1590.00' y1='187.00' x2='1624.00' y2='187.00' stroke='#f47a1f' stroke-width='4.00' opacity='1.000'/>
+<text x='1634.00' y='192.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222222'>Moderate 15%</text>
+<line x1='1590.00' y1='213.00' x2='1624.00' y2='213.00' stroke='#2e9f44' stroke-width='4.00' opacity='1.000'/>
+<text x='1634.00' y='218.00' font-family='Helvetica, Arial, sans-serif' font-size='8' font-weight='normal' text-anchor='start' fill='#222222'>Aggressive 30%</text>
+</svg>

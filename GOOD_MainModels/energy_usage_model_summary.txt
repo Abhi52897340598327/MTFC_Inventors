@@ -1,0 +1,29 @@
+                                     SARIMAX Results                                      
+==========================================================================================
+Dep. Variable:                         energy_GWh   No. Observations:                   96
+Model:             SARIMAX(0, 0, 1)x(0, 1, 1, 12)   Log Likelihood                 -52.092
+Date:                            Fri, 27 Feb 2026   AIC                            118.185
+Time:                                    04:35:41   BIC                            133.924
+Sample:                                01-01-2015   HQIC                           124.437
+                                     - 12-01-2022                                         
+Covariance Type:                              opg                                         
+================================================================================
+                   coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------
+month_sin    -1.616e-09   1.16e-09     -1.389      0.165    -3.9e-09    6.65e-10
+month_cos     6.957e-09    1.9e-10     36.528      0.000    6.58e-09    7.33e-09
+year_numeric     1.2993      0.033     39.621      0.000       1.235       1.364
+temp_c           0.1654      0.053      3.132      0.002       0.062       0.269
+ma.L1           -0.0420      0.141     -0.298      0.766      -0.318       0.234
+ma.S.L12        -0.5932      0.095     -6.260      0.000      -0.779      -0.408
+sigma2           0.2536      0.037      6.905      0.000       0.182       0.326
+===================================================================================
+Ljung-Box (L1) (Q):                   0.00   Jarque-Bera (JB):                 8.54
+Prob(Q):                              0.96   Prob(JB):                         0.01
+Heteroskedasticity (H):               0.70   Skew:                             0.53
+Prob(H) (two-sided):                  0.41   Kurtosis:                         4.35
+===================================================================================
+
+Warnings:
+[1] Covariance matrix calculated using the outer product of gradients (complex-step).
+[2] Covariance matrix is singular or near-singular, with condition number 2.09e+24. Standard errors may be unstable.
