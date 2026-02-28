@@ -1,550 +1,337 @@
-COMPLETE DATA GUIDE: WHERE TO FIND EVERYTHING AND HOW TO USE IT
-================================================================
+COMPLETE DATA GUIDE: NON-SYNTHETIC DATA INVENTORY AND ACQUISITION
+=================================================================
 
-This guide explains every data source needed for your AI datacenter 
-forecasting project, where to get it, and how to use it.
+Last updated: 2026-02-27
+Scope: Every non-synthetic dataset currently under Data_Sources/, what it contains, and how it was acquired.
 
-================================================================
-OVERVIEW: DATA YOU NEED
-================================================================
 
-TRAINING DATA (2019 - to learn relationships):
-  1. ✅ Temperature (you have)
-  2. ✅ CPU utilization (you have)
-  3. ❌ Power consumption (need from BigQuery)
-  4. ✅ Carbon intensity (you have)
-  5. ✅ Regional demand (you have)
+1) EXTERNAL ACQUISITION CHANNELS
+================================
 
-FORECASTING DATA (2024-2026 - to make predictions):
-  6. ❌ Updated temperature (need from NOAA)
-  7. ❌ Updated carbon intensity (need from EIA)
-  8. User-defined: Virginia capacity scenarios
-  9. User-defined: AI workload assumptions
+NOAA ISD / Global Hourly (direct files):
+- Access: Public file download (no key required for ISD history/global hourly files already downloaded).
+- Used for: Station metadata and hourly weather observations (Dulles station 72403093738).
 
-================================================================
-DATA SOURCE 1: TEMPERATURE DATA
-================================================================
+NOAA CDO API:
+- Access: NOAA token required.
+- Token signup: https://www.ncdc.noaa.gov/cdo-web/token
+- Used for: Daily station observations for Dulles/Ashburn area.
 
-WHAT YOU HAVE:
-  File: ashburn_va_temperature_2019.csv
-  Coverage: Full year 2019, hourly
-  Location: Ashburn, VA (or nearby)
-  
-WHAT IT'S FOR:
-  - Training model to learn how temperature affects cooling power
-  - Higher temperature → more cooling needed → more power
-  
-HOW TO GET 2024 DATA:
+EIA Open Data API v2:
+- Access: EIA API key required.
+- Key signup: https://www.eia.gov/opendata/register.php
+- Used for: PJM hourly demand, forecast, interchange, net generation, generation by fuel; Virginia state electricity/emissions series.
 
-  Source: NOAA Climate Data Online
-  Website: https://www.ncdc.noaa.gov/cdo-web/
-  
-  Steps:
-  1. Go to: https://www.ncdc.noaa.gov/cdo-web/datasets
-  2. Select "Local Climatological Data (LCD)"
-  3. Search for station: "Dulles Airport" or "Washington DC IAD"
-  4. Station ID: GHCND:USW00093738
-  5. Select date range: Jan 1, 2024 - Dec 31, 2024
-  6. Select data types: Temperature (hourly)
-  7. Select output format: CSV
-  8. Submit order (may take a few minutes)
-  
-  API Method:
-  - Get API token: https://www.ncdc.noaa.gov/cdo-web/token
-  - Use download_all_data.py script (in Model_Files folder)
-  - Token arrives via email in 1-2 days
-  
-  Alternative: Use 2019 data as "typical year"
-  - Assumption: Temperature patterns similar 2019 vs 2024
-  - Acceptable for forecasting project
+Google BigQuery public datasets:
+- Access: Google Cloud project + BigQuery API + billing enabled.
+- Console: https://console.cloud.google.com/bigquery
+- Used for: Google ClusterData 2019 and PowerData 2019 extracts; NOAA GSOD query workflows in legacy scripts.
 
-================================================================
-DATA SOURCE 2: CPU UTILIZATION
-================================================================
+EPA eGRID:
+- Access: Public download.
+- Used for: eGRID detailed/metric XLSX reference files and release notes.
 
-WHAT YOU HAVE:
-  File: google_cluster_utilization_2019.csv
-  Coverage: May 2019 only, second-level granularity
-  Source: Google Cloud public dataset
-  
-WHAT IT'S FOR:
-  - Training model to learn how compute load drives power
-  - Higher utilization → more active servers → more power
-  
-PREPROCESSING NEEDED:
-  - Aggregate from seconds to hourly averages
-  - Match with May 2019 only (other data sources)
-  - Formula: hourly_util = mean(all seconds in that hour)
-  
-FOR YOUR 2024+ FORECASTS:
-  - You WON'T have actual 2024 utilization (no crystal ball!)
-  - Instead, CREATE SCENARIOS based on AI workload assumptions:
-  
-    Scenario 1: Normal growth
-    - 2019 average: ~20-30% utilization
-    - 2024 AI datacenter: 60-70% sustained (AI trains non-stop)
-    - Use: Scale up 2019 patterns by 2-3x
-    
-    Scenario 2: Peak AI training
-    - 90% sustained utilization
-    - Represents large model training runs
-    
-    Scenario 3: Mixed workload
-    - 40% baseline + spikes to 80%
-    - Represents inference + some training
+Alibaba cluster data:
+- Access: Public metadata/docs and survey-gated archive links.
+- Used for: External workload trace archives and metadata.
 
-================================================================
-DATA SOURCE 3: POWER CONSUMPTION (CRITICAL - NEED TO GET)
-================================================================
 
-WHAT YOU NEED:
-  Google datacenter actual power measurements (May 2019)
-  This is your TARGET VARIABLE for training
-  Without this, you cannot train the model on real relationships
-  
-WHERE IT IS:
-  Google BigQuery public dataset
-  Project: google.com:google-cluster-data
-  Dataset: powerdata_2019
-  Tables: cella_pdu01 through cellh_pdu21 (57 total)
-  
-WHAT IT CONTAINS:
-  - time: Timestamp (microseconds since May 1, 2019 00:00 PT - 600s)
-  - measured_power_util: Actual power utilization (0-1 scale)
-  - production_power_util: Estimated production workload power
-  - pdu: Power distribution unit identifier
-  - cell: Datacenter cell identifier
-  
-HOW TO GET IT:
+2) DATA_SOURCES ROOT (RAW OR IMPORTED FILES)
+============================================
 
-  OPTION A: BigQuery Web Console (Easiest)
-  1. Go to: https://console.cloud.google.com/bigquery
-  2. Sign in with Google account
-  3. Create new project (name it anything)
-  4. Enable BigQuery API (free)
-  5. Enable billing (required but FREE TIER covers this)
-     - New accounts get $300 free credit
-     - This query costs < $0.05
-  6. Open BigQuery SQL workspace
-  7. Copy/paste this query:
-  
-     SELECT 
-         time,
-         cell,
-         pdu,
-         measured_power_util,
-         production_power_util
-     FROM `google.com:google-cluster-data.powerdata_2019.cell*`
-     WHERE time IS NOT NULL
-         AND NOT bad_measurement_data
-         AND NOT bad_production_power_data
-     ORDER BY time, cell, pdu
-  
-  8. Click "Run"
-  9. Click "Save Results" → Export to CSV
-  10. Save as: google_power_data_2019.csv in Data_Sources folder
-  
-  OPTION B: Python API
-  1. Install: pip install google-cloud-bigquery
-  2. Authenticate: gcloud auth application-default login
-  3. Use Python script to query and save
-  
-  OPTION C: Synthetic Alternative (if BigQuery not available)
-  1. Build physics-based power model
-  2. Formula: Power = Base + (Util × Scale) + Cooling(Temp)
-  3. Calibrate to industry benchmarks
-  4. Less accurate but still functional
-  
-PREPROCESSING NEEDED:
-  - Convert time from microseconds to datetime
-  - time_seconds = (time / 1e6) + 600  # 600s offset
-  - datetime = May 1, 2019 00:00:00 PT + time_seconds
-  - Aggregate from 5-minute to hourly data
-  - Join with utilization and temperature
+- ashburn_va_temperature_2019.csv
+  Contains: hourly timestamp and temperature_c for 2019.
+  Acquired: legacy curated weather table already present in repository (NOAA-derived station weather series).
 
-================================================================
-DATA SOURCE 4: GRID CARBON INTENSITY
-================================================================
+- ashburn_va_temperature_2024.csv
+  Contains: NOAA-style daily records (date, datatype, station, attributes, value) for 2024.
+  Acquired: NOAA CDO API pull (station GHCND:USW00093738, Dulles).
 
-WHAT YOU HAVE:
-  File: pjm_grid_carbon_intensity_2019_full.csv
-  Coverage: Full year 2019, hourly
-  Region: PJM Interconnection (covers Virginia)
-  
-WHAT IT CONTAINS:
-  - timestamp: Date/time
-  - carbon_intensity: g CO2 per kWh
-  - total_gen_mw: Total generation (regional demand proxy)
-  - Net Generation by fuel type (coal, gas, nuclear, etc.)
-  
-WHAT IT'S FOR:
-  - Convert forecasted power (MW) → CO2 emissions (tons)
-  - Formula: Emissions = Power × Carbon_Intensity × Hours
-  - Identify high-carbon hours (avoid running workloads then)
-  
-HOW TO GET 2024 DATA:
+- google_cluster_utilization_2019.csv
+  Contains: real_timestamp, hour_of_day, avg_cpu_utilization, num_tasks_sampled.
+  Acquired: extracted from Google ClusterData 2019 public dataset (BigQuery/public trace workflow).
 
-  Source 1: EIA Electricity Grid Monitor (BEST)
-  Website: https://www.eia.gov/electricity/gridmonitor/
-  
-  Steps:
-  1. Go to: https://www.eia.gov/electricity/gridmonitor/
-  2. Select region: PJM or Mid-Atlantic
-  3. Download historical data
-  4. Format: CSV with hourly generation by fuel
-  5. Calculate carbon intensity:
-     CI = (Coal_MW × 1000 + Gas_MW × 450) / Total_MW
-  
-  API Method:
-  - Get EIA API key: https://www.eia.gov/opendata/register.php (instant)
-  - Use download_all_data.py script
-  - Endpoint: /v2/electricity/rto/region-data/
-  - Filter: respondent=PJM, frequency=hourly
-  
-  Source 2: WattTime API
-  Website: https://www.watttime.org/
-  - Provides real-time marginal emissions
-  - More accurate but requires paid subscription
-  
-  Alternative: Use 2019 + adjustment factor
-  - Virginia grid getting cleaner: ~2-3% less carbon per year
-  - 2024 estimate = 2019 intensity × 0.85
-  - Document assumption clearly
+- noaa_dulles_daily_2015_2024.csv
+  Contains: daily Dulles weather features (avg/max/min temp, wind, precipitation, humidity, snow) with year/month.
+  Acquired: NOAA CDO API via legacy downloader workflow.
 
-================================================================
-DATA SOURCE 5: REGIONAL ELECTRICITY DEMAND
-================================================================
+- noaa_gsod_dulles_2019.csv
+  Contains: GSOD daily weather fields (temp, dewp, max, min, prcp, sndp) for Dulles 2019.
+  Acquired: NOAA GSOD query workflow (legacy BigQuery/public GSOD extraction).
 
-WHAT YOU HAVE:
-  Already in: pjm_grid_carbon_intensity_2019_full.csv
-  Column: total_gen_mw
-  
-WHAT IT'S FOR:
-  - Identify grid stress periods (peak demand hours)
-  - Calculate "coincident peak" contribution
-  - Coincident peak = datacenter load during regional peak
-  - Utilities care about this for grid planning
-  
-HOW TO GET 2024 DATA:
-  Same sources as carbon intensity above (EIA Grid Monitor)
-  
-HOW TO USE:
-  1. Find peak demand hours (top 10% of grid load)
-  2. Calculate: datacenter_contribution = DC_power / total_demand
-  3. Identify if datacenter worsens peak stress
-  4. Test mitigation: shift load away from peaks
+- pjm_hourly_demand_2019_2024_eia.csv
+  Contains: datetime_utc, respondent, demand_mwh.
+  Acquired: EIA API v2 endpoint electricity/rto/region-data/data with respondent=PJM, type=D.
 
-================================================================
-DATA SOURCE 6: VIRGINIA DATACENTER CAPACITY (RESEARCH)
-================================================================
+- pjm_demand_forecast_2019_2024_eia.csv
+  Contains: period, respondent metadata, type=DF, value (MWh).
+  Acquired: EIA API v2 endpoint electricity/rto/region-data/data with respondent=PJM, type=DF.
 
-WHAT YOU NEED:
-  - Total MW of datacenter capacity in Northern Virginia
-  - AI-specific capacity (subset of total)
-  - Growth projections for 2024-2028
-  
-WHERE TO FIND:
+- pjm_interchange_2019_2024_eia.csv
+  Contains: period, respondent metadata, type=TI, value (MWh).
+  Acquired: EIA API v2 endpoint electricity/rto/region-data/data with respondent=PJM, type=TI.
 
-  Source 1: Utility Planning Documents
-  - Dominion Energy Virginia IRP (Integrated Resource Plan)
-  - Website: https://www.dominionenergy.com/company/making-energy/Resource-planning
-  - Look for: "Data center load growth" sections
-  - Usually in Appendix or Load Forecast chapter
-  
-  Source 2: Public Utility Commission
-  - Virginia State Corporation Commission (SCC)
-  - Website: https://www.scc.virginia.gov/
-  - Search docket filings for "data center"
-  - Look for: Interconnection requests (show MW capacity)
-  
-  Source 3: Industry Reports (Subscription may be needed)
-  - JLL Datacenter Outlook
-  - CBRE Data Center Trends Report
-  - Cushman & Wakefield
-  - Synergy Research Group
-  - Often available via: university library access
-  
-  Source 4: News Aggregation
-  - Search Google News: "northern virginia data center" + "megawatt"
-  - AWS, Microsoft, Google, Meta all announce facilities
-  - Example: "Meta builds 500 MW data center in Loudoun County"
-  - Compile announcements from past 2-3 years
-  
-  Source 5: Academic Research
-  - Virginia Tech: papers on datacenter energy impacts
-  - University of Virginia: grid studies
-  - Search: Google Scholar for "virginia datacenter energy"
-  
-BASELINE ESTIMATES (use if research unavailable):
-  
-  2019: ~1,500 MW total datacenter capacity (Northern VA)
-  2024: ~2,500 MW (15% annual growth)
-  2026: ~3,000 MW
-  2028: ~3,500 MW
-  
-  AI Subset: ~30-40% of NEW capacity (post-2020)
-  2024 AI capacity: ~300-400 MW
-  2026 scenario: +500 MW AI (total 800-900 MW)
-  2028 scenario: +1,500 MW AI (total 1,800-2,300 MW)
-  
-  Document these as assumptions if exact data unavailable.
-  For a science fair project, reasonable estimates are OK!
+- pjm_net_generation_2019_2024_eia.csv
+  Contains: period, respondent metadata, type=NG, value (MWh).
+  Acquired: EIA API v2 endpoint electricity/rto/region-data/data with respondent=PJM, type=NG.
 
-================================================================
-DATA SOURCE 7: AI WORKLOAD CHARACTERISTICS (RESEARCH)
-================================================================
+- pjm_generation_by_fuel_2019_2024_eia.csv
+  Contains: period, respondent metadata, fueltype, value (MWh).
+  Acquired: EIA API v2 endpoint electricity/rto/fuel-type-data/data with respondent=PJM and fuel filters.
 
-WHAT YOU NEED:
-  - Power consumption per GPU/chip
-  - Typical utilization rates for AI workloads
-  - Training vs inference differences
-  
-WHERE TO FIND:
+- virginia_co2_emissions_2015_2023.csv
+  Contains: annual/state emissions identifiers (sector, fuel, state metadata).
+  Acquired: EIA open data state-level emissions series (saved CSV export).
 
-  Source 1: GPU Specifications
-  - Nvidia H100 spec sheet: 700W TDP per GPU
-  - AMD MI300: 750W TDP
-  - Google TPU v5: ~450W per chip
-  - Website: nvidia.com, amd.com specifications
-  
-  Source 2: MLCommons Benchmarks
-  - Website: https://mlcommons.org/
-  - Power measurements for real AI workloads
-  - Shows actual power draw during training/inference
-  
-  Source 3: Academic Papers
-  - Search: "large language model power consumption"
-  - Search: "AI datacenter energy efficiency"
-  - Key papers:
-    → "Energy and Policy Considerations for Deep Learning"
-    → "Carbon Emissions and Large Neural Network Training"
-  
-  Source 4: Vendor Whitepapers
-  - AWS, Google Cloud, Microsoft Azure: datacenter efficiency
-  - Look for: PUE values, cooling approaches
-  
-BASELINE ASSUMPTIONS:
-  
-  AI Training Workloads:
-  - Utilization: 70-90% sustained (runs 24/7 for weeks)
-  - Power per rack: 50-100 kW (vs 10-20 kW traditional)
-  - PUE: 1.1-1.2 (modern liquid cooling)
-  
-  AI Inference Workloads:
-  - Utilization: 30-60% average (variable with requests)
-  - Power per rack: 20-40 kW
-  - PUE: 1.2-1.3
-  
-  Compare to 2019 Google data:
-  - 2019 average utilization: 20-30%
-  - 2019 power density: 5-15 kW per rack
-  - 2019 PUE: 1.3-1.5
+- virginia_electricity_consumption_2015_2024.csv
+  Contains: monthly state electricity consumption identifiers (period, state, sector).
+  Acquired: EIA open data state-level consumption series (saved CSV export).
 
-================================================================
-HOW TO USE ALL THIS DATA: COMPLETE WORKFLOW
-================================================================
+- virginia_generation_by_fuel_2015_2024.csv
+  Contains: monthly Virginia generation metadata by fuel and sector.
+  Acquired: EIA open data state-level generation-by-fuel series (saved CSV export).
 
-PHASE 1: DATA COLLECTION (what you're doing now)
-  ✓ Get all data sources above
-  ✓ Save to Data_Sources folder
-  ✓ Document sources and dates
+- virginia_renewable_generation_2015_2024.csv
+  Contains: monthly Virginia renewable generation metadata by fuel and sector.
+  Acquired: EIA open data state-level renewable generation series (saved CSV export).
 
-PHASE 2: DATA PREPROCESSING
-  1. Load all CSV files
-  2. Align timestamps (all to hourly, same timezone)
-  3. Merge on timestamp:
-     - Temperature
-     - Utilization (aggregate to hourly)
-     - Power (aggregate to hourly)
-     - Carbon intensity
-     - Regional demand
-  4. Restrict to overlapping period: May 2019
-  5. Feature engineering:
-     - hour_of_day (0-23)
-     - day_of_week (0-6)
-     - is_weekend (binary)
-     - temperature lags (t-1, t-2, t-3 hours)
-  6. Handle missing data
-  7. Save: processed_training_data_2019.csv
+- EIA923_Schedules_2_3_4_5_M_11_2025_21JAN2026.xlsx
+  Contains: EIA-923 monthly generation/fuel schedules workbook.
+  Acquired: manual public download from EIA Form 923 release files.
 
-PHASE 3: MODEL TRAINING (on May 2019 data)
-  1. Split: 70% train, 15% validation, 15% test
-  2. Train SARIMAX:
-     - Target: power consumption
-     - Features: hour, day, temperature
-     - Seasonal periods: 24 (daily), 168 (weekly)
-  3. Train LSTM:
-     - Target: residuals (actual - SARIMAX prediction)
-     - Features: past 24 hours of residuals, current util
-  4. Train XGBoost:
-     - Target: same residuals
-     - Features: util, temp, hour, temp×util interaction
-  5. Train Meta-Learner:
-     - Combine: SARIMAX + LSTM + XGBoost
-     - Use ridge regression
-  6. Evaluate on test set
-  7. Save models
+- epa_temperature_loudoun_2019.csv
+  Contains: empty file (0 rows).
+  Acquired: incomplete/failed export artifact; not used.
 
-PHASE 4: SCENARIO FORECASTING (2024-2026)
-  1. Load trained models
-  2. Create scenario inputs:
-     - Use 2024 temperature data (or 2019 proxy)
-     - Define AI utilization profile (e.g., 70% sustained)
-     - Scale to desired datacenter size (e.g., 500 MW)
-  3. Generate hourly forecasts:
-     - Run models on scenario inputs
-     - Output: hourly power demand (MW)
-  4. Repeat for multiple scenarios
+- datacenter_constants.json
+  Contains: fixed project constants/assumptions.
+  Acquired: project-authored local configuration (not externally downloaded data).
 
-PHASE 5: RISK ANALYSIS
-  1. Carbon Emissions:
-     - Join forecasted power with 2024 carbon intensity
-     - Calculate: total_CO2 = Σ(power × carbon_intensity × 1 hour)
-     - Convert MW × g/kWh → tons CO2
-  2. Grid Stress:
-     - Join forecasted power with 2024 regional demand
-     - Identify: hours where DC contributes to peak
-     - Calculate: ramp rates (hour-to-hour changes)
-     - Calculate: capacity factor (average/peak)
-  3. Summary Metrics:
-     - Annual CO2 emissions (tons)
-     - Peak demand (MW)
-     - Coincident peak contribution
-     - Hours exceeding threshold
+- data_quality_report.txt
+  Contains: legacy cleaning report output.
+  Acquired: generated by local quality/cleaning script runs.
 
-PHASE 6: MITIGATION ANALYSIS
-  1. Scenario: Workload Shifting
-     - Move flexible compute to low-carbon hours
-     - Measure: reduction in CO2
-  2. Scenario: Demand Response
-     - Curtail load during grid peaks
-     - Measure: reduction in coincident peak
-  3. Scenario: Efficiency Improvements
-     - Better PUE (1.3 → 1.1)
-     - Newer hardware (higher compute per watt)
-     - Measure: reduction in total power
-  4. Sensitivity Analysis:
-     - Which lever has biggest impact?
-     - What's cost vs benefit?
-  5. Recommendations:
-     - Ranked list of strategies
-     - Quantified benefits
 
-PHASE 7: VISUALIZATION & REPORTING
-  1. Time series plots:
-     - Forecasted power demand
-     - Carbon intensity overlay
-     - Regional demand overlay
-  2. Distributions:
-     - Histogram of hourly emissions
-     - CDF of power levels
-  3. Comparison charts:
-     - Baseline vs mitigation scenarios
-     - 2024 vs 2026 vs 2028
-  4. Summary tables:
-     - Key metrics for each scenario
-  5. Export to Figures folder
+3) DATA_SOURCES/EXTERNAL_DOWNLOADS (DOWNLOADED EXTERNAL ASSETS)
+===============================================================
 
-================================================================
-QUICK START CHECKLIST
-================================================================
+- noaa_isd_history.csv
+  Contains: NOAA ISD station master inventory (USAF/WBAN, lat/lon, begin/end dates).
+  Acquired: direct NOAA ISD public download.
 
-☐ 1. Get API keys (10 minutes)
-     ☐ EIA: https://www.eia.gov/opendata/register.php
-     ☐ NOAA: https://www.ncdc.noaa.gov/cdo-web/token
+- noaa_global_hourly_72403093738_2019.csv
+- noaa_global_hourly_72403093738_2020.csv
+- noaa_global_hourly_72403093738_2021.csv
+- noaa_global_hourly_72403093738_2022.csv
+- noaa_global_hourly_72403093738_2023.csv
+- noaa_global_hourly_72403093738_2024.csv
+  Contains: NOAA Global Hourly observations for Dulles station 72403093738 (raw coded fields: TMP, DEW, WND, VIS, SLP, etc.).
+  Acquired: direct NOAA Global Hourly public downloads.
 
-☐ 2. Run download_all_data.py
-     ☐ Update API keys in script
-     ☐ Run: python download_all_data.py
-     ☐ Check Data_Sources folder for new files
+- google_cluster_cpu_cellb_hourly_2019.csv
+  Contains: hourly CPU utilization aggregate for Google cell b (real_timestamp, avg_cpu_utilization, num_tasks_sampled).
+  Acquired: Google ClusterData 2019 extraction (BigQuery/public trace workflow).
 
-☐ 3. Set up BigQuery (30-60 minutes)
-     ☐ Create Google Cloud account
-     ☐ Create project
-     ☐ Enable BigQuery API
-     ☐ Run query from instructions
-     ☐ Export to CSV
+- google_power_cellb_hourly_2019.csv
+  Contains: hourly power utilization aggregate for Google cell b (measured and production power util, sample_count).
+  Acquired: Google PowerData 2019 extraction (BigQuery/public trace workflow).
 
-☐ 4. Research Virginia capacity (1-2 hours)
-     ☐ Read Dominion Energy IRP
-     ☐ Search news for announcements
-     ☐ Document estimates/assumptions
+- egrid2023_data_rev2.xlsx
+- egrid2023_data_metric_rev2.xlsx
+- egrid2023_release_notes.txt
+- epa_egrid_detailed_data.html
+  Contains: EPA eGRID 2023 detailed and metric reference files plus release notes/page snapshot.
+  Acquired: direct EPA eGRID public downloads.
 
-☐ 5. Research AI workload specs (1 hour)
-     ☐ Look up GPU power specs
-     ☐ Find utilization benchmarks
-     ☐ Document assumptions
+- alibaba_machine_meta.tar.gz
+- alibaba_container_meta.tar.gz
+- alibaba_batch_task.tar.gz
+  Contains: Alibaba trace archive subsets (machine/container/task metadata).
+  Acquired: Alibaba cluster trace public/survey-gated download process.
 
-☐ 6. (Optional) Get 2024 temperature
-     ☐ Download from NOAA manually
-     ☐ Or use 2019 as proxy
+- alibaba_clusterdata_README.md
+- alibaba_cluster_trace_v2018_contents.json
+- alibaba_fetchData.sh
+- google_cluster_data_README.md
+- google_ClusterData2019.md
+- google_PowerData2019.md
+- google_power_trace_documentation.pdf
+- google_power_trace_analysis_colab.ipynb
+- README_DOWNLOADED.txt
+  Contains: source documentation, schema notes, acquisition scripts/checklists.
+  Acquired: direct download from source project docs and local provenance capture.
 
-☐ 7. You're ready to start coding!
-     ☐ Data preprocessing script
-     ☐ Model training pipeline
-     ☐ Forecasting engine
 
-================================================================
-TROUBLESHOOTING
-================================================================
+4) DATA_SOURCES/CLEANED (NON-SYNTHETIC TRANSFORMED TABLES)
+===========================================================
 
-Problem: "API key not working"
-Solution: 
-  - Check you copied entire key (no spaces)
-  - EIA keys work immediately
-  - NOAA keys take 1-2 days (email confirmation)
-  - Test key with simple API call first
+- cleaned/ashburn_va_temperature_2019_cleaned.csv
+  Contains: cleaned hourly 2019 local temperature table.
+  Acquired: local cleaning pass of ashburn_va_temperature_2019.csv.
 
-Problem: "BigQuery says billing required"
-Solution:
-  - Must enable billing (credit card required)
-  - BUT: Free tier covers this entirely
-  - New accounts get $300 free credit
-  - This dataset costs < $0.05
-  - No charges unless you exceed free tier
+- cleaned/ashburn_va_temperature_2024_cleaned.csv
+  Contains: cleaned NOAA-style 2024 station table.
+  Acquired: local cleaning pass of ashburn_va_temperature_2024.csv.
 
-Problem: "Can't find Virginia capacity data"
-Solution:
-  - Use baseline estimates provided above
-  - Document as assumption
-  - Sensitivity analysis shows impact of assumption
-  - For science fair, methodology > exact numbers
+- cleaned/google_cluster_utilization_2019_cleaned.csv
+  Contains: cleaned CPU utilization sample table.
+  Acquired: local cleaning pass of google_cluster_utilization_2019.csv.
 
-Problem: "Too much data to process"
-Solution:
-  - Start with one month (May 2019)
-  - Can expand to full year later
-  - Hourly resolution is sufficient
-  - Don't need second-level detail
+- cleaned/google_cluster_utilization_2019_cellb_hourly_cleaned.csv
+  Contains: cleaned hourly Google cell-b CPU series.
+  Acquired: local cleaning pass of external_downloads/google_cluster_cpu_cellb_hourly_2019.csv.
 
-Problem: "Don't understand how to use X data"
-Solution:
-  - See workflow section above
-  - Each data source has specific purpose
-  - Will become clear during preprocessing
-  - Start with basic merging on timestamps
+- cleaned/google_power_utilization_2019_cellb_hourly.csv
+  Contains: cleaned hourly Google cell-b power utilization series.
+  Acquired: local cleaning pass of external_downloads/google_power_cellb_hourly_2019.csv.
 
-================================================================
-SUMMARY: WHAT YOU CAN DO RIGHT NOW
-================================================================
+- cleaned/google_cluster_plus_power_2019_cellb_hourly.csv
+  Contains: joined CPU + power hourly table for Google cell b.
+  Acquired: local join of cleaned Google CPU and power hourly files.
 
-IMMEDIATE (Don't need anything):
-  ✓ Plan model architecture
-  ✓ Start preprocessing script for existing data
-  ✓ Research Virginia capacity (free, just reading)
-  ✓ Research AI specs (free, just reading)
+- cleaned/pjm_hourly_demand_2019_2024_cleaned.csv
+  Contains: cleaned hourly PJM demand table.
+  Acquired: local cleaning pass of pjm_hourly_demand_2019_2024_eia.csv.
 
-TODAY (Free, 10 min setup):
-  ✓ Register for EIA API key
-  ✓ Register for NOAA API key
-  ✓ Sign up for Google Cloud (free tier)
+- cleaned/pjm_exogenous_hourly_2019_2024_cleaned.csv
+  Contains: hourly merged PJM exogenous features (demand, forecast, interchange, net generation, fuel MWh and shares, forecast error).
+  Acquired: Data_Sources/scripts/build_additional_cleaned_datasets.py from:
+    pjm_hourly_demand_2019_2024_eia.csv
+    pjm_demand_forecast_2019_2024_eia.csv
+    pjm_interchange_2019_2024_eia.csv
+    pjm_net_generation_2019_2024_eia.csv
+    pjm_generation_by_fuel_2019_2024_eia.csv
 
-THIS WEEK (When keys arrive):
-  ✓ Run download script for 2024 data
-  ✓ Set up BigQuery and download power data
-  ✓ Complete all data collection
+- cleaned/noaa_global_hourly_dulles_2019_2024_cleaned.csv
+  Contains: hourly weather features (temperature_c, dew_point_c, sea_level_pressure_hpa, wind_speed_mps, visibility_m).
+  Acquired: Data_Sources/scripts/build_additional_cleaned_datasets.py from:
+    external_downloads/noaa_global_hourly_72403093738_2019.csv ... 2024.csv
 
-THEN:
-  ✓ Start building the model!
+- cleaned/pjm_grid_carbon_intensity_2019_full_cleaned.csv
+  Contains: timestamp and carbon_intensity_kg_per_mwh.
+  Acquired: legacy precomputed cleaned carbon-intensity table retained in repository (derived from PJM/EIA generation mix in prior pipeline run).
 
-Good luck! You have everything you need to succeed.
+- cleaned/virginia_co2_emissions_2015_2023_cleaned.csv
+  Contains: cleaned Virginia CO2 emissions metadata series.
+  Acquired: local cleaning pass of virginia_co2_emissions_2015_2023.csv.
+
+- cleaned/virginia_electricity_consumption_2015_2024_cleaned.csv
+  Contains: cleaned Virginia electricity consumption metadata series.
+  Acquired: local cleaning pass of virginia_electricity_consumption_2015_2024.csv.
+
+- cleaned/virginia_generation_by_fuel_2015_2024_cleaned.csv
+  Contains: cleaned Virginia generation-by-fuel metadata series.
+  Acquired: local cleaning pass of virginia_generation_by_fuel_2015_2024.csv.
+
+- cleaned/virginia_renewable_generation_2015_2024_cleaned.csv
+  Contains: cleaned Virginia renewable generation metadata series.
+  Acquired: local cleaning pass of virginia_renewable_generation_2015_2024.csv.
+
+
+5) DATA_SOURCES/MODEL_READY (NON-SYNTHETIC PIPELINE INPUTS)
+============================================================
+
+Created by Data_Sources/scripts/data_audit_and_organize.py using model_data_catalog roles.
+
+- model_ready/stage1_cpu_primary.csv
+  Contains: hourly Google CPU primary series.
+  Acquired: copy of cleaned/google_cluster_utilization_2019_cellb_hourly_cleaned.csv.
+
+- model_ready/stage3_temperature_primary.csv
+  Contains: hourly temperature primary series.
+  Acquired: copy of cleaned/ashburn_va_temperature_2019_cleaned.csv.
+
+- model_ready/stage5_carbon_primary.csv
+  Contains: hourly carbon intensity primary target.
+  Acquired: copy of cleaned/pjm_grid_carbon_intensity_2019_full_cleaned.csv.
+
+- model_ready/power_optional_feature.csv
+  Contains: hourly measured/production power utilization feature.
+  Acquired: copy of cleaned/google_power_utilization_2019_cellb_hourly.csv.
+
+- model_ready/joined_cpu_power_optional.csv
+  Contains: joined CPU + power diagnostics table.
+  Acquired: copy of cleaned/google_cluster_plus_power_2019_cellb_hourly.csv.
+
+- model_ready/stage5_grid_exog_optional.csv
+  Contains: PJM exogenous hourly predictors for carbon stage.
+  Acquired: copy of cleaned/pjm_exogenous_hourly_2019_2024_cleaned.csv.
+
+- model_ready/stage3_weather_exog_optional.csv
+  Contains: NOAA weather exogenous hourly predictors.
+  Acquired: copy of cleaned/noaa_global_hourly_dulles_2019_2024_cleaned.csv.
+
+- model_ready/final_training_table_2019_hourly.csv
+  Contains: merged hourly training core (cpu + temperature + carbon intensity).
+  Acquired: built in data_audit_and_organize.py by merging stage1_cpu_primary + stage3_temperature_primary + stage5_carbon_primary.
+
+- model_ready/final_training_table_2019_hourly_with_power.csv
+  Contains: core training table plus optional power utilization fields.
+  Acquired: built in data_audit_and_organize.py by left-joining power_optional_feature onto final_training_table_2019_hourly.
+
+
+6) DATA_SOURCES/REPORTS (PROVENANCE/QUALITY OUTPUTS)
+=====================================================
+
+- reports/data_inventory.csv
+  Contains: per-file inventory with file type, encoding, row/column counts, timestamps, quality flags, notes.
+  Acquired: generated by data_audit_and_organize.py profiling pass.
+
+- reports/data_quality_flags.csv
+  Contains: subset of inventory entries with non-empty quality flags.
+  Acquired: generated by data_audit_and_organize.py.
+
+- reports/model_data_catalog.csv
+  Contains: selected model roles mapped to file paths with existence, row counts, and rationale.
+  Acquired: generated by data_audit_and_organize.py.
+
+- reports/DATA_AUDIT_SUMMARY.md
+  Contains: high-level summary of scanned files, key model picks, copies to model_ready, and cleanup recommendations.
+  Acquired: generated by data_audit_and_organize.py.
+
+
+7) DATA_SOURCES/_ARCHIVE (HISTORICAL/DIAGNOSTIC FILES)
+======================================================
+
+- _archive/google_cluster_cpu_cellb_hourly_idx_2019.csv
+  Contains: hour-indexed CPU utilization aggregate (hour_index, avg_cpu_utilization, num_tasks_sampled).
+  Acquired: historical intermediate export from Google cell-b CPU processing.
+
+- _archive/google_power_cellb_hourly_idx_2019.csv
+  Contains: failed query text artifact rather than a valid CSV table.
+  Acquired: historical failed export artifact; not used.
+
+- _archive/_download_test.txt
+  Contains: download test marker file.
+  Acquired: local download script test artifact; not used.
+
+
+8) EXCLUDED SYNTHETIC FILES (INTENTIONALLY OUT OF SCOPE)
+=========================================================
+
+The following are synthetic and excluded from this non-synthetic guide:
+- cleaned/semisynthetic_datacenter_power_2015_2024.csv
+- model_ready/synthetic_reference_only.csv
+
+
+9) REPRODUCIBLE BUILD PATH (NON-SYNTHETIC PIPELINE)
+===================================================
+
+Step 1: Acquire raw external data
+- EIA API pulls (PJM and Virginia series)
+- NOAA direct downloads and/or NOAA CDO API pulls
+- Google cluster/power extracts (BigQuery workflow)
+- EPA eGRID and Alibaba archives/docs (direct download)
+
+Step 2: Create cleaned non-synthetic tables
+- Run local cleaning scripts (existing project cleaning workflow).
+- Run: Data_Sources/scripts/build_additional_cleaned_datasets.py
+  Outputs:
+  - cleaned/pjm_exogenous_hourly_2019_2024_cleaned.csv
+  - cleaned/noaa_global_hourly_dulles_2019_2024_cleaned.csv
+
+Step 3: Build model-ready non-synthetic tables and reports
+- Run: Data_Sources/scripts/data_audit_and_organize.py
+  Outputs:
+  - reports/*.csv and reports/DATA_AUDIT_SUMMARY.md
+  - model_ready/stage*_*.csv and final_training_table_*.csv
