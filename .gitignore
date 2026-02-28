@@ -81,3 +81,8 @@ tmp/
 # Track cleaned datasets
 !Data_Sources/cleaned/
 !Data_Sources/cleaned/**/*.csv
+
+# Track NEW MODEL DATA datasets
+!NEW MODEL DATA/
+!NEW MODEL DATA/**/*.csv
+

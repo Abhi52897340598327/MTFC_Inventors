@@ -1,0 +1,33 @@
+period,sectorid,sector_name,fuelid,fuel_name,stateid,state_name
+1970-01-01 00:00:00.000002022,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002022,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002022,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002022,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002021,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002021,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002021,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002021,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002020,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002020,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002020,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002020,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002019,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002019,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002019,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002019,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002018,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002018,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002018,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002018,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002017,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002017,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002017,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002017,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002016,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002016,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002016,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002016,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
+1970-01-01 00:00:00.000002015,EC,Electric Power carbon dioxide emissions,CO,Coal,VA,Virginia
+1970-01-01 00:00:00.000002015,EC,Electric Power carbon dioxide emissions,NG,Natural Gas,VA,Virginia
+1970-01-01 00:00:00.000002015,EC,Electric Power carbon dioxide emissions,PE,Petroleum,VA,Virginia
+1970-01-01 00:00:00.000002015,EC,Electric Power carbon dioxide emissions,TO,All Fuels,VA,Virginia
