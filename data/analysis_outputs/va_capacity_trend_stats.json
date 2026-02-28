@@ -24,5 +24,27 @@
     "year": 2019,
     "delta_mw": -1590.1,
     "delta_pct": -5.37
+  },
+  "datacenter_market_context": {
+    "description": "Data centers are specialized facilities that manage, process, and share large amounts of data for digital services such as websites, applications, email, cloud platforms, and media streaming.",
+    "northern_virginia_share_global_operational_capacity_pct": 13,
+    "northern_virginia_share_americas_operational_capacity_pct": 25
+  },
+  "demand_outlook_context": {
+    "source_publication": "E&E News by POLITICO (Energywire)",
+    "article_title": "Data centers' share of US electricity seen doubling by 2030",
+    "author": "Christa Marshall",
+    "published_date": "2026-02-26",
+    "quoted_source": "Electric Power Research Institute (EPRI)",
+    "us_datacenter_share_current_pct": 4.5,
+    "us_datacenter_share_2030_pct_range": [
+      9,
+      17
+    ],
+    "virginia_datacenter_share_current_pct": 25,
+    "virginia_datacenter_share_2030_pct_range": [
+      41,
+      59
+    ]
   }
 }
