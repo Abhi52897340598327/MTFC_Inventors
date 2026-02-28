@@ -1,0 +1,28 @@
+{
+  "source_file": "/Users/abhiraamvenigalla/Downloads/SEP Tables for VA.xlsx",
+  "sheet": "4A. Capacity",
+  "metric": "Total electric industry capacity (MW)",
+  "year_range": [
+    1990,
+    2024
+  ],
+  "start_mw": 15065.0,
+  "end_mw": 29146.5,
+  "absolute_change_mw": 14081.5,
+  "percent_change": 93.47,
+  "cagr_percent": 1.96,
+  "max_mw": 29634.8,
+  "max_year": 2018,
+  "min_mw": 15065.0,
+  "min_year": 1990,
+  "largest_yoy_increase": {
+    "year": 2018,
+    "delta_mw": 1974.7,
+    "delta_pct": 7.14
+  },
+  "largest_yoy_decrease": {
+    "year": 2019,
+    "delta_mw": -1590.1,
+    "delta_pct": -5.37
+  }
+}
