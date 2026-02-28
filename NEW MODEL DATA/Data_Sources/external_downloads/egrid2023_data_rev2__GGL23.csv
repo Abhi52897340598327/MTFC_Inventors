@@ -1,8 +1,0 @@
-data_year,one_of_the_three_interconnect_power_grids_in_the_u_s___plus_alaska__hawaii__and_the_entire_u_s,estimated_losses__mwh,total_disposition__mwh__without_exports,direct_use__mwh,grid_gross_loss__estimated_losses_total_disposition_without_exports___direct_use
-,REGION,ESTLOSS,TOTDISP,DIRCTUSE,GGRSLOSS
-2023-01-01,Alaska,266812,6717825,257915,0.041
-2023-01-01,ERCOT,18707069.8984063,477196420.049405,33326181.9688072,0.042
-2023-01-01,Eastern,121579324.419556,2973141900.65172,85205118.1830285,0.042
-2023-01-01,Hawaii,395363,9194164,196737,0.044
-2023-01-01,Western,30244892.4502106,746640041.471222,17788276.4053731,0.041
-2023-01-01,U.S.,171193461.768173,4212890351.17235,136774228.557209,0.042
