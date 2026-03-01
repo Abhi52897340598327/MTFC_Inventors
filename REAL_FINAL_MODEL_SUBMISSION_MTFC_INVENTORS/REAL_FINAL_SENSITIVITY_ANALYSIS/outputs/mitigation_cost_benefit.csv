@@ -1,5 +1,5 @@
 lever,emission_reduction_pct,capex_usd,annual_savings_usd,npv_10yr_usd,roi_x,payback_years
-Dynamic Workload Shifting,11.5,600000,5404147.0,35662266.0,59.4,0.11
-PUE Optimization (Cooling),18.8,14000000,8834605.0,45280921.0,3.2,1.58
-Cleaner Grid Contracts,22.4,200000,10526338.0,70432587.0,352.2,0.02
-Combined Portfolio,41.9,15200000,19689892.0,116920777.0,7.7,0.77
+Dynamic Workload Shifting,11.5,600000,2575368.0,16680927.0,27.8,0.23
+PUE Optimization (Cooling),18.8,14000000,6669974.0,30756071.0,2.2,2.1
+Cleaner Grid Contracts,22.4,200000,5016368.0,33460241.0,167.3,0.04
+Combined Portfolio,41.9,15200000,11843104.0,64268194.0,4.2,1.28

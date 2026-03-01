@@ -1,0 +1,5 @@
+lever,description,capex_usd,annual_opex_usd,co2_reduction_pct,energy_saving_pct,total_co2_avoided_10yr_tonnes,npv_benefits_usd,npv_net_usd,roi_x,payback_years,breakeven_scc_usd_per_ton,cost_per_tonne_avoided_usd
+Dynamic Workload Shifting,Move 6.6% of compute to low-carbon hours,600000,50000,0.06566147859922156,0.02,19448.0,7056292.0,6456292.0,10.76,2,0,30.85
+PUE Optimization (Cooling),Aggressive cooling upgrades targeting ESIF-level PUE (~1.05),14000000,200000,0.188,0.188,55682.0,53536319.0,39536319.0,2.82,4,0,251.43
+Cleaner Grid (50 MW PPA),50 MW renewable PPA at $45/MWh displacing grid carbon,200000,0,0.224,0.0,66345.0,86975237.0,86775237.0,433.88,1,0,3.01
+Combined Portfolio,All three levers combined (non-additive interaction),14800000,250000,0.419,0.2,124101.0,143508795.0,128708795.0,8.7,1,0,119.26

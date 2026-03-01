@@ -26,6 +26,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from scipy.stats.qmc import Sobol as SobolEngine
 from config import DC_PARAMS, GRID, SOBOL, OUTPUT_DIR, FIGURE_DIR, PLOT
 
 np.random.seed(SOBOL["seed"])
@@ -44,10 +45,13 @@ K = len(PARAMS)
 
 # ── Saltelli sampling ───────────────────────────────────────────────────
 def _saltelli_sample(n: int) -> np.ndarray:
-    """Generate (n * (2K + 2)) × K matrix via Saltelli scheme."""
-    # Two independent Sobol-like quasi-random bases
-    A = np.random.uniform(0, 1, (n, K))
-    B = np.random.uniform(0, 1, (n, K))
+    """Generate (n * (2K + 2)) × K matrix via Saltelli scheme
+    using true quasi-random Sobol sequences for low-discrepancy sampling."""
+    # Two independent quasi-random Sobol sequence bases
+    engine = SobolEngine(d=2 * K, seed=SOBOL["seed"])
+    block = engine.random(n)                     # shape (n, 2K)
+    A = block[:, :K]
+    B = block[:, K:]
 
     samples = [A, B]
     for i in range(K):

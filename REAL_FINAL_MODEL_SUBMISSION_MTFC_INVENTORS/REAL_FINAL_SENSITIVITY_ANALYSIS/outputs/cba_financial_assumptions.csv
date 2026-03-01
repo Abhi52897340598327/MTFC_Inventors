@@ -1,0 +1,25 @@
+assumption,value,source
+Social Cost of Carbon (EPA 2024),$190/tonne,FINANCE.scc_usd_per_ton
+Carbon Price — Low Scenario,$95/tonne,FINANCE.carbon_price_low
+Carbon Price — High/Tail Scenario,$300/tonne,FINANCE.carbon_price_high
+Energy Price (Virginia Grid Average),$72/MWh,FINANCE.energy_price
+Discount Rate,8%,FINANCE.discount_rate
+Projection Horizon,10 years (2025–2035),FINANCE.horizon_years
+Contract Peak Capacity,40 MW,FINANCE.contract_peak_mw
+Peak Breach Penalty Rate,$450/MWh,FINANCE.peak_breach_penalty
+Electricity Volatility Markup,5%,FINANCE.electricity_volatility_markup
+Cooling Maintenance (base),$2.5M/yr,FINANCE.cooling_maintenance
+Demand Charge,$180/kW/yr,FINANCE.demand_charge
+DC IT Capacity (base),30 MW,DC_PARAMS.it_capacity_mw
+Industry PUE Baseline,1.30,DC_PARAMS.pue_baseline
+Base Utilization,60%,scenario assumption
+VA Grid CI (empirical),31.8 kg CO₂/MWh,Derived: emissions/energy
+DC Spending CAGR (empirical),26.7%,monthly-spending-data-center-us.csv
+VA Energy CAGR 20yr (empirical),0.97%,virginia_yearly_energy_consumption_bbtu.csv
+VA Temp Trend (empirical),-0.43°F/decade,monthly_temp_virginia.csv
+ESIF PUE Mean (empirical),1.051,esif_daily_avg_interpolated.csv
+Coal Decline CAGR 20yr,-1.9%,energy_by_source_annual_grid_comp.csv
+Renewable Growth CAGR 20yr,1.9%,energy_by_source_annual_grid_comp.csv
+VA Total CO₂ (latest),22.9 MMT,virginia_total_carbon_emissions_energyproduction_annual.csv
+Exponential Fit R² (DC spend),0.996,monthly-spending-data-center-us.csv
+ESIF PUE Variability (P95/P05),1.04×,esif_daily_avg_interpolated.csv

@@ -133,8 +133,11 @@ def compute_mitigation(proj_df, p):
         first_scen = proj_df["scenario"].unique()[0]
         boom = proj_df[proj_df["scenario"] == first_scen].copy()
 
-    # PJM diurnal ratio for workload shifting benefit
-    diurnal_ratio = p.get("pjm_diurnal_peak_trough_ratio", 1.25)
+    # ESIF PUE variability as proxy for temporal shifting benefit
+    # Higher PUE range → more benefit from shifting to efficient hours
+    pue_p95 = p.get("esif_pue_p95", 1.08)
+    pue_p05 = p.get("esif_pue_p05", 1.02)
+    operational_variability = max(pue_p95 / pue_p05, 1.02) if pue_p05 > 0 else 1.05
     # ESIF PUE improvement rate for optimization lever
     esif_pue_rate = abs(p.get("esif_pue_trend_per_year", 0.004))
 
@@ -142,9 +145,9 @@ def compute_mitigation(proj_df, p):
         "Dynamic Workload Shifting": {
             "capex": 600_000,
             "annual_opex": 50_000,
-            "co2_reduction_pct": min(0.115, (diurnal_ratio - 1) * 0.50),  # Shift load to low-CI hours
+            "co2_reduction_pct": min(0.115, (operational_variability - 1) * 1.5),  # Shift load to low-CI / low-PUE hours
             "energy_saving_pct": 0.02,  # Small energy saving from off-peak
-            "description": f"Move {min(11.5,(diurnal_ratio-1)*50):.1f}% of compute to low-carbon hours",
+            "description": f"Move {min(11.5,(operational_variability-1)*150):.1f}% of compute to low-carbon hours",
         },
         "PUE Optimization (Cooling)": {
             "capex": 14_000_000,
@@ -418,7 +421,7 @@ def save_assumptions(p):
         ("Social Cost of Carbon (EPA 2024)", "$190/tonne", "FINANCE.scc_usd_per_ton"),
         ("Carbon Price — Low Scenario", "$95/tonne", "FINANCE.carbon_price_low"),
         ("Carbon Price — High/Tail Scenario", "$300/tonne", "FINANCE.carbon_price_high"),
-        ("Energy Price (PJM Average)", "$72/MWh", "FINANCE.energy_price"),
+        ("Energy Price (Virginia Grid Average)", "$72/MWh", "FINANCE.energy_price"),
         ("Discount Rate", "8%", "FINANCE.discount_rate"),
         ("Projection Horizon", "10 years (2025–2035)", "FINANCE.horizon_years"),
         ("Contract Peak Capacity", "40 MW", "FINANCE.contract_peak_mw"),
@@ -438,8 +441,7 @@ def save_assumptions(p):
         ("Renewable Growth CAGR 20yr", f"{p.get('renewable_consumption_cagr_20yr', 0.03):.1%}", "energy_by_source_annual_grid_comp.csv"),
         ("VA Total CO₂ (latest)", f"{p.get('va_total_co2_mmt_latest', 21):.1f} MMT", "virginia_total_carbon_emissions_energyproduction_annual.csv"),
         ("Exponential Fit R² (DC spend)", f"{p.get('dc_spend_exponential_r2', 0.95):.3f}", "monthly-spending-data-center-us.csv"),
-        ("PJM Load CAGR", f"{p.get('pjm_load_cagr', 0.05):.2%}", "hrl_load_metered_combined_cleaned.csv"),
-        ("PJM Diurnal Peak/Trough", f"{p.get('pjm_diurnal_peak_trough_ratio', 1.25):.2f}×", "hrl_load_metered_combined_cleaned.csv"),
+        ("ESIF PUE Variability (P95/P05)", f"{p.get('esif_pue_p95', 1.08)/max(p.get('esif_pue_p05', 1.02),0.01):.2f}×", "esif_daily_avg_interpolated.csv"),
     ]
 
     df = pd.DataFrame(assumptions, columns=["assumption", "value", "source"])

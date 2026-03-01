@@ -75,11 +75,13 @@ GROWTH_SCENARIOS = {
 }
 
 # ── Mitigation Levers ───────────────────────────────────────────────────
+# energy_saving_pct  = % of *electricity* cost avoided (only PUE lever does this)
+# emission_reduction_pct = % of *carbon liability* avoided (SCC-scaled)
 MITIGATION_LEVERS = {
-    "Dynamic Workload Shifting":  dict(emission_reduction_pct=11.5, capex_usd=600_000),
-    "PUE Optimization (Cooling)": dict(emission_reduction_pct=18.8, capex_usd=14_000_000),
-    "Cleaner Grid Contracts":     dict(emission_reduction_pct=22.4, capex_usd=200_000),
-    "Combined Portfolio":         dict(emission_reduction_pct=41.9, capex_usd=15_200_000),
+    "Dynamic Workload Shifting":  dict(emission_reduction_pct=11.5, energy_saving_pct=0.0,  capex_usd=600_000),
+    "PUE Optimization (Cooling)": dict(emission_reduction_pct=18.8, energy_saving_pct=10.0, capex_usd=14_000_000),
+    "Cleaner Grid Contracts":     dict(emission_reduction_pct=22.4, energy_saving_pct=0.0,  capex_usd=200_000),
+    "Combined Portfolio":         dict(emission_reduction_pct=41.9, energy_saving_pct=10.0, capex_usd=15_200_000),
 }
 
 # ── Plotting Style ───────────────────────────────────────────────────────

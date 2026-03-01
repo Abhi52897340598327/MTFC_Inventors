@@ -57,8 +57,10 @@ _SCENARIO_DEFS = {
 }
 
 
-def _npv_stream(annual_cost, discount, n_years):
-    return sum(annual_cost * (1 + discount) ** (-yr) for yr in range(1, n_years + 1))
+def _npv_stream(annual_cost, discount, n_years, growth=0.0):
+    """NPV of a cost stream growing at *growth* rate p.a."""
+    return sum(annual_cost * (1 + growth) ** yr * (1 + discount) ** (-yr)
+               for yr in range(1, n_years + 1))
 
 
 def compute_scenario_monetisation() -> pd.DataFrame:
@@ -79,7 +81,7 @@ def compute_scenario_monetisation() -> pd.DataFrame:
         demand_chg  = FINANCE["demand_charge_usd_per_kw_yr"] * total_mw * 1000
         total       = energy_cost + carbon_cost + cooling + demand_chg
 
-        npv = _npv_stream(total, d, n)
+        npv = _npv_stream(total, d, n, growth=s["growth"])
 
         # 10-year cumulative with growth
         cumul_emissions = sum(
@@ -152,16 +154,18 @@ def compute_risk_premium() -> pd.DataFrame:
 # ── Mitigation cost-benefit ─────────────────────────────────────────────
 def compute_mitigation_cba() -> pd.DataFrame:
     base_mw = DC_PARAMS["it_capacity_mw"] * DC_PARAMS["pue_baseline"]
-    base_cost = (base_mw * 8760 * FINANCE["energy_price_usd_per_mwh"]
-                 + base_mw * GRID["carbon_intensity_mean"] * 8760 / 1000
-                   * FINANCE["scc_usd_per_ton"])
+    base_energy_cost = base_mw * 8760 * FINANCE["energy_price_usd_per_mwh"]
+    base_carbon_cost = (base_mw * GRID["carbon_intensity_mean"] * 8760 / 1000
+                        * FINANCE["scc_usd_per_ton"])
     d = FINANCE["discount_rate"]
     n = FINANCE["horizon_years"]
 
     rows = []
     for name, lev in MITIGATION_LEVERS.items():
-        reduction_frac = lev["emission_reduction_pct"] / 100.0
-        annual_savings = base_cost * reduction_frac
+        co2_frac = lev["emission_reduction_pct"] / 100.0
+        nrg_frac = lev.get("energy_saving_pct", 0.0) / 100.0
+        # Emission reduction avoids carbon cost; energy saving avoids energy cost
+        annual_savings = base_carbon_cost * co2_frac + base_energy_cost * nrg_frac
         capex = lev["capex_usd"]
         npv = _npv_stream(annual_savings, d, n) - capex
         roi = npv / capex if capex > 0 else float("inf")
