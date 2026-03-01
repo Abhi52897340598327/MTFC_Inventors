@@ -18,7 +18,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from config import DC_PARAMS, GRID, FINANCE, MC, OUTPUT_DIR, FIGURE_DIR, PLOT
+from config import DC_PARAMS, GRID, FINANCE, MC, OUTPUT_DIR, FIGURE_DIR, PLOT, TEMPERATURE
 
 np.random.seed(MC["seed"])
 
@@ -27,9 +27,9 @@ np.random.seed(MC["seed"])
 def simulate(n: int = MC["n_simulations"]) -> pd.DataFrame:
     """Run *n* Monte-Carlo draws through the cascaded pipeline."""
 
-    # --- Stage 1: Temperature (truncated normal, Virginia climate) --------
-    temp_f = np.random.normal(60.0, 15.0, n)
-    temp_f = np.clip(temp_f, 10, 110)  # physical bounds
+    # --- Stage 1: Temperature (from real VA monthly data) ----------------
+    temp_f = np.random.normal(TEMPERATURE["mean_f"], TEMPERATURE["std_f"], n)
+    temp_f = np.clip(temp_f, TEMPERATURE["min_f"] - 5, TEMPERATURE["max_f"] + 5)
 
     # --- Stage 2: CPU utilisation (truncated normal) ----------------------
     cpu = np.random.normal(

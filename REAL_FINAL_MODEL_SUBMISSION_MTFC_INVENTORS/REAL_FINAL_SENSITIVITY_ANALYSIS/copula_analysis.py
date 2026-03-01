@@ -26,7 +26,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
-from config import MC, OUTPUT_DIR, FIGURE_DIR, PLOT, DC_PARAMS, GRID
+from config import MC, OUTPUT_DIR, FIGURE_DIR, PLOT, DC_PARAMS, GRID, TEMPERATURE, FINANCE
 
 np.random.seed(MC["seed"])
 
@@ -43,8 +43,8 @@ PAIRS = [
 
 # ── Generate correlated draws from the physical model ────────────────────
 def _build_dataset(n: int = 20000) -> pd.DataFrame:
-    temp_f = np.random.normal(60, 15, n)
-    temp_f = np.clip(temp_f, 10, 110)
+    temp_f = np.random.normal(TEMPERATURE["mean_f"], TEMPERATURE["std_f"], n)
+    temp_f = np.clip(temp_f, TEMPERATURE["min_f"] - 5, TEMPERATURE["max_f"] + 5)
     cpu = np.random.normal(DC_PARAMS["cpu_utilization_mean"],
                            DC_PARAMS["cpu_utilization_std"], n)
     cpu = np.clip(cpu, 5, 100)
@@ -60,7 +60,7 @@ def _build_dataset(n: int = 20000) -> pd.DataFrame:
                           GRID["carbon_intensity_std"], n)
     ci = np.clip(ci, GRID["carbon_intensity_min"], GRID["carbon_intensity_max"])
     emissions = total_mw * ci * 8760 / 1000
-    total_cost = energy_mwh * 72 + emissions * 190
+    total_cost = energy_mwh * FINANCE["energy_price_usd_per_mwh"] + emissions * FINANCE["scc_usd_per_ton"]
     return pd.DataFrame({
         "temperature": temp_f,
         "cpu_utilization": cpu,

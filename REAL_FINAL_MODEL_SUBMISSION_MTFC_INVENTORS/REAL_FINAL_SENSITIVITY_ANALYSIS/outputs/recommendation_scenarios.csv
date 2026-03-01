@@ -1,4 +1,4 @@
 scenario,growth_rate_pct,yr10_power_mw,yr10_emissions_tons,yr10_annual_cost,cumulative_10yr_emissions,emission_change_vs_baseline,risk_rating,recommended_action
-Conservative,5.0,57.5,141871.0,63191974.0,1307017.0,20.4,Low,Maintain current ops
-Moderate,15.0,135.6,302305.0,142992335.0,2051851.0,156.5,Medium,Proactive mitigation needed
-Aggressive,30.0,511.4,1397668.0,588083560.0,5841321.0,1085.8,High,Urgent intervention required
+Conservative,5.0,51.3,106614.0,52619073.0,940609.0,34.2,Low,Maintain current ops
+Moderate,15.0,127.4,238978.0,125781616.0,1534391.0,200.9,Medium,Proactive mitigation needed
+Aggressive,30.0,434.3,998728.0,463651134.0,4119398.0,1157.4,High,Urgent intervention required

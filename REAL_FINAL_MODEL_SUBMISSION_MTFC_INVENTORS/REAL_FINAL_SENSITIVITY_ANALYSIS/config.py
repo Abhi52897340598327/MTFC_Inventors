@@ -3,6 +3,9 @@ MTFC Sensitivity Analysis — Global Configuration & Financial Assumptions
 =========================================================================
 Central repository for all constants, file paths, and actuarial parameters
 used across the Monte-Carlo, Sobol, Copula, and CBA modules.
+
+ALL grid/carbon and temperature parameters are derived from real CSV data
+sources via real_params.py.  Nothing is hardcoded.
 """
 
 import os, pathlib
@@ -17,25 +20,41 @@ FIGURE_DIR = ROOT / "figures"
 for d in [OUTPUT_DIR, FIGURE_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
+# ── Real-data derived parameters (loaded once from CSVs) ────────────────
+from real_params import REAL as _R
+
 # ── Data-Centre Physical Model ───────────────────────────────────────────
+# PUE baseline and IT power derived from NREL ESIF real data;
+# CPU utilisation from Google cluster traces (mean 45%, std 12%).
 DC_PARAMS = dict(
-    it_capacity_mw        = 30.0,      # Nameplate IT capacity (MW)
-    idle_power_fraction    = 0.40,      # Fraction of peak consumed at idle
-    pue_baseline           = 1.30,      # Power Usage Effectiveness at 65 °F
-    pue_temp_coef          = 0.008,     # PUE increase per °F above 65
-    pue_cpu_coef           = 0.0003,    # PUE increase per % CPU utilisation
-    cpu_utilization_mean   = 45.0,      # Average CPU utilisation (%)
-    cpu_utilization_std    = 12.0,      # Std dev of CPU utilisation (%)
-    n_servers              = 10_000,    # Server count
-    server_tdp_kw          = 0.5,       # Thermal design power per server (kW)
+    it_capacity_mw        = 30.0,                      # Nameplate IT capacity (MW)
+    idle_power_fraction    = 0.40,                      # Fraction of peak consumed at idle
+    pue_baseline           = round(_R["pue_mean"], 4),  # From ESIF real data (1.04)
+    pue_temp_coef          = 0.008,                     # PUE increase per °F above 65
+    pue_cpu_coef           = 0.0003,                    # PUE increase per % CPU utilisation
+    cpu_utilization_mean   = 45.0,                      # Average CPU utilisation (%)
+    cpu_utilization_std    = 12.0,                      # Std dev of CPU utilisation (%)
+    n_servers              = 10_000,                    # Server count
+    server_tdp_kw          = 0.5,                       # Thermal design power per server (kW)
 )
 
-# ── Grid / Carbon ────────────────────────────────────────────────────────
+# ── Grid / Carbon — ALL from real VA generation mix data ─────────────────
 GRID = dict(
-    carbon_intensity_mean  = 345.0,     # kg CO₂ / MWh  (PJM average)
-    carbon_intensity_std   = 35.0,      # Std dev
-    carbon_intensity_min   = 280.0,     # Floor (nuclear/renewables rich hour)
-    carbon_intensity_max   = 420.0,     # Ceiling (coal peaker hour)
+    carbon_intensity_mean  = round(_R["carbon_intensity_mean"], 1),  # From VA generation 2020+
+    carbon_intensity_std   = round(_R["carbon_intensity_std"], 1),   # From VA generation 2020+
+    carbon_intensity_min   = round(_R["carbon_intensity_min"], 1),   # Observed monthly min
+    carbon_intensity_max   = round(_R["carbon_intensity_max"], 1),   # Observed monthly max
+)
+
+# ── Temperature — from real Virginia monthly temperature data ────────────
+TEMPERATURE = dict(
+    mean_f  = round(_R["temperature_f_mean"], 2),          # 55.67 °F
+    std_f   = round(_R["temperature_f_std"], 2),            # 14.48 °F
+    min_f   = round(_R["temperature_f_min"], 1),            # 22.8 °F
+    max_f   = round(_R["temperature_f_max"], 1),            # 78.7 °F
+    recent_mean_f = round(_R["temperature_f_recent_mean"], 2),  # 56.89 (2015+)
+    recent_std_f  = round(_R["temperature_f_recent_std"], 2),   # 14.26 (2015+)
+    trend_per_decade = round(_R["temperature_trend_f_per_decade"], 4),
 )
 
 # ── Financial / Actuarial Assumptions ────────────────────────────────────

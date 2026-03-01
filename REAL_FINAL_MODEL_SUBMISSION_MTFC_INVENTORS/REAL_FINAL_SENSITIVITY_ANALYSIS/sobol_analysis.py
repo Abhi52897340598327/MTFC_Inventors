@@ -30,7 +30,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy.stats.qmc import Sobol as SobolEngine
-from config import DC_PARAMS, GRID, SOBOL, OUTPUT_DIR, FIGURE_DIR, PLOT
+from config import DC_PARAMS, GRID, SOBOL, OUTPUT_DIR, FIGURE_DIR, PLOT, TEMPERATURE
 
 np.random.seed(SOBOL["seed"])
 
@@ -39,9 +39,9 @@ np.random.seed(SOBOL["seed"])
 PARAMS = [
     ("idle_power_fraction", 0.30, 0.50),
     ("cpu_utilization",     20.0, 80.0),
-    ("temperature_f",       20.0, 100.0),
-    ("pue_baseline",        1.15, 1.50),
-    ("carbon_intensity",    280,  420),
+    ("temperature_f",       TEMPERATURE["min_f"], TEMPERATURE["max_f"]),
+    ("pue_baseline",        DC_PARAMS["pue_baseline"] * 0.85, DC_PARAMS["pue_baseline"] * 1.15),
+    ("carbon_intensity",    GRID["carbon_intensity_min"], GRID["carbon_intensity_max"]),
 ]
 K = len(PARAMS)
 

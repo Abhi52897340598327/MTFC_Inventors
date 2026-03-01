@@ -46,7 +46,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 from config import (DC_PARAMS, GRID, FINANCE, GROWTH_SCENARIOS,
-                    OUTPUT_DIR, FIGURE_DIR, PLOT)
+                    OUTPUT_DIR, FIGURE_DIR, PLOT, TEMPERATURE)
+from real_params import REAL as _R
 
 # ── Data paths ───────────────────────────────────────────────────────────
 _DATA = Path(__file__).resolve().parent.parent / "REAL FINAL DATA SOURCES"
@@ -210,7 +211,7 @@ def forecast_co2() -> pd.DataFrame:
     """
     base_it = DC_PARAMS["it_capacity_mw"]
     pue0 = DC_PARAMS["pue_baseline"]
-    ci0 = GRID["carbon_intensity_mean"]   # 345 kg/MWh
+    ci0 = GRID["carbon_intensity_mean"]   # Real VA generation-mix CI (kg/MWh)
     scc = FINANCE["scc_usd_per_ton"]
     rows = []
     for name, scen in GROWTH_SCENARIOS.items():
@@ -306,8 +307,8 @@ def forecast_grid_stress() -> pd.DataFrame:
     """
     base_it = DC_PARAMS["it_capacity_mw"]
     pue0 = DC_PARAMS["pue_baseline"]
-    # Last known renewable share ~ 15% (2023 VA data)
-    renew_now = 0.15
+    # Last known clean energy share from real VA grid composition data
+    renew_now = _R["clean_energy_share"]  # ~24.6% (nuclear + renewables)
     renew_target = _RENEW_TARGET_2035
 
     rows = []

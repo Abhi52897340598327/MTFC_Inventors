@@ -20,14 +20,14 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from config import DC_PARAMS, GRID, OUTPUT_DIR, FIGURE_DIR, PLOT
+from config import DC_PARAMS, GRID, OUTPUT_DIR, FIGURE_DIR, PLOT, TEMPERATURE
 
 
 # ── Parameter baselines and perturbation range ──────────────────────────
 PARAM_DEFS = {
     "idle_power_fraction": DC_PARAMS["idle_power_fraction"],
     "cpu_utilization":     DC_PARAMS["cpu_utilization_mean"],
-    "temperature_f":       60.0,
+    "temperature_f":       TEMPERATURE["mean_f"],
     "pue_baseline":        DC_PARAMS["pue_baseline"],
     "carbon_intensity":    GRID["carbon_intensity_mean"],
     "it_capacity_mw":      DC_PARAMS["it_capacity_mw"],
