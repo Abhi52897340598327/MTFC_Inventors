@@ -1,13 +1,11 @@
 """
 MTFC Data Preparation Module
-Converts annual energy data to monthly frequency and prepares all time series
-for SARIMA/SARIMAX modeling.
+Prepares all time series for SARIMA/SARIMAX modeling.
 
-Temporal Alignment: 2015-01-01 to 2023-12-31 (108 months)
+Temporal Alignment: 2015-01-01 to 2025-08-01 (128 months)
 
 Key Design Decisions:
-- Annual BBTU values are divided by 12 to get monthly consumption
-- Grid percentages are interpolated directly (already in ratio form)
+- Energy & grid mix use actual monthly EIA generation data (real seasonality)
 - PUE is clipped to [1.0, 3.0] (physical constraint: PUE >= 1.0)
 - AI proxy is normalized to 2015-01 = 1.0 (historical baseline)
 """
@@ -18,174 +16,151 @@ from pathlib import Path
 
 # Directory Configuration
 BASE_DIR = Path(__file__).parent.parent
-INPUT_DIR = BASE_DIR / 'REAL FINAL DATA SOURCES'
+INPUT_DIR = BASE_DIR / 'REAL_FINAL_MODEL_SUBMISSION_MTFC_INVENTORS' / 'REAL FINAL DATA SOURCES'
 OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'prepared_data'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Constants
-BBTU_TO_GWH = 0.293071
 START_DATE = '2015-01-01'
-END_DATE = '2023-12-31'
+END_DATE = '2025-08-01'
 HISTORICAL_PUE_ESTIMATE = 1.50  # For months before PUE data availability
+EXPECTED_MONTHS = len(pd.date_range(START_DATE, END_DATE, freq='MS'))  # 128
+
+# Source mapping: EIA energy source names -> our 4 grid categories
+SOURCE_MAP = {
+    'Coal': 'coal',
+    'Natural Gas': 'gas',
+    'Nuclear': 'nuclear',
+    'Hydroelectric Conventional': 'renewable',
+    'Solar Thermal and Photovoltaic': 'renewable',
+    'Wind': 'renewable',
+    'Wood and Wood Derived Fuels': 'renewable',
+    'Other Biomass': 'renewable',
+}
 
 
-def _annual_to_monthly(annual_df: pd.DataFrame, value_cols: list,
-                       divide_by_12: bool = True) -> pd.DataFrame:
+def _load_eia_generation() -> pd.DataFrame:
     """
-    Convert annual data to monthly via linear interpolation.
+    Load and parse the EIA monthly generation dataset.
 
-    Places each annual value at Jan 1 of that year, resamples to monthly start
-    frequency, then linearly interpolates between annual anchor points.
-
-    Parameters:
-        annual_df: DataFrame with 'Year' column and value columns
-        value_cols: Column names to interpolate
-        divide_by_12: If True, divide by 12 (annual totals -> monthly amounts)
-
-    Returns:
-        DataFrame with DatetimeIndex at monthly frequency
+    Returns DataFrame with columns:
+        date, energy_source, generation_mwh
+    filtered to 'Total Electric Power Industry' only.
     """
-    df = annual_df[['Year'] + value_cols].copy()
-    df['date'] = pd.to_datetime(df['Year'].astype(int), format='%Y')
-    df = df.set_index('date')[value_cols]
-
-    # Create full monthly range covering all years (Jan of first year to Dec of last year)
-    first_year = int(annual_df['Year'].min())
-    last_year = int(annual_df['Year'].max())
-    full_range = pd.date_range(f'{first_year}-01-01', f'{last_year}-12-01', freq='MS')
-
-    # Reindex to full monthly range, interpolate, then forward-fill last year
-    monthly = df.reindex(full_range).interpolate(method='linear').ffill()
-
-    if divide_by_12:
-        monthly = monthly / 12.0
-
-    return monthly
+    df = pd.read_csv(INPUT_DIR / 'virginia_generation_all_years.csv')
+    df = df[df['TYPE OF PRODUCER'] == 'Total Electric Power Industry'].copy()
+    df['date'] = pd.to_datetime(
+        df['YEAR'].astype(str) + '-' + df['MONTH'].astype(str).str.zfill(2) + '-01'
+    )
+    return df
 
 
 def prepare_monthly_energy() -> pd.DataFrame:
     """
-    Convert annual energy data to monthly and separate total vs electricity.
+    Extract actual monthly electricity generation from EIA state data.
 
-    Mathematical Process:
-    1. Total Energy: All fuel types for all sectors (annual BBTU)
-    2. Grid Electricity: Coal + Gas + Nuclear + Renewable (annual BBTU)
-    3. Linear interpolation to monthly, then divide by 12
-    4. Convert units: E_GWh = E_BBTU * 0.293071
+    Uses REAL monthly generation (not interpolated from annual), providing
+    genuine seasonal patterns for SARIMAX modeling.
 
-    Input: virginia_yearly_energy_consumption_bbtu.csv
-           energy_by_source_annual_grid_comp.csv
-    Output: monthly_energy_consumption.csv (with both total and electricity)
+    Source: virginia_generation_all_years.csv (EIA Form 923 / 860M)
+    Filter: Total Electric Power Industry, 'Total' source
+            (net generation including pumped-storage deduction)
+    Units:  GWh/month
+
+    Output: monthly_energy_consumption.csv
     """
-    # Load total energy
-    total_energy_df = pd.read_csv(INPUT_DIR / 'virginia_yearly_energy_consumption_bbtu.csv')
-    total_energy_df = total_energy_df.rename(
-        columns={'Total Energy Consumption (Billion BTU)': 'Total_BBTU'}
-    )
+    df = _load_eia_generation()
 
-    # Load grid sources
-    grid_df = pd.read_csv(INPUT_DIR / 'energy_by_source_annual_grid_comp.csv')
+    # 'Total' row = net generation across all sources (includes pumped-storage deduction)
+    total = df[df['ENERGY SOURCE'] == 'Total'].copy()
+    total = total.sort_values('date')
 
-    # Calculate electricity-only consumption (exclude petroleum - used for transport)
-    grid_df['Electricity_BBTU'] = (
-        grid_df['Coal_Total_Consumption_Billion_BTU']
-        + grid_df['Natural_Gas_Total_Consumption_Billion_BTU']
-        + grid_df['Nuclear_Total_Consumption_Billion_BTU']
-        + grid_df['Renewable_Total_Consumption_Billion_BTU']
-    )
-
-    # Merge on Year
-    df = total_energy_df.merge(grid_df[['Year', 'Electricity_BBTU']], on='Year')
-
-    # Interpolate to monthly and divide by 12 (annual -> monthly)
-    monthly = _annual_to_monthly(df, ['Total_BBTU', 'Electricity_BBTU'], divide_by_12=True)
+    # Convert MWh -> GWh
+    total['electricity_gwh'] = total['GENERATION (Megawatthours)'] / 1000.0
 
     # Filter to analysis period
-    monthly = monthly.loc[START_DATE:END_DATE]
+    mask = (total['date'] >= START_DATE) & (total['date'] <= END_DATE)
+    total = total[mask]
 
-    # Convert BBTU to GWh
-    monthly['total_energy_gwh'] = monthly['Total_BBTU'] * BBTU_TO_GWH
-    monthly['electricity_gwh'] = monthly['Electricity_BBTU'] * BBTU_TO_GWH
-
-    # Build output
-    result = monthly[['total_energy_gwh', 'electricity_gwh']].copy()
-    result = result.reset_index().rename(columns={'index': 'date'})
+    result = total[['date', 'electricity_gwh']].reset_index(drop=True)
 
     # Verify output
-    assert len(result) == 108, f"Expected 108 months, got {len(result)}"
-    assert result['total_energy_gwh'].isnull().sum() == 0, "Null total energy values"
+    assert len(result) == EXPECTED_MONTHS, f"Expected {EXPECTED_MONTHS} months, got {len(result)}"
     assert result['electricity_gwh'].isnull().sum() == 0, "Null electricity values"
+    assert (result['electricity_gwh'] > 0).all(), "Negative or zero generation"
 
     result.to_csv(OUTPUT_DIR / 'monthly_energy_consumption.csv', index=False)
 
-    print(f"  Energy: {len(result)} months")
-    print(f"    Total Energy: {result['total_energy_gwh'].min():.1f} to "
-          f"{result['total_energy_gwh'].max():.1f} GWh/month")
-    print(f"    Electricity: {result['electricity_gwh'].min():.1f} to "
-          f"{result['electricity_gwh'].max():.1f} GWh/month")
-    print(f"    Electricity Share: "
-          f"{(result['electricity_gwh'].mean() / result['total_energy_gwh'].mean() * 100):.1f}%")
+    print(f"  Energy: {len(result)} months (actual monthly EIA generation)")
+    print(f"    Range: {result['electricity_gwh'].min():,.0f} to "
+          f"{result['electricity_gwh'].max():,.0f} GWh/month")
+    print(f"    Mean: {result['electricity_gwh'].mean():,.0f} GWh/month")
+    print(f"    Annual: {result['electricity_gwh'].mean() * 12:,.0f} GWh/year")
 
     return result
 
 
 def prepare_monthly_grid_mix() -> pd.DataFrame:
     """
-    Convert annual grid composition to monthly percentages.
+    Calculate monthly grid composition from actual generation by source.
 
-    Mathematical Process:
-    1. Combine petroleum into natural gas (small contribution)
-    2. Calculate annual percentages
-    3. Linear interpolation to monthly (NO divide by 12 - these are ratios)
-    4. Normalize each row to sum to 100%
+    Uses real monthly EIA generation data, giving genuine seasonal variation
+    in grid composition (e.g., more gas in summer, more nuclear share in
+    shoulder months).
 
-    Input: energy_by_source_annual_grid_comp.csv
+    Source categories:
+        Coal:      Coal
+        Gas:       Natural Gas
+        Nuclear:   Nuclear
+        Renewable: Hydro + Solar + Wind + Wood + Other Biomass
+    Excluded:  Petroleum, Pumped Storage, Other, Other Gases
+
     Output: monthly_grid_mix.csv
     """
-    df = pd.read_csv(INPUT_DIR / 'energy_by_source_annual_grid_comp.csv')
+    df = _load_eia_generation()
 
-    # Combine petroleum with natural gas
-    df['Gas_Combined'] = (
-        df['Natural_Gas_Total_Consumption_Billion_BTU']
-        + df['Petroleum_Total_Consumption_Billion_BTU']
+    # Keep only sources that map to our 4 categories
+    relevant = df[df['ENERGY SOURCE'].isin(SOURCE_MAP.keys())].copy()
+    relevant['category'] = relevant['ENERGY SOURCE'].map(SOURCE_MAP)
+
+    # Sum MWh by (date, category)
+    grouped = (
+        relevant
+        .groupby(['date', 'category'])['GENERATION (Megawatthours)']
+        .sum()
+        .unstack(fill_value=0)
     )
 
-    # Calculate total consumption
-    df['Total'] = (
-        df['Coal_Total_Consumption_Billion_BTU']
-        + df['Gas_Combined']
-        + df['Nuclear_Total_Consumption_Billion_BTU']
-        + df['Renewable_Total_Consumption_Billion_BTU']
-    )
+    # Ensure all 4 categories exist (Wind may be missing in early years)
+    for cat in ['coal', 'gas', 'nuclear', 'renewable']:
+        if cat not in grouped.columns:
+            grouped[cat] = 0
 
-    # Calculate percentages (annual)
-    df['coal_pct'] = df['Coal_Total_Consumption_Billion_BTU'] / df['Total'] * 100
-    df['gas_pct'] = df['Gas_Combined'] / df['Total'] * 100
-    df['nuclear_pct'] = df['Nuclear_Total_Consumption_Billion_BTU'] / df['Total'] * 100
-    df['renewable_pct'] = df['Renewable_Total_Consumption_Billion_BTU'] / df['Total'] * 100
+    # Calculate total and percentages
+    total_gen = grouped[['coal', 'gas', 'nuclear', 'renewable']].sum(axis=1)
 
     pct_cols = ['coal_pct', 'gas_pct', 'nuclear_pct', 'renewable_pct']
-
-    # Interpolate to monthly (percentages, NOT divided by 12)
-    monthly = _annual_to_monthly(df, pct_cols, divide_by_12=False)
+    grouped['coal_pct'] = grouped['coal'] / total_gen * 100
+    grouped['gas_pct'] = grouped['gas'] / total_gen * 100
+    grouped['nuclear_pct'] = grouped['nuclear'] / total_gen * 100
+    grouped['renewable_pct'] = grouped['renewable'] / total_gen * 100
 
     # Filter to analysis period
-    monthly = monthly.loc[START_DATE:END_DATE]
+    mask = (grouped.index >= START_DATE) & (grouped.index <= END_DATE)
+    monthly = grouped.loc[mask, pct_cols].copy()
 
-    # Normalize to ensure sum = 100% (compositional constraint)
-    row_sums = monthly[pct_cols].sum(axis=1)
-    monthly[pct_cols] = monthly[pct_cols].div(row_sums, axis=0) * 100
-
-    result = monthly[pct_cols].reset_index().rename(columns={'index': 'date'})
+    result = monthly.reset_index().rename(columns={'index': 'date'})
 
     # Verify output
-    assert len(result) == 108, f"Expected 108 months, got {len(result)}"
-    row_sum_check = result[pct_cols].sum(axis=1)
-    assert np.allclose(row_sum_check, 100.0, atol=1e-6), "Grid mix does not sum to 100%"
+    assert len(result) == EXPECTED_MONTHS, f"Expected {EXPECTED_MONTHS} months, got {len(result)}"
+    row_sums = result[pct_cols].sum(axis=1)
+    assert np.allclose(row_sums, 100.0, atol=0.01), (
+        f"Grid mix does not sum to 100%: {row_sums.min():.2f}-{row_sums.max():.2f}"
+    )
 
     result.to_csv(OUTPUT_DIR / 'monthly_grid_mix.csv', index=False)
 
-    print(f"  Grid Mix: {len(result)} months, composition verified (sum=100%)")
+    print(f"  Grid Mix: {len(result)} months (actual monthly EIA by source)")
     for col in pct_cols:
         print(f"    {col}: {result[col].iloc[0]:.2f}% -> {result[col].iloc[-1]:.2f}%")
 
@@ -224,7 +199,7 @@ def prepare_monthly_pue() -> pd.DataFrame:
     result['pue'] = result['pue'].fillna(HISTORICAL_PUE_ESTIMATE)
 
     # Verify output
-    assert len(result) == 108, f"Expected 108 months, got {len(result)}"
+    assert len(result) == EXPECTED_MONTHS, f"Expected {EXPECTED_MONTHS} months, got {len(result)}"
     assert result['pue'].isnull().sum() == 0, "Null PUE values detected"
     assert result['pue'].min() >= 1.0, f"Invalid PUE < 1.0: {result['pue'].min()}"
 
@@ -268,7 +243,7 @@ def prepare_monthly_ai_proxy() -> pd.DataFrame:
     result = df[['date', 'ai_proxy']].reset_index(drop=True)
 
     # Verify output
-    assert len(result) == 108, f"Expected 108 months, got {len(result)}"
+    assert len(result) == EXPECTED_MONTHS, f"Expected {EXPECTED_MONTHS} months, got {len(result)}"
     assert result['ai_proxy'].isnull().sum() == 0, "Null values detected"
     assert np.isclose(result['ai_proxy'].iloc[0], 1.0, atol=1e-6), "Baseline not 1.0"
 
@@ -302,7 +277,7 @@ def prepare_monthly_temperature() -> pd.DataFrame:
     result = result.sort_values('date').reset_index(drop=True)
 
     # Verify output
-    assert len(result) == 108, f"Expected 108 months, got {len(result)}"
+    assert len(result) == EXPECTED_MONTHS, f"Expected {EXPECTED_MONTHS} months, got {len(result)}"
     assert result['temperature'].isnull().sum() == 0, "Null temperature values"
 
     result.to_csv(OUTPUT_DIR / 'monthly_temperature.csv', index=False)
@@ -318,17 +293,17 @@ def run_data_preparation() -> tuple:
     Execute all data preparation steps in sequence.
 
     Output Files:
-    - monthly_energy_consumption.csv (108 rows)
-    - monthly_grid_mix.csv (108 rows)
-    - monthly_pue.csv (108 rows)
-    - monthly_ai_proxy.csv (108 rows)
-    - monthly_temperature.csv (108 rows)
+    - monthly_energy_consumption.csv
+    - monthly_grid_mix.csv
+    - monthly_pue.csv
+    - monthly_ai_proxy.csv
+    - monthly_temperature.csv
     """
     print("=" * 70)
     print(" DATA PREPARATION PHASE ".center(70))
-    print(" Converting Annual to Monthly & Aligning Time Series ".center(70))
+    print(" Preparing Monthly Time Series from EIA Generation Data ".center(70))
     print("=" * 70)
-    print(f"\nAnalysis Period: {START_DATE} to {END_DATE} (108 months)")
+    print(f"\nAnalysis Period: {START_DATE} to {END_DATE} ({EXPECTED_MONTHS} months)")
     print(f"Output Directory: {OUTPUT_DIR}\n")
 
     energy = prepare_monthly_energy()
@@ -341,7 +316,7 @@ def run_data_preparation() -> tuple:
     print(" DATA PREPARATION COMPLETE ".center(70))
     print("=" * 70)
     print(f"\n  All files saved to: {OUTPUT_DIR}")
-    print("  All time series aligned: 108 months (2015-01 to 2023-12)")
+    print(f"  All time series aligned: {EXPECTED_MONTHS} months ({START_DATE[:7]} to {END_DATE[:7]})")
     print("  Ready for time series modeling\n")
 
     return energy, grid, pue, ai, temp

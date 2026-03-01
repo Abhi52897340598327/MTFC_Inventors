@@ -17,34 +17,33 @@ def plot_grid_stress():
     
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
     
-    # Panel 1: Grid Stress
-    ax1.plot(data['date'], data['grid_stress_pct'], 
-             linewidth=2.5, color='#1f77b4', label='Base Stress')
-    ax1.plot(data['date'], data['grid_stress_adjusted_pct'], 
-             linewidth=2.5, color='red', linestyle='--', label='Adjusted Stress (with penalty)')
+    # Panel 1: DC Share of Grid
+    ax1.plot(data['date'], data['dc_share_pct'], 
+             linewidth=2.5, color='#1f77b4', label='DC Share of Grid')
     
-    ax1.axhline(y=35, color='orange', linestyle=':', linewidth=2.5, 
-                label='Concern Threshold (35%)', alpha=0.7)
-    ax1.axhline(y=40, color='darkred', linestyle=':', linewidth=2.5, 
-                label='Critical Threshold (40%)', alpha=0.7)
+    ax1.axhline(y=100, color='darkred', linestyle=':', linewidth=2.5, 
+                label='100% of Grid Capacity', alpha=0.7)
+    ax1.axhline(y=50, color='orange', linestyle=':', linewidth=2.5, 
+                label='50% of Grid Capacity', alpha=0.7)
     
-    ax1.set_ylabel('Grid Stress (%)', fontsize=13, fontweight='bold')
-    ax1.set_title('Datacenter Grid Stress Forecast', fontsize=15, fontweight='bold')
+    ax1.set_ylabel('DC Share (%)', fontsize=13, fontweight='bold')
+    ax1.set_title('Datacenter Demand as Share of Grid Generation', fontsize=15, fontweight='bold')
     ax1.legend(loc='upper left', fontsize=11, framealpha=0.95)
     ax1.grid(True, alpha=0.3, linestyle='--')
     
     # Panel 2: Energy Comparison
-    ax2.plot(data['date'], data['dc_energy_adjusted_gwh'], 
-             linewidth=2.5, color='purple', label='Datacenter Energy (adjusted)')
+    ax2.plot(data['date'], data['dc_energy_gwh'], 
+             linewidth=2.5, color='purple', label='Datacenter Energy Demand')
     ax2.plot(data['date'], data['electricity_gwh'], 
-             linewidth=2.5, color='gray', linestyle='--', label='Total Grid Electricity')
+             linewidth=2.5, color='gray', linestyle='--', label='Total Grid Generation')
     
-    ax2.fill_between(data['date'], 0, data['dc_energy_adjusted_gwh'], 
+    ax2.fill_between(data['date'], 0, data['dc_energy_gwh'], 
                      alpha=0.3, color='purple')
     
     ax2.set_xlabel('Year', fontsize=13, fontweight='bold')
     ax2.set_ylabel('Energy (GWh)', fontsize=13, fontweight='bold')
-    ax2.set_title('Energy Consumption Comparison', fontsize=15, fontweight='bold')
+    ax2.set_title('Energy Comparison: Datacenter Demand vs Grid Generation',
+                  fontsize=15, fontweight='bold')
     ax2.legend(loc='upper left', fontsize=11, framealpha=0.95)
     ax2.grid(True, alpha=0.3, linestyle='--')
     

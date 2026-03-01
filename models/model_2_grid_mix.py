@@ -22,8 +22,11 @@ OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'model_forecasts'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Model Constants
-FORECAST_PERIODS = 180
-AI_SPENDING_GROWTH_PROJECTION = 0.10  # 10% annual growth
+FORECAST_PERIODS = 160  # 2025-09 to 2038-12
+# AI spending projection for renewable exogenous: average forward growth rate
+# consistent with Model 3's fitted exponential (~25% initial) decaying with
+# a 5-year half-life toward 3.7% floor — averages ~12% over forecast horizon.
+AI_SPENDING_GROWTH_PROJECTION = 0.12  # 12% annual (consistent with Model 3)
 
 
 def run_grid_mix_forecast():
@@ -50,8 +53,8 @@ def run_grid_mix_forecast():
     print("\n" + "=" * 70)
     print(" MODEL 2: GRID MIX EVOLUTION FORECAST ".center(70))
     print("=" * 70)
-    print(f"\nTraining Period: 2015-01 to 2023-12 (108 months)")
-    print(f"Forecast Period: 2024-01 to 2038-12 (180 months)\n")
+    print(f"\nTraining Period: {data.index[0].strftime('%Y-%m')} to {data.index[-1].strftime('%Y-%m')} ({len(data)} months)")
+    print(f"Forecast Period: {FORECAST_PERIODS} months from {data.index[-1].strftime('%Y-%m')}\n")
     
     for source in sources:
         print(f"Fitting {source}...", end=' ')
