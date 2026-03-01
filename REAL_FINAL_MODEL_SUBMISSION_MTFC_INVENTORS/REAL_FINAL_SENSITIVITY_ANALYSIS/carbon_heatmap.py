@@ -135,21 +135,11 @@ def plot_heatmap(df: pd.DataFrame):
 
     # Annotate EVERY cell with its integer CI value
     ci_min, ci_max = pivot.values.min(), pivot.values.max()
-    # Use the colormap to determine text contrast
-    ci_range = ci_max - ci_min if ci_max > ci_min else 1
-    cmap = plt.cm.RdYlGn_r
     for i in range(24):
         for j in range(12):
             val = pivot.values[i, j]
-            # Map value to colormap normalised position
-            norm_val = (val - (ci_min - 5)) / ((ci_max + 5) - (ci_min - 5))
-            r, g, b, _ = cmap(norm_val)
-            # Perceived luminance (ITU-R BT.601)
-            lum = 0.299 * r + 0.587 * g + 0.114 * b
-            # Dark text on light/medium cells, white only on very dark cells
-            color = "white" if lum < 0.35 else "#1a1a1a"
             ax.text(j, i, f"{int(round(val))}", ha="center", va="center",
-                    fontsize=7, fontweight="bold", color=color)
+                    fontsize=7, fontweight="bold", color="black")
 
     ax.set_xticks(range(12))
     ax.set_xticklabels(month_labels, fontsize=11)
