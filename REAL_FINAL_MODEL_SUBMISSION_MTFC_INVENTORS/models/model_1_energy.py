@@ -66,13 +66,17 @@ def run_energy_forecast():
         freq='MS'
     )
 
-    # Generate forecast
-    forecast = results.forecast(steps=FORECAST_PERIODS)  # type: ignore[union-attr]
+    # Generate forecast with confidence intervals
+    forecast_obj = results.get_forecast(steps=FORECAST_PERIODS)  # type: ignore[union-attr]
+    forecast = forecast_obj.predicted_mean
+    conf_int = forecast_obj.conf_int(alpha=0.05)  # 95% CI
 
     # Create output dataframe
     output = pd.DataFrame({
         'date': future_dates,
-        'electricity_gwh': forecast.values
+        'electricity_gwh': forecast.values,
+        'electricity_gwh_lower': conf_int.iloc[:, 0].values,
+        'electricity_gwh_upper': conf_int.iloc[:, 1].values
     })
 
     # Save to CSV
@@ -91,6 +95,7 @@ def run_energy_forecast():
     print(f"  Start: {forecast.values[0]:,.1f} GWh")
     print(f"  End:   {forecast.values[-1]:,.1f} GWh")
     print(f"  Growth: {((forecast.values[-1]/forecast.values[0] - 1) * 100):+.1f}%")
+    print(f"  95% CI at end: [{conf_int.iloc[-1, 0]:,.1f}, {conf_int.iloc[-1, 1]:,.1f}] GWh")
     print(f"\n✓ Saved to: {OUTPUT_DIR / 'forecast_energy.csv'}")
     print("=" * 70 + "\n")
 

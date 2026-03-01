@@ -5,7 +5,7 @@ Mixed SARIMA/SARIMAX models for each energy source.
 Coal, Gas, Nuclear: SARIMA (policy-driven)
 Renewable: SARIMAX with AI spending exogenous (PPA-driven)
 
-Forecast Horizon: 180 months (15 years)
+Forecast Horizon: 160 months (~13 years)
 """
 
 import pandas as pd
@@ -49,6 +49,8 @@ def run_grid_mix_forecast():
     
     sources = ['coal_pct', 'gas_pct', 'nuclear_pct', 'renewable_pct']
     forecasts = {}
+    forecasts_lower = {}
+    forecasts_upper = {}
     
     print("\n" + "=" * 70)
     print(" MODEL 2: GRID MIX EVOLUTION FORECAST ".center(70))
@@ -80,7 +82,9 @@ def run_grid_mix_forecast():
             ])
             
             future_exog = pd.DataFrame({'ai_proxy': future_ai})
-            forecast = results.forecast(steps=FORECAST_PERIODS, exog=future_exog)  # type: ignore[union-attr]
+            forecast_obj = results.get_forecast(steps=FORECAST_PERIODS, exog=future_exog)  # type: ignore[union-attr]
+            forecast = forecast_obj.predicted_mean
+            ci = forecast_obj.conf_int(alpha=0.05)
             
             print(f"SARIMAX(1,1,1)(1,1,1)₁₂ with ai_proxy")
             
@@ -95,11 +99,15 @@ def run_grid_mix_forecast():
             )
             
             results = model.fit(disp=False, maxiter=200, method='lbfgs')  # type: ignore[assignment]
-            forecast = results.forecast(steps=FORECAST_PERIODS)  # type: ignore[union-attr]
+            forecast_obj = results.get_forecast(steps=FORECAST_PERIODS)  # type: ignore[union-attr]
+            forecast = forecast_obj.predicted_mean
+            ci = forecast_obj.conf_int(alpha=0.05)
             
             print(f"SARIMA(1,1,1)(1,1,1)₁₂")
         
         forecasts[source] = forecast.values
+        forecasts_lower[source] = ci.iloc[:, 0].values
+        forecasts_upper[source] = ci.iloc[:, 1].values
         print(f"  {data[source].iloc[-1]:.2f}% (2023) → {forecast.values[-1]:.2f}% (2038)")
     
     # Generate future dates
@@ -110,28 +118,37 @@ def run_grid_mix_forecast():
         freq='MS'
     )
     
-    # Create forecast dataframe
+    # Create forecast dataframes (point + CI)
     grid_forecast = pd.DataFrame(forecasts, index=future_dates)
+    grid_lower = pd.DataFrame(forecasts_lower, index=future_dates)
+    grid_upper = pd.DataFrame(forecasts_upper, index=future_dates)
     
     # Clip to physical bounds BEFORE normalization
     # (SARIMA can produce negative values for declining trends)
     grid_forecast = grid_forecast.clip(lower=0, upper=100)
+    grid_lower = grid_lower.clip(lower=0, upper=100)
+    grid_upper = grid_upper.clip(lower=0, upper=100)
     
     # Normalize to enforce compositional constraint (sum = 100%)
     print("\nApplying compositional constraint (normalization)...")
-    row_sums = grid_forecast.sum(axis=1)
-    grid_forecast = grid_forecast.div(row_sums, axis=0) * 100
+    for df in [grid_forecast, grid_lower, grid_upper]:
+        row_sums = df.sum(axis=1)
+        row_sums = row_sums.replace(0, 1)  # avoid division by zero
+        for col in df.columns:
+            df[col] = df[col] / row_sums * 100
     
     # Verify normalization
     verification_sums = grid_forecast.sum(axis=1)
     assert np.allclose(verification_sums, 100.0, atol=1e-6), "Normalization failed"
     print("✓ All rows sum to 100.00%")
     
-    # Save individual forecasts
+    # Save individual forecasts with confidence intervals
     for source in sources:
         output = pd.DataFrame({
             'date': future_dates,
-            source: grid_forecast[source].values
+            source: grid_forecast[source].values,
+            f'{source}_lower': grid_lower[source].values,
+            f'{source}_upper': grid_upper[source].values
         })
         filename = f"forecast_grid_{source.replace('_pct', '')}.csv"
         output.to_csv(OUTPUT_DIR / filename, index=False)

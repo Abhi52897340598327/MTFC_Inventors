@@ -5,9 +5,8 @@ Combines all forecasts and calculates risk metrics.
 Mathematical Operations:
 1. Merge all time series forecasts
 2. Calculate datacenter energy with AI growth
-3. Apply interaction terms (renewable intensity, grid stress penalty)
-4. Calculate carbon intensity and CO2 emissions by source
-5. Compute grid stress metrics
+3. Calculate carbon intensity and CO2 emissions by source
+4. Compute DC share of grid generation
 
 Output: Integrated forecast with all risk indicators
 """

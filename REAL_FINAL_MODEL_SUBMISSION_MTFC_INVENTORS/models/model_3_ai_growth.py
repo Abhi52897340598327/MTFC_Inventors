@@ -77,6 +77,10 @@ def run_ai_growth_forecast():
                            p0=[1.0, 0.02], maxfev=10000)
     a_fit, b_fit = popt
 
+    # Standard errors from covariance matrix
+    perr = np.sqrt(np.diag(pcov))
+    a_se, b_se = perr
+
     # Calculate fit quality
     y_fitted = _exp_growth(t_hist, a_fit, b_fit)
     ss_res = np.sum((y_hist - y_fitted) ** 2)
@@ -120,6 +124,27 @@ def run_ai_growth_forecast():
     # Normalize so first forecast month = 1.0
     multiplier_normalized = projected / projected[0]
 
+    # --- Monte Carlo confidence intervals (200 parameter draws) ---
+    N_MC = 200
+    rng = np.random.default_rng(42)
+    param_draws = rng.multivariate_normal(popt, pcov, size=N_MC)
+    mc_paths = np.zeros((N_MC, FORECAST_PERIODS))
+    for k in range(N_MC):
+        a_k, b_k = param_draws[k]
+        if b_k <= 0:
+            b_k = 0.001  # floor to avoid negative growth in draw
+        last_k = _exp_growth(t_hist[-1], a_k, b_k)
+        path = [last_k]
+        for i in range(FORECAST_PERIODS):
+            decayed_k = MIN_MONTHLY_GROWTH + \
+                (b_k - MIN_MONTHLY_GROWTH) * np.exp(-GROWTH_DECAY_RATE * i)
+            path.append(path[-1] * np.exp(decayed_k))
+        path = np.array(path[1:])
+        mc_paths[k] = path / path[0]  # normalize to 1.0 at start
+
+    multiplier_lower = np.percentile(mc_paths, 2.5, axis=0)
+    multiplier_upper = np.percentile(mc_paths, 97.5, axis=0)
+
     # Generate future dates
     last_date = ai.index[-1]
     future_dates = pd.date_range(
@@ -131,7 +156,9 @@ def run_ai_growth_forecast():
     # Create output dataframe
     output = pd.DataFrame({
         'date': future_dates,
-        'ai_multiplier': multiplier_normalized
+        'ai_multiplier': multiplier_normalized,
+        'ai_multiplier_lower': multiplier_lower,
+        'ai_multiplier_upper': multiplier_upper
     })
 
     # Save to CSV

@@ -23,9 +23,10 @@ def plot_grid_mix():
     
     data['date'] = pd.to_datetime(data['date'])
     
-    fig, ax = plt.subplots(figsize=(14, 7))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 11))
     
-    ax.stackplot(
+    # Panel 1: Stacked area (point estimates)
+    ax1.stackplot(
         data['date'],
         data['coal_pct'],
         data['gas_pct'],
@@ -36,14 +37,34 @@ def plot_grid_mix():
         alpha=0.85
     )
     
-    ax.set_xlabel('Year', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Grid Composition (%)', fontsize=13, fontweight='bold')
-    ax.set_title('Virginia Grid Mix Evolution Forecast (2024-2038)', 
+    ax1.set_ylabel('Grid Composition (%)', fontsize=13, fontweight='bold')
+    ax1.set_title('Virginia Grid Mix Evolution Forecast (2024-2038)', 
                  fontsize=15, fontweight='bold', pad=20)
+    ax1.legend(loc='upper right', fontsize=11, framealpha=0.95)
+    ax1.set_ylim(0, 100)
+    ax1.grid(True, alpha=0.3, axis='y', linestyle='--')
     
-    ax.legend(loc='upper right', fontsize=11, framealpha=0.95)
-    ax.set_ylim(0, 100)
-    ax.grid(True, alpha=0.3, axis='y', linestyle='--')
+    # Panel 2: Individual sources with 95% CI bands
+    source_info = [
+        ('renewable_pct', '#32CD32', 'Renewables'),
+        ('gas_pct', '#FFD700', 'Natural Gas'),
+        ('nuclear_pct', '#4169E1', 'Nuclear'),
+        ('coal_pct', '#8B4513', 'Coal'),
+    ]
+    for col, color, label in source_info:
+        ax2.plot(data['date'], data[col], linewidth=2, color=color, label=label)
+        lower_col = f'{col}_lower'
+        upper_col = f'{col}_upper'
+        if lower_col in data.columns:
+            ax2.fill_between(data['date'], data[lower_col], data[upper_col],
+                             alpha=0.15, color=color)
+    
+    ax2.set_xlabel('Year', fontsize=13, fontweight='bold')
+    ax2.set_ylabel('Share (%)', fontsize=13, fontweight='bold')
+    ax2.set_title('Individual Source Forecasts with 95% CI', 
+                 fontsize=14, fontweight='bold')
+    ax2.legend(loc='best', fontsize=11, framealpha=0.95)
+    ax2.grid(True, alpha=0.3, linestyle='--')
     
     plt.tight_layout()
     plt.savefig(OUTPUT_DIR / 'grid_mix_forecast.png', dpi=300, bbox_inches='tight')
