@@ -2,15 +2,18 @@
 Carbon Intensity Heatmap (Hour × Month)
 =========================================
 Generates a 24-row × 12-column heatmap of average grid carbon
-intensity (kg CO₂ / MWh), matching the reference figure exactly:
+intensity (kg CO₂ / MWh):
   • RdYlGn colormap (red = high, green = low)
   • Integer annotations in every cell
   • Y-axis = Hour of Day (0–23)
   • X-axis = Month (Jan–Dec)
   • Colorbar labelled "Avg Carbon Intensity (kg/MWh)"
 
-Uses a physics-informed diurnal + seasonal model calibrated
-to PJM / Virginia grid data.
+Data-driven approach:
+  1. Monthly CI from virginia_generation_all_years.csv
+     (real VA generation by fuel × EPA emission factors)
+  2. Diurnal modulation from hrl_load_metered_combined_cleaned.csv
+     (higher load → more gas peakers → higher CI)
 
 Outputs
 -------
@@ -23,45 +26,89 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from config import GRID, OUTPUT_DIR, FIGURE_DIR, PLOT
+from pathlib import Path
+from config import GRID, OUTPUT_DIR, FIGURE_DIR, PLOT, DATA_DIR
 
 np.random.seed(42)
 
+# EPA / EIA CO₂ emission factors (kg CO₂ per MWh of generation)
+_CO2_FACTORS = {
+    "Coal": 1000,
+    "Natural Gas": 450,
+    "Petroleum": 900,
+    "Nuclear": 0,
+    "Hydroelectric Conventional": 0,
+    "Solar Thermal and Photovoltaic": 0,
+    "Wind": 0,
+    "Wood and Wood Derived Fuels": 0,
+    "Other Biomass": 0,
+    "Pumped Storage": 0,
+    "Other": 450,
+    "Other Gases": 450,
+}
 
-# ── Synthetic grid carbon-intensity model ────────────────────────────────
+
+def _load_monthly_ci() -> pd.Series:
+    """Compute real monthly-average CI (kg/MWh) from VA generation data."""
+    fp = DATA_DIR / "virginia_generation_all_years.csv"
+    gen = pd.read_csv(fp)
+    gen = gen[gen["TYPE OF PRODUCER"] == "Total Electric Power Industry"]
+    gen = gen[gen["ENERGY SOURCE"] != "Total"]
+    gen["co2_kg"] = gen.apply(
+        lambda r: r["GENERATION (Megawatthours)"]
+        * _CO2_FACTORS.get(r["ENERGY SOURCE"], 0),
+        axis=1,
+    )
+    monthly = (
+        gen.groupby(["YEAR", "MONTH"])
+        .agg(total_gen=("GENERATION (Megawatthours)", "sum"),
+             total_co2=("co2_kg", "sum"))
+        .reset_index()
+    )
+    monthly["ci"] = monthly["total_co2"] / monthly["total_gen"]
+    # Average across recent years (2020+) for each calendar month
+    recent = monthly[monthly["YEAR"] >= 2020]
+    return recent.groupby("MONTH")["ci"].mean()  # Series indexed 1..12
+
+
+def _load_diurnal_profile() -> pd.Series:
+    """Normalised hourly load profile from PJM data (proxy for dispatch intensity)."""
+    fp = DATA_DIR / "hrl_load_metered_combined_cleaned.csv"
+    pjm = pd.read_csv(fp)
+    pjm["datetime"] = pd.to_datetime(
+        pjm["datetime_beginning_ept"], format="mixed", dayfirst=False
+    )
+    pjm["hour"] = pjm["datetime"].dt.hour
+    hourly_avg = pjm.groupby("hour")["mw"].mean()
+    # Normalise: 1.0 = daily mean, >1 = above-average dispatch
+    return hourly_avg / hourly_avg.mean()  # Series indexed 0..23
+
+
 def _build_heatmap_data() -> pd.DataFrame:
+    """Build 24×12 CI grid from real data.
+
+    For each (hour, month):
+        CI(h, m) = monthly_CI(m) × diurnal_factor(h)
+    where monthly_CI comes from real VA generation/fuel mix and
+    the diurnal factor reflects how much marginal-dispatch CI
+    rises above the monthly average during peak-load hours.
     """
-    Model mean carbon intensity as:
-        CI(h, m) = base
-                 + seasonal_amplitude * cos(2π(m-peak_month)/12)
-                 + diurnal_amplitude  * cos(2π(h-peak_hour)/24)
-                 + interaction
-                 + noise
-    Calibrated so overall mean ≈ 345 kg/MWh (matching GRID config).
-    """
-    base = GRID["carbon_intensity_mean"]  # 345
-    seasonal_amp = 35.0   # ± kg/MWh  (summer peaking from gas/coal ramp)
-    diurnal_amp  = 25.0   # ± kg/MWh  (mid-day renewables depress CI)
-    peak_month   = 7      # July peak (cooling load → gas peakers)
-    trough_hour  = 13     # 1 PM lowest CI (solar peak)
-    interaction  = 8.0    # summer-afternoon interaction term
+    monthly_ci = _load_monthly_ci()       # Series: month 1..12 → CI (kg/MWh)
+    diurnal    = _load_diurnal_profile()  # Series: hour 0..23 → multiplier
+
+    # Scale the diurnal effect: at peak load, CI rises ~15% above monthly avg
+    # (gas peakers fire); at trough, CI drops ~10% (nuclear/renewables dominate)
+    diurnal_effect_strength = 0.18  # ±18% swing driven by load shape
+    diurnal_scaled = 1.0 + (diurnal.values - 1.0) * diurnal_effect_strength / (
+        diurnal.values.max() - 1.0
+    )
 
     rows = []
     for month in range(1, 13):
+        base_ci = monthly_ci.get(month, GRID["carbon_intensity_mean"])
         for hour in range(24):
-            seasonal = seasonal_amp * np.cos(2 * np.pi * (month - peak_month) / 12)
-            diurnal  = -diurnal_amp * np.cos(2 * np.pi * (hour - trough_hour) / 24)
-
-            # Interaction: summer afternoons have lower CI (solar)
-            summer_factor = max(0, np.cos(2 * np.pi * (month - 6.5) / 12))
-            afternoon_factor = max(0, np.cos(2 * np.pi * (hour - 13) / 24))
-            interact = -interaction * summer_factor * afternoon_factor
-
-            noise = np.random.normal(0, 3)
-            ci = base + seasonal + diurnal + interact + noise
-            ci = np.clip(ci, GRID["carbon_intensity_min"],
-                         GRID["carbon_intensity_max"])
-
+            ci = base_ci * diurnal_scaled[hour]
+            # No artificial clipping — let real data values show through
             rows.append({
                 "month": month,
                 "hour": hour,
@@ -86,18 +133,23 @@ def plot_heatmap(df: pd.DataFrame):
                    vmin=pivot.values.min() - 5,
                    vmax=pivot.values.max() + 5)
 
-    # Annotate only cells in top/bottom 20% to reduce clutter
+    # Annotate EVERY cell with its integer CI value
     ci_min, ci_max = pivot.values.min(), pivot.values.max()
-    ci_range = ci_max - ci_min
-    low_thresh = ci_min + ci_range * 0.20
-    high_thresh = ci_max - ci_range * 0.20
+    # Use the colormap to determine text contrast
+    ci_range = ci_max - ci_min if ci_max > ci_min else 1
+    cmap = plt.cm.RdYlGn_r
     for i in range(24):
         for j in range(12):
             val = pivot.values[i, j]
-            if val <= low_thresh or val >= high_thresh:
-                color = "white" if val >= high_thresh else "black"
-                ax.text(j, i, f"{int(round(val))}", ha="center", va="center",
-                        fontsize=7, fontweight="bold", color=color)
+            # Map value to colormap normalised position
+            norm_val = (val - (ci_min - 5)) / ((ci_max + 5) - (ci_min - 5))
+            r, g, b, _ = cmap(norm_val)
+            # Perceived luminance (ITU-R BT.601)
+            lum = 0.299 * r + 0.587 * g + 0.114 * b
+            # Dark text on light/medium cells, white only on very dark cells
+            color = "white" if lum < 0.35 else "#1a1a1a"
+            ax.text(j, i, f"{int(round(val))}", ha="center", va="center",
+                    fontsize=7, fontweight="bold", color=color)
 
     ax.set_xticks(range(12))
     ax.set_xticklabels(month_labels, fontsize=11)

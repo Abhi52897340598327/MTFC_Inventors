@@ -500,7 +500,7 @@ def run_full_cba(proj_df, p):
 
 # ─────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    from data_ingestion import ingest_all
+    from data_ingestion_real import ingest_all
     from cba_scenarios import project_scenarios
     data = ingest_all()
     proj_df, _ = project_scenarios(data["params"])

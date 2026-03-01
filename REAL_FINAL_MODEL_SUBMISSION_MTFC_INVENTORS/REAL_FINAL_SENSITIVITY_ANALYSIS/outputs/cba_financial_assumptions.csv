@@ -13,13 +13,13 @@ Demand Charge,$180/kW/yr,FINANCE.demand_charge
 DC IT Capacity (base),30 MW,DC_PARAMS.it_capacity_mw
 Industry PUE Baseline,1.30,DC_PARAMS.pue_baseline
 Base Utilization,60%,scenario assumption
-VA Grid CI (empirical),31.8 kg CO₂/MWh,Derived: emissions/energy
-DC Spending CAGR (empirical),26.7%,monthly-spending-data-center-us.csv
-VA Energy CAGR 20yr (empirical),0.97%,virginia_yearly_energy_consumption_bbtu.csv
-VA Temp Trend (empirical),-0.43°F/decade,monthly_temp_virginia.csv
-ESIF PUE Mean (empirical),1.051,esif_daily_avg_interpolated.csv
-Coal Decline CAGR 20yr,-1.9%,energy_by_source_annual_grid_comp.csv
-Renewable Growth CAGR 20yr,1.9%,energy_by_source_annual_grid_comp.csv
-VA Total CO₂ (latest),22.9 MMT,virginia_total_carbon_emissions_energyproduction_annual.csv
-Exponential Fit R² (DC spend),0.996,monthly-spending-data-center-us.csv
-ESIF PUE Variability (P95/P05),1.04×,esif_daily_avg_interpolated.csv
+VA Grid CI (empirical),30.0 kg CO₂/MWh,Derived: emissions/energy
+DC Spending CAGR (empirical),21.6%,monthly-spending-data-center-us.csv
+VA Energy CAGR 20yr (empirical),-0.22%,virginia_yearly_energy_consumption_bbtu.csv
+VA Temp Trend (empirical),+0.12°F/decade,monthly_temp_virginia.csv
+ESIF PUE Mean (empirical),1.020,esif_daily_avg_interpolated.csv
+Coal Decline CAGR 20yr,-11.3%,energy_by_source_annual_grid_comp.csv
+Renewable Growth CAGR 20yr,2.9%,energy_by_source_annual_grid_comp.csv
+VA Total CO₂ (latest),21.4 MMT,virginia_total_carbon_emissions_energyproduction_annual.csv
+Exponential Fit R² (DC spend),0.923,monthly-spending-data-center-us.csv
+ESIF PUE Variability (P95/P05),1.07×,esif_daily_avg_interpolated.csv

@@ -1,5 +1,12 @@
 scenario,description,narrative,dc_capacity_growth_rate,pue_change_per_year,grid_ci_change_per_year,temp_change_f_per_year,utilization_growth_rate
+<<<<<<< HEAD
 Baseline,Historical Virginia energy growth continues; no AI step-change,"VA energy CAGR=0.97%, CI trend=+0.1 kg/MWh/yr",0.009723350080053761,0.0,0.05695129131677664,-0.04332956259426741,0.01
 DC Boom,AI-driven datacenter growth follows DC-spending CAGR trajectory,DC spending CAGR=26.7% → capacity proxy ~13%/yr,0.13359149339929444,0.005,0.02847564565838832,-0.04332956259426741,0.03
 Efficient Transition,DC Boom growth + aggressive PUE optimization + 50MW clean PPA,"PUE improves -0.015/yr, PPA 50 MW @ $45, grid CI decarb 2× trend",0.13359149339929444,-0.015,0.11390258263355328,-0.04332956259426741,0.03
 Climate Stress,DC Boom + accelerated warming + coal reversion during summer peaks,"Warming 3× trend, PUE +0.01/yr, CI reverses by +0.0/yr",0.13359149339929444,0.01,0.02847564565838832,-0.12998868778280223,0.03
+=======
+Baseline,Historical Virginia energy growth continues; no AI step-change,"VA energy CAGR=-0.22%, CI trend=-1.0 kg/MWh/yr",-0.002232345742559816,0.0,-1.039289576232155,0.012143288084464554,0.01
+DC Boom,AI-driven datacenter growth follows DC-spending CAGR trajectory,DC spending CAGR=21.6% → capacity proxy ~11%/yr,0.1078409804095265,0.005,-0.5196447881160775,0.012143288084464554,0.03
+Efficient Transition,DC Boom growth + aggressive PUE optimization + 50MW clean PPA,"PUE improves -0.015/yr, PPA 50 MW @ $45, grid CI decarb 2× trend",0.1078409804095265,-0.015,-2.07857915246431,0.012143288084464554,0.03
+Climate Stress,DC Boom + accelerated warming + coal reversion during summer peaks,"Warming 3× trend, PUE +0.01/yr, CI reverses by +0.5/yr",0.1078409804095265,0.01,0.5196447881160775,0.03642986425339366,0.03
+>>>>>>> 50f9f19cf4e3f8caaea1eef4a7715fe10ffe3dea

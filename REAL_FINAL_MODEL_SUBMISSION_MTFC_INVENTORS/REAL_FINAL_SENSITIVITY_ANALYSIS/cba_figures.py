@@ -456,7 +456,7 @@ def generate_all_figures(data_bundle, proj_df, cost_df, mit_df, risk_df):
 
 # ─────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    from data_ingestion import ingest_all
+    from data_ingestion_real import ingest_all
     from cba_scenarios import project_scenarios
     from cba_full_analysis import run_full_cba
 
