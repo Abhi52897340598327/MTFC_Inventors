@@ -26,6 +26,15 @@ END_DATE = '2025-08-01'
 HISTORICAL_PUE_ESTIMATE = 1.50  # For months before PUE data availability
 EXPECTED_MONTHS = len(pd.date_range(START_DATE, END_DATE, freq='MS'))  # 128
 
+# Virginia share of US datacenter construction spending
+# Source: CBRE North America Data Center Trends (2024), JLL Data Center Outlook
+# Virginia (NoVA / Loudoun County) hosts ~25-30% of US datacenter capacity.
+# Time-varying: ~20% in 2014 growing to ~30% by 2025 reflecting VA's increasing dominance.
+VA_DC_SHARE_START = 0.20   # 2014 share
+VA_DC_SHARE_END   = 0.30   # 2025 share
+VA_DC_SHARE_START_DATE = pd.Timestamp('2014-01-01')
+VA_DC_SHARE_END_DATE   = pd.Timestamp('2025-08-01')
+
 # Source mapping: EIA energy source names -> our 4 grid categories
 SOURCE_MAP = {
     'Coal': 'coal',
@@ -211,14 +220,30 @@ def prepare_monthly_pue() -> pd.DataFrame:
     return result
 
 
+def _va_dc_share(dates: pd.Series) -> pd.Series:
+    """Compute time-varying Virginia datacenter share of US spending.
+
+    Linearly interpolates from VA_DC_SHARE_START (2014) to VA_DC_SHARE_END (2025).
+    Clipped to [VA_DC_SHARE_START, VA_DC_SHARE_END] outside the range.
+    """
+    total_days = (VA_DC_SHARE_END_DATE - VA_DC_SHARE_START_DATE).days
+    elapsed = (dates - VA_DC_SHARE_START_DATE).dt.days.astype(float)
+    frac = np.clip(elapsed / total_days, 0.0, 1.0)
+    return VA_DC_SHARE_START + frac * (VA_DC_SHARE_END - VA_DC_SHARE_START)
+
+
 def prepare_monthly_ai_proxy() -> pd.DataFrame:
     """
-    Prepare datacenter spending as AI growth proxy.
+    Prepare datacenter spending as AI growth proxy (Virginia-adjusted).
 
     Mathematical Process:
-    1. Load monthly spending data
-    2. Filter to analysis period
-    3. Normalize to baseline (2015-01 = 1.0)
+    1. Load US monthly spending data
+    2. Apply time-varying Virginia share (20% in 2014 → 30% in 2025)
+    3. Filter to analysis period
+    4. Normalize to baseline (2015-01 = 1.0)
+
+    Assumption: Virginia's share of US DC construction grows linearly
+    from ~20% to ~30% over 2014-2025 (CBRE, JLL industry data).
 
     Input: monthly-spending-data-center-us.csv
     Output: monthly_ai_proxy.csv
@@ -232,6 +257,11 @@ def prepare_monthly_ai_proxy() -> pd.DataFrame:
     })
 
     df['date'] = pd.to_datetime(df['date'])
+
+    # Apply time-varying Virginia share of US spending
+    va_share = _va_dc_share(df['date'])
+    df['ai_proxy'] = df['ai_proxy'] * va_share
+    print(f"  VA DC share applied: {va_share.iloc[0]:.1%} (start) → {va_share.iloc[-1]:.1%} (end)")
 
     # Filter to analysis period
     df = df[(df['date'] >= START_DATE) & (df['date'] <= END_DATE)].copy()

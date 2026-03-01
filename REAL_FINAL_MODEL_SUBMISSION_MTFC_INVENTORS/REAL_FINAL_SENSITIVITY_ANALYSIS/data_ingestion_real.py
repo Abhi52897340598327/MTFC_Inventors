@@ -301,6 +301,20 @@ def _va_energy_params(df):
 # ─────────────────────────────────────────────────────────────────────────
 #  7.  US Data-Centre Construction Spending  (monthly-spending-data-center-us.csv)
 # ─────────────────────────────────────────────────────────────────────────
+# Virginia share of US datacenter construction spending (time-varying)
+# Source: CBRE North America Data Center Trends (2024), JLL Data Center Outlook
+VA_DC_SHARE_START      = 0.20    # ~20% in 2014
+VA_DC_SHARE_END        = 0.30    # ~30% by 2025
+_VA_SHARE_START_DATE   = pd.Timestamp('2014-01-01')
+_VA_SHARE_END_DATE     = pd.Timestamp('2025-08-01')
+
+def _va_dc_share_series(dates: pd.Series) -> pd.Series:
+    """Time-varying Virginia share: linear 20% (2014) → 30% (2025)."""
+    total_days = (_VA_SHARE_END_DATE - _VA_SHARE_START_DATE).days
+    elapsed = (dates - _VA_SHARE_START_DATE).dt.days.astype(float)
+    frac = np.clip(elapsed / total_days, 0.0, 1.0)
+    return VA_DC_SHARE_START + frac * (VA_DC_SHARE_END - VA_DC_SHARE_START)
+
 def _load_dc_spending():
     fp = DATA_DIR / "monthly-spending-data-center-us.csv"
     df = pd.read_csv(fp)
@@ -308,6 +322,11 @@ def _load_dc_spending():
     df["date"] = pd.to_datetime(df["date"])
     df["spending_usd"] = pd.to_numeric(df["spending_usd"], errors="coerce")
     df = df.sort_values("date").reset_index(drop=True)
+    # Scale US-wide spending to Virginia's share (time-varying)
+    va_share = _va_dc_share_series(df["date"])
+    df["spending_usd_us"] = df["spending_usd"].copy()  # keep original for reference
+    df["spending_usd"] = df["spending_usd"] * va_share
+    print(f"  VA DC share applied to spending: {va_share.iloc[0]:.1%} → {va_share.iloc[-1]:.1%}")
     return df
 
 

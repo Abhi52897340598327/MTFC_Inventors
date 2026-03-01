@@ -3,8 +3,8 @@ va_avg_temp_f_mean,55.28164983164984
 va_avg_temp_f_std,15.945970642627017
 va_cdd_annual_mean,1022.9411764705883
 va_hdd_annual_mean,4418.725490196079
-va_temp_trend_f_per_decade,-0.4332956259426841
-va_cdd_trend_per_decade,31.664253393665362
+va_temp_trend_f_per_decade,-0.43329562594267407
+va_cdd_trend_per_decade,31.664253393666964
 va_recent_summer_cdd_monthly_avg,320.5
 esif_pue_mean,1.0510848924881318
 esif_pue_std,0.013883133457701835
@@ -13,7 +13,7 @@ esif_pue_p95,1.073
 esif_it_power_mean_kw,1643.8813990505444
 esif_cooling_mean_kw,53.67623010332309
 esif_cooling_fraction,0.03265213058212402
-esif_pue_trend_per_year,0.0039915565275369744
+esif_pue_trend_per_year,0.0039915565275372876
 esif_it_power_cagr,0.12588402773740914
 grid_share_coal_pct,7.258206842494105
 grid_share_natural_pct,39.14199228092468
@@ -45,4 +45,4 @@ dc_spend_late_cagr,0.008390709457662293
 dc_spend_exponential_r2,0.9961433012092094
 va_grid_ci_gco2_kwh_latest,31.755100940085196
 va_grid_ci_kgco2_mwh_latest,31.755100940085196
-va_grid_ci_trend_per_decade,0.5695129131677588
+va_grid_ci_trend_per_decade,0.5695129131677664

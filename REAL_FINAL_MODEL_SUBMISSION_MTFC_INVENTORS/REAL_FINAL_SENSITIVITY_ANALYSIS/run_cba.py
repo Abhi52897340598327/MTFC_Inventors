@@ -89,7 +89,7 @@ def print_actuarial_summary(p, proj_df, cba_results):
     3. energy_by_source_annual_grid_comp.csv  → Grid mix (coal {p.get('coal_consumption_cagr_20yr',0):.0%}/yr decline)
     4. virginia_total_carbon_emissions_*.csv  → VA CO₂ ({p.get('va_total_co2_mmt_latest',0):.1f} MMT latest)
     5. virginia_yearly_energy_consumption.csv → VA energy ({p.get('va_energy_cagr_20yr',0):.2%} CAGR 20yr)
-    6. monthly-spending-data-center-us.csv    → DC spending (CAGR={p.get('dc_spend_cagr',0):.0%}, R²={p.get('dc_spend_exponential_r2',0):.3f})
+    6. monthly-spending-data-center-us.csv    → VA DC spending (CAGR={p.get('dc_spend_cagr',0):.0%}, R²={p.get('dc_spend_exponential_r2',0):.3f})
 """)
 
     # ── Scenario Comparison ──

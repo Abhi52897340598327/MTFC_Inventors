@@ -35,7 +35,7 @@ def plot_energy_forecast():
                         fcst['electricity_gwh_upper'],
                         alpha=0.2, color='#1f77b4', label='95% CI')
 
-    ax.axvline(x=pd.Timestamp('2024-01-01'), color='gray',
+    ax.axvline(x=pd.Timestamp('2025-09-01'), color='gray',
                linestyle='--', linewidth=1.5, alpha=0.6, label='Forecast Start')
 
     ax.set_xlabel('Year', fontsize=13, fontweight='bold')

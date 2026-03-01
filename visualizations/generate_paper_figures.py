@@ -458,7 +458,7 @@ def fig06_ai_multiplier():
 
     ax.scatter(ai_hist['date'], ai_hist['ai_proxy'],
                s=10, color=C['black'], alpha=0.45, zorder=3,
-               label='Observed (DC Construction Spending)')
+               label='Observed (VA DC Construction Spending, est.)')
 
     ax.plot(ai_hist['date'], y_fitted,
             color=C['red'], linewidth=1.4, linestyle='--',
@@ -479,7 +479,7 @@ def fig06_ai_multiplier():
 
     ax.set_xlabel('Year')
     ax.set_ylabel('AI Proxy Index (2015-01 = 1.0)')
-    ax.set_title('Figure 6.  AI Growth Proxy \u2014 Exponential Fit and Forecast')
+    ax.set_title('Figure 6.  AI Growth Proxy (Virginia est.) \u2014 Exponential Fit and Forecast')
     ax.legend(loc='upper left', fontsize=8)
     ax.xaxis.set_major_locator(mdates.YearLocator(3))
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))

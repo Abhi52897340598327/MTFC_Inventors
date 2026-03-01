@@ -405,7 +405,7 @@ def fig_growth_evidence(data_bundle):
     cagr = data_bundle["params"].get("dc_spend_cagr", 0.25)
     ax1.plot(dates_fit, y_fit / 1e9, "--", color="#4A148C", linewidth=2.5,
              label=f"Exponential fit (R²={r2:.3f}, CAGR={cagr:.0%})")
-    ax1.set_title("US Data-Centre Construction Spending", fontsize=14, fontweight="bold")
+    ax1.set_title("Virginia Data-Centre Construction Spending (est.)", fontsize=14, fontweight="bold")
     ax1.set_ylabel("Monthly Spending ($Billion)")
     ax1.legend(fontsize=10)
     ax1.grid(True, alpha=0.3)
@@ -422,7 +422,7 @@ def fig_growth_evidence(data_bundle):
     ax2.scatter(dc["date"], dc["spending_usd"], s=20, alpha=0.5, color="#7B1FA2")
     ax2.plot(dates_fit, y_fit, "--", color="#4A148C", linewidth=2.5, label=f"R²={r2:.3f}")
     ax2.set_yscale("log")
-    ax2.set_title("Log Scale — Exponential Growth Verification", fontsize=14, fontweight="bold")
+    ax2.set_title("Log Scale — Exponential Growth (Virginia est.)", fontsize=14, fontweight="bold")
     ax2.set_ylabel("Monthly Spending ($, log scale)")
     ax2.legend(fontsize=10)
     ax2.grid(True, alpha=0.3, which="both")

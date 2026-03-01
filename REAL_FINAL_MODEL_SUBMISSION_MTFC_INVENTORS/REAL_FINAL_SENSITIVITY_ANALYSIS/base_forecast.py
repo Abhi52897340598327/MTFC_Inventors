@@ -74,19 +74,37 @@ _AI_SPEND = {
 #  1.  LOAD & CALIBRATE HISTORICAL DATA
 # ═════════════════════════════════════════════════════════════════════════
 
+# Virginia share of US datacenter construction spending (time-varying)
+# Source: CBRE North America Data Center Trends (2024), JLL Data Center Outlook
+_VA_SHARE_START      = 0.20    # ~20% in 2014
+_VA_SHARE_END        = 0.30    # ~30% by 2025
+_VA_SHARE_DATE_START = pd.Timestamp('2014-01-01')
+_VA_SHARE_DATE_END   = pd.Timestamp('2025-08-01')
+
+def _va_dc_share_vec(dates):
+    """Time-varying Virginia share: linear 20% (2014) → 30% (2025)."""
+    total_days = (_VA_SHARE_DATE_END - _VA_SHARE_DATE_START).days
+    elapsed = (dates - _VA_SHARE_DATE_START).dt.days.astype(float)
+    frac = np.clip(elapsed / total_days, 0.0, 1.0)
+    return _VA_SHARE_START + frac * (_VA_SHARE_END - _VA_SHARE_START)
+
 def _load_historical_spending() -> pd.DataFrame:
-    """Load US datacenter monthly spending → annual totals."""
+    """Load US datacenter monthly spending, apply Virginia share → annual totals."""
     fp = _DATA / "monthly-spending-data-center-us.csv"
     if fp.exists():
         df = pd.read_csv(fp)
         col = [c for c in df.columns if "spending" in c.lower()
                or c.startswith("Monthly")][0]
-        df["year"] = pd.to_datetime(df["Day"]).dt.year
+        df["date"] = pd.to_datetime(df["Day"])
+        df["year"] = df["date"].dt.year
+        # Apply time-varying Virginia share
+        va_share = _va_dc_share_vec(df["date"])
+        df[col] = df[col] * va_share
         annual = df.groupby("year")[col].sum().reset_index()
         annual.columns = ["year", "spending_usd"]
         annual["spending_B"] = annual["spending_usd"] / 1e9
         return annual
-    return pd.DataFrame({"year": [2024], "spending_B": [22.0]})
+    return pd.DataFrame({"year": [2024], "spending_B": [6.6]})
 
 
 def _load_historical_energy() -> pd.DataFrame:
