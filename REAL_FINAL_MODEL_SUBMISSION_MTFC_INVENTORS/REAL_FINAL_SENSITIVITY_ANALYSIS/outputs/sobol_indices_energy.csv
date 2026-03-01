@@ -1,0 +1,6 @@
+parameter,S1,ST,S1_rank,ST_rank
+idle_power_fraction,0.0397,0.0577,4,4
+cpu_utilization,0.6751,0.6907,1,1
+temperature_f,0.0938,0.1178,3,3
+pue_baseline,0.1341,0.1516,2,2
+carbon_intensity,0.0,0.0,5,5

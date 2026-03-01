@@ -1,0 +1,6 @@
+pair,kendall_tau,gumbel_theta,clayton_theta,upper_tail,lower_tail,spearman_rho
+temperature_vs_energy_demand,0.1754,1.2127,0.4254,0.229,0.1961,0.2599
+temperature_vs_carbon_intensity,-0.0017,1.0,0.0,0.0,0.0,-0.0026
+carbon_intensity_vs_emissions,0.4467,1.8075,1.6149,0.5326,0.651,0.6275
+cpu_utilization_vs_energy_demand,0.8342,6.0332,10.0663,0.8783,0.9335,0.9388
+pue_vs_total_cost,0.4766,1.9106,1.8211,0.5627,0.6834,0.6146

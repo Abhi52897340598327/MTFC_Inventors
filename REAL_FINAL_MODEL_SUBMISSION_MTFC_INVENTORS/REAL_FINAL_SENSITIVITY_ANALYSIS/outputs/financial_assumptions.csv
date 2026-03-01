@@ -1,0 +1,9 @@
+parameter,value,unit,source
+Social Cost of Carbon,190.0,USD/ton CO₂,"EPA 2024 (central, 3% DR)"
+Wholesale Energy Price,72.0,USD/MWh,PJM 2024 avg
+Discount Rate,8%,—,WACC for hyperscale DC
+Horizon,10,years,Model assumption
+Contract Peak,40.0,MW,Typical Ashburn utility contract
+Peak Breach Penalty,450.0,USD/MWh,Industry estimate
+Demand Charge,180.0,USD/kW/yr,Dominion Energy tariff
+Cooling Maintenance,$2.5M,USD/yr,ASHRAE benchmark
