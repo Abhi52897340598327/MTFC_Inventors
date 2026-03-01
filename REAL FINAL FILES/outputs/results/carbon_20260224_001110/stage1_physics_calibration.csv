@@ -1,0 +1,2 @@
+it_power_slope,it_power_intercept,total_power_slope,total_power_intercept,calibration_valid,calibration_reason
+1.0,0.0,1.0,0.0,True,disabled_identity

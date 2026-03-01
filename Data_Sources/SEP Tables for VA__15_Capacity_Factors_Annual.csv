@@ -1,0 +1,42 @@
+"Table 15. Capacity and usage factors, 2008 through 2024",Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9,Unnamed: 10,Unnamed: 11,Unnamed: 12,Unnamed: 13,Unnamed: 14,Unnamed: 15,Unnamed: 16,Unnamed: 17,Unnamed: 18
+Virginia,,,,,,,,,,,,,,,,,,
+Generation technology,2024 Time adjusted capacity (MW),"Year
+2024","Year
+2023","Year
+2022","Year
+2021","Year
+2020","Year
+2019","Year
+2018","Year
+2017","Year
+2016","Year
+2015","Year
+2014","Year
+2013","Year
+2012","Year
+2011","Year
+2010","Year
+2009","Year
+2008"
+Capacity Factors,,,,,,,,,,,,,,,,,,
+Nuclear,3568,92.4,94.9,90.2,91.4,96.2,94.4,93.6,97.8,94.9,89.8,96.7,93.5,91.8,82.8,86.6,94.6,93.4
+Natural Gas - CC,8910.1,71.5,59.7,56.8,62.9,72.2,67.5,65.6,63.1,64.6,62.5,54.2,59.1,66.2,51.2,46.3,37.8,26.8
+Wood,489.7,67,64.8,67.8,66.6,59.9,63,61.7,59.9,61.3,63.4,60.7,51.6,59.4,42.2,48.4,66.2,71.1
+"Other, Biomass",236.4,59.8,52.3,56.4,58.1,61.7,61.9,61.9,42.1,58.2,58.1,60.1,54.6,49.8,48.6,48.1,46,51
+Wind - Offshore,12,47.7,44.7,48.4,47.1, , , , , , , , , , , , , 
+Solar - PV,3886.5,20.2,20.3,21.5,22.5,22.6,26.3,23.2,26.3,14.5, , , , , , , , 
+Hydroelectric,866.6,16.5,18.3,15,17.2,26.7,20,23.3,14.7,19.3,15.3,12.6,16.5,13.7,16,19.8,23.6,17.8
+Coal,1530.1,16.1,9.9,16.3,15.6,16.1,14.2,29.1,33.1,49.8,40.9,43,42.6,27.9,39.4,50.1,49.8,61.7
+Natural Gas - GT,4212,11.2,8.6,9.9,9.9,12.8,10.5,11.8,7.8,9.7,9.5,6.4,6.3,4.6,4,8.9,3.6,4
+Natural Gas - ST,587.8,10.6,5.1,7.8,8.2,5.3,10.3,10,6.7,10.7,8.7,9,13.4,6.9,5.3,11.9,5.7,7.6
+Natural Gas - IC,1.5,2,0.8,0.8,0.3,1.5,11.9,13.9,11.9,7.1, , , , , , , , 
+Petroleum - GT,607.4,0.8,0.7,1.7,0.9,0.8,0.4,2.2,1.4,2.1,2.6,3.1,0.9,1.5,0.7,1.2,0.5,0.8
+Petroleum - IC,135,0.8,0.7,0.8,0.8,0.7,0.6,0.6,0.3,0.5,0.7,0.5,0.2,0.2,0.3,1.8,1.1,1.7
+"Other, not Biomass or Gas", , , , ,28.5,55.5,43.2, , , , ,29.3,24, , , , , 
+Petroleum - ST, , , ,0.4,0.7,0.3,0.6,2.3,1.4,1.7,3.9,2.6,0.9,1.2,1.8,5,3.1,4.8
+Usage Factors,,,,,,,,,,,,,,,,,,
+Pumped Storage,3253.1,15.6,14.6,16.7,11.5,12.4,11.8,14.8,13.6,11.9,13,14.9,14.1, , , , , 
+Battery,70.5,6.8,2,0.7, , , , , , , , , , , , , , 
+All Sources,28366.7, , , , , , , , , , , , , , , , , 
+"Note: Time adjusted capacity for the year is the capacity of all the generators that were included in the capacity factor calculation.
+Data Source: U.S. Energy Information Administration, Form EIA-860, Annual Electric Generator Report. and U.S. Energy Information Administration, Form EIA-923, Power Plant Operations Report",,,,,,,,,,,,,,,,,,

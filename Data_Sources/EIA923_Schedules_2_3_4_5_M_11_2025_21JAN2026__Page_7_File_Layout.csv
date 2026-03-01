@@ -1,0 +1,433 @@
+ ,Unnamed: 1
+"Form EIA-923, Power Plant Operations Report and instructions",
+,
+Layout and Description of Data,
+,
+Generation and Fuel Data,
+Data Elements,Description 
+,
+Plant ID,EIA Plant Identification number. One to five digit numeric.
+Combined Heat & Power Plant,"Whether or not the plant is a combined heat & power facility (cogenerator).One character alphanumeric, “Y” or “N”"
+Nuclear Unit ID,"For nuclear plants only, the unit number .One digit numeric. Nuclear plants are the only type of plants for which data are shown explicitly at the generating unit level."
+Plant Name,Plant name. Alphanumeric
+Operator Name,The name of the entity which operates the plant. Alphanumeric.
+Operator ID,"The EIA operator identification number. Five digit numeric, padded with leading zeros."
+State,State the facility is located in. Two character alphanumeric (standard state postal codes).
+Census Region,The census region the state is located in.Three to five character alphanumeric:
+                           NEW,New England
+                           MAT,Middle Atlantic
+                           SAT,South Atlantic
+                           ESC,East South Central
+                           WSC,West South Central
+                           ENC,East North Central
+                           WNC,West North Central
+                           MTN,Mountain
+                           PACC,"Pacific Contiguous (Oregon, Washington, and California)"
+                           PACN,Pacific Non-Contiguous (Alaska and Hawaii)
+NERC Region,The North American Electric Reliability Council (NERC) region where the plant is located.Alphanumeric:
+                           NPCC,Northeast Power Coordinating Council
+                           MRO,Midwest Reliability Organization
+                           SERC,SERC Reliability Corporation
+                           RFC,Reliability First Corporation
+                           SPP,Southwest Power Pool
+                           TRE,Texas Regional Entity
+                           FRCC,Florida Reliability Coordinating Council
+                           WECC,Western Electricity Coordinating Council
+NAICS Code,"The facility’s North American Industrial Classification System (NAICS) code.Numeric. For information on the NAICS system, see:http://www.census.gov/epcd/www/naics.html"
+EIA Sector Number and Sector Name,"EIA’s internal consolidated NAICS sectors.For internal purposes, EIA consolidates the NAICS categories into seven groups.  These are shown below in the Sector Codes and Names table:"
+1,Electric Utility: Traditional regulated electric utilities
+2,NAICS-22 Non-Cogen: Independent power producers which are not cogenerators
+3,"NAICS-22 Cogen: Independent power producers which are cogenerators, but whose primary business purpose is the sale of electricity to the public"
+4,"Commercial NAICS Non-Cogen: Commercial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+5,"Commercial NAICS Cogen: Commercial cogeneration facilities that produce electric power, are connected to the grid, and can sell power to the public"
+6,"Industrial NAICS Non-Cogen: Industrial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+7,"Industrial NAICS Cogen: Industrial cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+Reported Primer Mover,Type of prime mover:
+                           BA,"Energy Storage, Battery"
+                           BT,Turbines Used in a Binary Cycle. Including those used for geothermal applications
+                           CA,Combined-Cycle -- Steam Part
+                           CE,"Energy Storage, Compressed Air"
+                           CP,"Energy Storage, Concentrated Solar Power"
+                           CS,Combined-Cycle Single-Shaft Combustion Turbine and Steam Turbine share of single generator
+                           CT,Combined-Cycle Combustion Turbine Part
+                           ES,"Energy Storage, Other (Specify on Schedule 9, Comments)"
+                           FC,Fuel Cell
+                           FW,"Energy Storage, Flywheel"
+                           GT,Combustion (Gas) Turbine. Including Jet Engine design
+                           HA,"Hydrokinetic, Axial Flow Turbine"
+                           HB,"Hydrokinetic, Wave Buoy"
+                           HK,"Hydrokinetic, Other"
+                           HY,Hydraulic Turbine. Including turbines associated with delivery of water by pipeline.
+                           IC,"Internal Combustion (diesel, piston, reciprocating) Engine"
+                           PS,"Energy Storage, Reversible Hydraulic Turbine (Pumped Storage)"
+                           OT,Other
+                           ST,"Steam Turbine. Including Nuclear, Geothermal, and Solar Steam (does not include Combined Cycle)."
+                           PV,Photovoltaic
+                           WT,"Wind Turbine, Onshore"
+                           WS,"Wind Turbine, Offshore"
+Reported Fuel Type Code,The fuel code reported to EIA.Two or three letter alphanumeric:
+                           AB,Agricultural By-Products
+                           ANT,Anthracite Coal
+                           BFG,Blast Furnace Gas
+                           BIT,Bituminous Coal
+                           BLQ,Black Liquor
+                           DFO,"Distillate Fuel Oil. Including diesel, No. 1, No. 2, and No. 4 fuel oils."
+                           GEO,Geothermal
+                           H2,Hydrogen
+                           JF,Jet Fuel
+                           KER,Kerosene
+                           LFG,Landfill Gas
+                           LIG,Lignite Coal
+                           MSB,Biogenic Municipal Solid Waste
+                           MSN,Non-biogenic Municipal Solid Waste
+                           MWH,Electricity used for energy storage
+                           NG,Natural Gas
+                           NUC,"Nuclear. Including Uranium, Plutonium, and Thorium."
+                           OBG,"Other Biomass Gas. Including digester gas, methane, and other biomass gases."
+                           OBL,Other Biomass Liquids
+                           OBS,Other Biomass Solids
+                           OG,Other Gas
+                           OTH,Other Fuel
+                           PC,Petroleum Coke
+                           PG,Gaseous Propane
+                           PUR,Purchased Steam
+                           RC,Refined Coal
+                           RFO,Residual Fuel Oil. Including No. 5 & 6 fuel oils and bunker C fuel oil.
+                           SC,"Coal-based Synfuel. Including briquettes, pellets, or extrusions, which are formed by binding materials or processes that recycle materials."
+                           SGC,Coal-Derived Synthesis Gas
+                           SGP,Synthesis Gas from Petroleum Coke
+                           SLW,Sludge Waste
+                           SUB,Subbituminous Coal
+                           SUN,Solar
+                           TDF,Tire-derived Fuels
+                           WAT,"Water at a Conventional Hydroelectric Turbine and water used in Wave Buoy Hydrokinetic Technology, current Hydrokinetic Technology, Tidal Hydrokinetic Technology, and Pumping Energy for Reversible (Pumped Storage) Hydroelectric Turbines."
+                           WC,"Waste/Other Coal. Including anthracite culm, bituminous gob, fine coal, lignite waste, waste coal."
+                           WDL,"Wood Waste Liquids, excluding Black Liquor. Including red liquor, sludge wood, spent sulfite liquor, and other wood-based liquids."
+                           WDS,"Wood/Wood Waste Solids. Including paper pellets, railroad ties, utility polies, wood chips, bark, and other wood waste solids."
+                           WH,Waste Heat not directly attributed to a fuel source
+                           WND,Wind
+                           WO,"Waste/Other Oil. Including crude oil, liquid butane, liquid propane, naphtha, oil waste, re-refined moto oil, sludge oil, tar oil, or other petroleum-based liquid wastes."
+MER Fuel Type Code,"A partial aggregation of the reported fuel type codes into larger categories used by EIA in, for example, the Monthly Energy Review (MER).Two or three letter alphanumeric.  See the Fuel Code table (Table 5), below:"
+                           SUN,Solar PV and thermal
+                           COL,Coal 
+                           DFO,Distillate Petroleum
+                           GEO,Geothermal
+                           HPS,Hydroelectric Pumped Storage
+                           HYC,Hydroelectric Conventional
+                           MLG,Biogenic Municipal Solid Waste and Landfill Gas
+                           NG,Natural Gas
+                           NUC,Nuclear
+                           OOG,Other Gases
+                           ORW,Other Renewables 
+                           OTH,Other (including nonbiogenic MSW)
+                           PC,Petroleum Coke
+                           RFO,Residual Petroleum
+                           WND,Wind
+                           WOC,Waste Coal
+                           WOO,Waste Oil
+                           WWW,Wood and Wood Waste
+Physical Unit Lable,The type of physical units fuel consumption is reported in:
+                           mcf,for gases
+                           short tons,for solid
+                           barrels,for liquids
+QUANTITY_[Month],"Consumption of the fuel type in physical units.Numeric.  Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production."
+ELEC_QUANTITY_[Month],Consumption for electric generation of the fuel type in physical units.Numeric.
+MMBTU_PER_UNIT_[Month],Heat content of the fuel in millions of Btus per physical unit.Numeric.
+TOT_MMBTU_[Month],"Total consumption of the fuel in millions of Btus.Numeric   Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production."
+ELEC_MMBTUS_[Month],"Consumption of fuel in millions of Btus for the purpose of generating electricity.These fields are most relevant to combined heat and power plants.  For non-combined heat and power plants, the data in these fields and in columns AK through AV (total fuel consumed) will be identical."
+NETGEN_[Month],"Net generation of electricity in megawatthours (MWh).Numeric.  This is total electrical output net of station service.  In the case of combined heat and power plants, this value is intended to include internal consumption of electricity for the purposes of a production process, as well as power put on the grid."
+TOTAL FUEL CONSUMPTION QUANTITY,"Total consumption of fuel in physical units, year to date.Numeric   Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production."
+ELECTRIC FUEL CONSUMPTION QUANTITY,"Total consumption of fuel to produce electricity, in physical units, year to date. Numeric"
+TOTAL FUEL CONSUMPTION MMBTUS,"Total consumption of fuel in MMBtus, year to date. Numeric   Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production."
+ELEC FUEL CONSUMPTION MMBTUS,"Consumption of fuel in millions of Btus for the purpose of generating electricity, year to date. This field is most relevant to combined heat and power plants.  For non-combined heat and power plants, the data in this field and in column BV (total fuel consumed) will be identical."
+NET GENERATION (megawatthours),"Net generation, year to date in megawatthours (MWh).Numeric. This is total electrical output net of station service.  In the case of combined heat and power plants, this value is intended to include internal consumption of electricity for the purposes of a production process, as well as power put on the grid."
+Year,Calendar Year for Data
+,
+Stocks Data,
+Data Elements,Description 
+,
+Region Name,The census region and state the facility is located in
+Coal Stock[Month],Coal stock in Thousand Tons
+Petroleum Liquids [Month],Petroleum Liquids stock in Thousand Barrels
+Petroleum Coke [Month],Petroleum Coke stock in Thousand Barrels
+,
+Boiler Fuel Data,
+Data Elements,Description 
+,
+Plant ID,EIA Plant Identification number. One to five digit numeric.
+Combined Heat & Power Plant,"Whether or not the plant is a combined heat & power facility (cogenerator). One character alphanumeric, “Y” or “N”"
+Plant Name,Plant name.Alphanumeric
+Operator Name,The name of the entity which operates the plant. Alphanumeric.
+Operator ID,"The EIA operator identification number. Five digit numeric, padded with leading zeros."
+State,State the facility is located in.Two character alphanumeric (standard state postal codes).
+Census Region,The census region the state is located in.Three to five character alphanumeric:
+                           NEW,New England
+                           MAT,Middle Atlantic
+                           SAT,South Atlantic
+                           ESC,East South Central
+                           WSC,West South Central
+                           ENC,East North Central
+                           WNC,West North Central
+                           MTN,Mountain
+                           PACC,"Pacific Contiguous (Oregon, Washington, and California)"
+                           PACN,Pacific Non-Contiguous (Alaska and Hawaii)
+NERC Region,The North American Electric Reliability Council (NERC) region where the plant is located.Alphanumeric:
+                           NPCC,Northeast Power Coordinating Council
+                           MRO,Midwest Reliability Organization
+                           SERC,SERC Reliability Corporation
+                           RFC,Reliability First Corporation
+                           SPP,Southwest Power Pool
+                           TRE,Texas Regional Entity
+                           FRCC,Florida Reliability Coordinating Council
+                           WECC,Western Electricity Coordinating Council
+NAICS Code,"The facility’s North American Industrial Classification System (NAICS) code.Numeric.  For information on the NAICS system, see:http://www.census.gov/epcd/www/naics.html"
+EIA Sector Number and Sector Name,"EIA’s internal consolidated NAICS sectors.For internal purposes, EIA consolidates the NAICS categories into seven groups.  These are shown below in the Sector Codes and Names table:"
+1,Electric Utility: Traditional regulated electric utilities
+2,NAICS-22 Non-Cogen: Independent power producers which are not cogenerators
+3,"NAICS-22 Cogen: Independent power producers which are cogenerators, but whose primary business purpose is the sale of electricity to the public"
+4,"Commercial NAICS Non-Cogen: Commercial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+5,"Commercial NAICS Cogen: Commercial cogeneration facilities that produce electric power, are connected to the grid, and can sell power to the public"
+6,"Industrial NAICS Non-Cogen: Industrial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+7,"Industrial NAICS Cogen: Industrial cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+Boiler ID,Boiler identification code; Alphanumeric
+Reported Primer Mover,Type of prime mover:
+                           BA,"Energy Storage, Battery"
+                           BT,Turbines Used in a Binary Cycle. Including those used for geothermal applications
+                           CA,Combined-Cycle -- Steam Part
+                           CE,"Energy Storage, Compressed Air"
+                           CP,"Energy Storage, Concentrated Solar Power"
+                           CS,Combined-Cycle Single-Shaft Combustion Turbine and Steam Turbine share of single generator
+                           CT,Combined-Cycle Combustion Turbine Part
+                           ES,"Energy Storage, Other (Specify on Schedule 9, Comments)"
+                           FC,Fuel Cell
+                           FW,"Energy Storage, Flywheel"
+                           GT,Combustion (Gas) Turbine. Including Jet Engine design
+                           HA,"Hydrokinetic, Axial Flow Turbine"
+                           HB,"Hydrokinetic, Wave Buoy"
+                           HK,"Hydrokinetic, Other"
+                           HY,Hydraulic Turbine. Including turbines associated with delivery of water by pipeline.
+                           IC,"Internal Combustion (diesel, piston, reciprocating) Engine"
+                           PS,"Energy Storage, Reversible Hydraulic Turbine (Pumped Storage)"
+                           OT,Other
+                           ST,"Steam Turbine. Including Nuclear, Geothermal, and Solar Steam (does not include Combined Cycle)."
+                           PV,Photovoltaic
+                           WT,"Wind Turbine, Onshore"
+                           WS,"Wind Turbine, Offshore"
+Reported Fuel Type Code,The fuel code reported to EIA.Two or three letter alphanumeric:
+                           AB,Agricultural By-Products
+                           ANT,Anthracite Coal
+                           BFG,Blast Furnace Gas
+                           BIT,Bituminous Coal
+                           BLQ,Black Liquor
+                           DFO,"Distillate Fuel Oil. Including diesel, No. 1, No. 2, and No. 4 fuel oils."
+                           H2,Hydrogen
+                           GEO,Geothermal
+                           JF,Jet Fuel
+                           KER,Kerosene
+                           LFG,Landfill Gas
+                           LIG,Lignite Coal
+                           MSB,Biogenic Municipal Solid Waste
+                           MSN,Non-biogenic Municipal Solid Waste
+                           MWH,Electricity used for energy storage
+                           NG,Natural Gas
+                           NUC,"Nuclear. Including Uranium, Plutonium, and Thorium."
+                           OBG,"Other Biomass Gas. Including digester gas, methane, and other biomass gases."
+                           OBL,Other Biomass Liquids
+                           OBS,Other Biomass Solids
+                           OG,Other Gas
+                           OTH,Other Fuel
+                           PC,Petroleum Coke
+                           PG,Gaseous Propane
+                           PUR,Purchased Steam
+                           RC,Refined Coal
+                           RFO,Residual Fuel Oil. Including No. 5 & 6 fuel oils and bunker C fuel oil.
+                           SC,"Coal-based Synfuel. Including briquettes, pellets, or extrusions, which are formed by binding materials or processes that recycle materials."
+                           SGC,Coal-Derived Synthesis Gas
+                           SGP,Synthesis Gas from Petroleum Coke
+                           SLW,Sludge Waste
+                           SUB,Subbituminous Coal
+                           SUN,Solar
+                           TDF,Tire-derived Fuels
+                           WAT,"Water at a Conventional Hydroelectric Turbine and water used in Wave Buoy Hydrokinetic Technology, current Hydrokinetic Technology, Tidal Hydrokinetic Technology, and Pumping Energy for Reversible (Pumped Storage) Hydroelectric Turbines."
+                           WC,"Waste/Other Coal. Including anthracite culm, bituminous gob, fine coal, lignite waste, waste coal."
+                           WDL,"Wood Waste Liquids, excluding Black Liquor. Including red liquor, sludge wood, spent sulfite liquor, and other wood-based liquids."
+                           WDS,"Wood/Wood Waste Solids. Including paper pellets, railroad ties, utility polies, wood chips, bark, and other wood waste solids."
+                           WH,Waste Heat not directly attributed to a fuel source
+                           WND,Wind
+                           WO,"Waste/Other Oil. Including crude oil, liquid butane, liquid propane, naphtha, oil waste, re-refined moto oil, sludge oil, tar oil, or other petroleum-based liquid wastes."
+Physical Unit Label,"The type of physical units fuel consumption is reported in. All consumption is reported in either short tons for solids, thousands of cubic feet for gases, and barrels for liquids:"
+                           mcf,for gases
+                           short tons,for solid
+                           barrels,for liquids
+Quantity of Fuel Consumed [Month],"Consumption of the fuel type specified in Column N, in physical units.Numeric.  Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production"
+MMBtu per Unit [Month],Heat content of the fuel in millions of Btus per physical unit to the nearest 0.001. Numeric
+Sulfur Content [Month],Sulfur content percentage by weight to the nearest 0.01 percent
+Ash Content [Month],Ash content percentage by weight to the nearest 0.1 percent
+Total Fuel Consumption Quantity,"Total consumption of fuel in physical units, year to date.Numeric   Note: this is the total quantity consumed for both electricity and, in the case of combined heat and power plants, process steam production."
+Year,Calendar Year for Data
+,
+Generator Data,
+Data Elements,Description 
+,
+Plant ID,EIA Plant Identification number. One to five digit numeric.
+Combined Heat & Power Plant,"Whether or not the plant is a combined heat & power facility (cogenerator). One character alphanumeric, “Y” or “N”"
+Nuclear Unit ID,"For nuclear plants only, the unit number.One digit numeric. Nuclear plants are the only type of plants for which data are shown explicitly at the generating unit level."
+Plant Name,Plant name. Alphanumeric
+Operator Name,The name of the entity which operates the plant. Alphanumeric.
+Operator ID,"The EIA operator identification number. Five digit numeric, padded with leading zeros."
+State,State the facility is located in. Two character alphanumeric (standard state postal codes).
+Census Region,The census region the state is located in. Three to five character alphanumeric:
+                           NEW,New England
+                           MAT,Middle Atlantic
+                           SAT,South Atlantic
+                           ESC,East South Central
+                           WSC,West South Central
+                           ENC,East North Central
+                           WNC,West North Central
+                           MTN,Mountain
+                           PACC,"Pacific Contiguous (Oregon, Washington, and California)"
+                           PACN,Pacific Non-Contiguous (Alaska and Hawaii)
+NERC Region,The North American Electric Reliability Council (NERC) region where the plant is located. Alphanumeric:
+                           NPCC,Northeast Power Coordinating Council
+                           MRO,Midwest Reliability Organization
+                           SERC,SERC Reliability Corporation
+                           RFC,Reliability First Corporation
+                           SPP,Southwest Power Pool
+                           TRE,Texas Regional Entity
+                           FRCC,Florida Reliability Coordinating Council
+                           WECC,Western Electricity Coordinating Council
+NAICS Code,"The facility’s North American Industrial Classification System (NAICS) code. Numeric. For information on the NAICS system, see:http://www.census.gov/epcd/www/naics.html"
+EIA Sector Number and Sector Name,"EIA’s internal consolidated NAICS sectors. For internal purposes, EIA consolidates the NAICS categories into seven groups. These are shown below in the Sector Codes and Names table:"
+1,Electric Utility: Traditional regulated electric utilities
+2,NAICS-22 Non-Cogen: Independent power producers which are not cogenerators
+3,"NAICS-22 Cogen: Independent power producers which are cogenerators, but whose primary business purpose is the sale of electricity to the public"
+4,"Commercial NAICS Non-Cogen: Commercial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+5,"Commercial NAICS Cogen: Commercial cogeneration facilities that produce electric power, are connected to the grid, and can sell power to the public"
+6,"Industrial NAICS Non-Cogen: Industrial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+7,"Industrial NAICS Cogen: Industrial cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+Generatr ID,Generator identification codem Alphanumeric
+Reported Primer Mover,Type of prime mover:
+                           BA,"Energy Storage, Battery"
+                           BT,Turbines Used in a Binary Cycle. Including those used for geothermal applications
+                           CA,Combined-Cycle -- Steam Part
+                           CE,"Energy Storage, Compressed Air"
+                           CP,"Energy Storage, Concentrated Solar Power"
+                           CS,Combined-Cycle Single-Shaft Combustion Turbine and Steam Turbine share of single generator
+                           CT,Combined-Cycle Combustion Turbine Part
+                           ES,"Energy Storage, Other (Specify on Schedule 9, Comments)"
+                           FC,Fuel Cell
+                           FW,"Energy Storage, Flywheel"
+                           GT,Combustion (Gas) Turbine. Including Jet Engine design
+                           HA,"Hydrokinetic, Axial Flow Turbine"
+                           HB,"Hydrokinetic, Wave Buoy"
+                           HK,"Hydrokinetic, Other"
+                           HY,Hydraulic Turbine. Including turbines associated with delivery of water by pipeline.
+                           IC,"Internal Combustion (diesel, piston, reciprocating) Engine"
+                           PS,"Energy Storage, Reversible Hydraulic Turbine (Pumped Storage)"
+                           OT,Other
+                           ST,"Steam Turbine. Including Nuclear, Geothermal, and Solar Steam (does not include Combined Cycle)."
+                           PV,Photovoltaic
+                           WT,"Wind Turbine, Onshore"
+                           WS,"Wind Turbine, Offshore"
+Net Generation [Month],Net generation for specified month of electricity in megawatthours (MWh). Numeric.
+Net Generation Year to Date,"Net generation, year to date in megawatthours (MWh). Numeric."
+Year,Calendar Year for Data
+,
+Fuel Receipts and Costs Data,
+Data Elements,Description 
+,
+Year ,Data Year. Four digit year
+Month,Data Moth. Numeric
+Plant ID,EIA Plant Identification number. One to five digit numeric.
+Plant Name,Plant name. Alphanumeric
+State,State the facility is located in. Two character alphanumeric (standard state postal codes).
+Contract_Type,Designates the purchase type under which receipts occurred in the reporting month. One or two character alphanumeric:
+                           C,Contract
+                           NC,New Contract
+                           S,Spot Purchase
+Contract Exp_Date,Date contract expires. Format:  MMYY
+Energy Source,The fuel code associated with the fuel receipt. Two or three character alphanumeric:
+                           ANT,Anthracite Coal
+                           BIT,Bituminous Coal
+                           DFO,"Distillate Fuel Oil. Including diesel, No. 1, No. 2, and No. 4 fuel oils."
+                           H2,Hydrogen
+                           LIG,Lignite Coal
+                           NG,Natural Gas
+                           PC,Petroleum Coke
+                           RC,Refined Coal
+                           RFO,Residual Fuel Oil. Including No. 5 & 6 fuel oils and bunker C fuel oil.
+                           SC,"Coal-based Synfuel. Including briquettes, pellets, or extrusions, which are formed by binding materials or processes that recycle materials."
+                           SUB,Subbituminous Coal
+                           WC,"Waste/Other Coal. Including anthracite culm, bituminous gob, fine coal, lignite waste, waste coal."
+                           WO,"Waste/Other Oil. Including crude oil, liquid butane, liquid propane, naphtha, oil waste, re-refined moto oil, sludge oil, tar oil, or other petroleum-based liquid wastes."
+Fuel Group,"Groups the energy sources into fuel groups that are located in the Electric Power Monthly:  Coal, Natural Gas, Petroleum, Petroleum Coke. "
+CoalMine_Type,Type of Coal Mine
+                           P,Preperation Plant
+                           S,Surface
+                           U,Underground
+                           U/S,Both an underground and surface mine with most coal extracted from underground
+                           S/U,Both an underground and surface mine with most coal extracted from surface
+CoalMine_State,State abbreviation related to coal mine location. Country abbreviations are also listed under this category and are as follows:
+                           AU,Australia
+                           CL,Columbia
+                           CN,Canada
+                           IS,Indonesia
+                           PL,Poland
+                           RS,Russia
+                           UK,United Kingdom
+                           VZ,Venezula
+                           OC,Other Country
+CoalMine_County,"Mine Location. County, listed by County FIPS code, where coal is removed from the mine. Three alphanumeric."
+CoalMine_MSHA ID,"Mine Safety and Health Administration Identification Number. Seven digit alphanumeric. NA = Not available, including foreign mines and tipple/loading points or docks with multiple mine or undetermined ."
+CoalMine_Name,Name of the Mine. Alphanumeric
+Supplier,"Company that sold the fuel to the plant or, in the case of NG, pipline owner."
+Quantity,"Quanity of fuel received in tons, barrel, or Mcf. Numeric"
+Average_Heat Content,Heat content of the fuel in millions of Btus per physical unit to the nearest 0.01.
+Average_Sulfur_Content,Sulfur content percentage by weightto the nearest 0.01 percent.
+Average_Ash_Content,Ash content percentage by weight to the nearest 0.1 percent.
+Average_Mercury_Content,Mercury content in parts per million (ppm) to the nearest 0.001 ppm. Numeric.
+Fuel-Cost,All costs incurred in the purchase and delivery of the fuel to the plant in cents per million Btu(MMBtu) to the nearest 0.1 cent. Numeric.
+Regulated,Three character code designating the regulatory 
+                           REG,Regulated Electric Utility
+                           UNR,Non-Regulated Independent Power Plant or Nonutility Plant.
+Operator Name,The name of the utility or company that operates the plant. Alphanumeric.
+Operattor ID,The EIA utility identification number.Alphanumeric.
+Respondent Frequency,One character designates the reporting frequency for the plant. Alphanumeric:
+                           M,Monthly respondent
+                           A,Annual respondent
+Primary/Secondary  Mode of Transportation,Mode for the longest / second longest distance.
+                           RR,Rail: Shipments of fuel moved to consumers by rail (private or public/commercial). Included is coal hauled to or away from a railroad siding by truck if the truck did not use public roads.
+                           RV,"River:  Shipments of fuel moved to consumers via river by barge.  Not included are shipments to Great Lakes coal loading docks, tidewater piers, or coastal ports. "
+                           GL,"Great Lakes:  Shipments of coal moved to consumers via the Great Lakes. These shipments are moved via the Great Lakes coal loading docks, which are identified by name and location as follows:  Conneaut Coal Storage & Transfer, Conneaut, Ohio;  NS Coal Dock (Ashtabula Coal Dock), Ashtabula, Ohio;  Sandusky Coal Pier, Sandusky, Ohio;  Toledo Docks, Toledo, Ohio; KCBX Terminals Inc., Chicago, Illinois;  Superior Midwest Energy Terminal, Superior, Wisconsin"
+                           TP,"Tidewater Piers and Coastal Ports:  Shipments of coal moved to Tidewater Piers and Coastal Ports for further shipments to consumers via coastal water or ocean.  The Tidewater Piers and Coastal Ports are identified by name and location as follows:  Dominion Terminal Associates, Newport News, Virginia; McDuffie Coal Terminal, Mobile, Alabama;  IC Railmarine Terminal, Convent, Louisiana;  International Marine Terminals, Myrtle Grove, Louisiana;  Cooper/T. Smith Stevedoring Co. Inc., Darrow, Louisiana;  Seward Terminal Inc., Seward, Alaska;  Los Angeles Export Terminal, Inc., Los Angeles, California;  Levin-Richmond Terminal Corp., Richmond, California; Baltimore Terminal, Baltimore, Maryland;  Norfolk Southern Lamberts Point P-6, Norfolk, Virginia;  Chesapeake Bay Piers, Baltimore, Maryland;  Pier IX Terminal Company, Newport News, Virginia;  Electro-Coal Transport Corp., Davant, Louisiana"
+                           WT,Water: Shipments of fuel moved to consumers by other waterways.
+                           TR,Truck: Shipments of fuel moved to consumers by truck.  Not included is fuel hauled to or away from a railroad siding by truck on non-public roads.
+                           TC,Tramway/Conveyor: Shipments of fuel moved to consumers by tramway or conveyor.
+                           SP,Slurry Pipeline: Shipments of coal moved to consumers by slurry pipeline.
+                           PL,Pipeline: Shipments of fuel moved to consumers by pipeline
+Natrual Gas Transportation Service,Contract type for natrual gas capacity service:
+                           F,Firm
+                           I,Interruptible
+Moisture Content,Moisture content percentage by weight of the coal quantity to the nearest 0.1 percent.
+Chlorine Content,Chlorine content in parts per million (ppm) of the coal quantity. Numeric.
+,
+Plant Frame Data,
+Data Elements,Description 
+,
+Year,Calendar Year for Data
+EIA Plant ID,EIA Plant Identification number. One to five digit numeric.
+Plant Name,Plant name. Alphanumeric.
+Plant State,State the facility is located in. Two character alphanumeric (standard state postal codes).
+EIA Sector Number and Sector Name,"EIA’s internal consolidated NAICS sectors. For internal purposes, EIA consolidates the NAICS categories into seven groups.  These are shown below in the Sector Codes and Names table:"
+1,Electric Utility: Traditional regulated electric utilities
+2,NAICS-22 Non-Cogen: Independent power producers which are not cogenerators
+3,"NAICS-22 Cogen: Independent power producers which are cogenerators, but whose primary business purpose is the sale of electricity to the public"
+4,"Commercial NAICS Non-Cogen: Commercial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+5,"Commercial NAICS Cogen: Commercial cogeneration facilities that produce electric power, are connected to the grid, and can sell power to the public"
+6,"Industrial NAICS Non-Cogen: Industrial non-cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+7,"Industrial NAICS Cogen: Industrial cogeneration facilities that produce electric power, are connected to the gird, and can sell power to the public"
+NAICS Code,"The facility’s North American Industrial Classification System (NAICS) code. Numeric. For information on the NAICS system, see:http://www.census.gov/epcd/www/naics.html"
+Combined Heat & Power Plant,"Whether or not the plant is a combined heat & power facility (cogenerator). One character alphanumeric, “Y” or “N”"
+Reporting Frequency,One character designates the reporting frequency for the plant. Alphanumeric.
+                           M,Monthly respondent
+                           A,Annual respondent

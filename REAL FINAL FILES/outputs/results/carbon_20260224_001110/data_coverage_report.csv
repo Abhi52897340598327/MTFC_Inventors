@@ -1,0 +1,9 @@
+source,path,exists,rows_total,start_timestamp,end_timestamp,overlap_rows,overlap_ratio_vs_core,used_in_model
+cpu,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\google_cluster_utilization_2019_cellb_hourly_cleaned.csv,True,745,2019-05-01 06:00:00,2019-06-01 06:00:00,745,1.0,True
+temperature,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\ashburn_va_temperature_2019_cleaned.csv,True,8760,2019-01-01 00:00:00,2019-12-31 23:00:00,745,1.0,True
+carbon_intensity,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\pjm_grid_carbon_intensity_2019_full_cleaned.csv,True,52443,2019-01-01 00:00:00,2024-12-31 00:00:00,745,1.0,True
+grid_exog,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\pjm_exogenous_hourly_2019_2024_cleaned.csv,True,52561,2019-01-01 00:00:00,2024-12-31 00:00:00,745,1.0,False
+weather_exog,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\noaa_global_hourly_dulles_2019_2024_cleaned.csv,True,52608,2019-01-01 00:00:00,2024-12-31 23:00:00,745,1.0,False
+power_optional,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\google_power_utilization_2019_cellb_hourly.csv,True,743,2019-05-01 07:00:00,2019-06-01 06:00:00,743,0.9973154362416108,False
+cluster_plus_power_optional,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\google_cluster_plus_power_2019_cellb_hourly.csv,True,743,2019-05-01 07:00:00,2019-06-01 06:00:00,743,0.9973154362416108,False
+pjm_hourly_demand_optional,C:\Users\ishan\Downloads\MTFC_Inventors\Data_Sources\cleaned\pjm_hourly_demand_2019_2024_cleaned.csv,True,52469,2019-01-01 00:00:00,2024-12-31 00:00:00,745,1.0,False

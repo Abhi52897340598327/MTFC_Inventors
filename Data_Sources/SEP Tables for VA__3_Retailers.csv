@@ -1,0 +1,12 @@
+"Table 3. Top five retailers of electricity, with end use sectors, 2024",Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7
+Virginia,,,,,,,
+megawatthours,,,,,,,
+,Entity,Type of provider,All sectors,Residential,Commercial,Industrial,Transportation
+1,Virginia Electric & Power Co,Investor-owned,89037178,28742267,55935962,4073194,285755
+2,Appalachian Power Co,Investor-owned,14004268,5850904,3626187,4527177,0
+3,Northern Virginia Elec Coop,Cooperative,12231081,2296226,9912583,22272,0
+4,Rappahannock Electric Coop,Cooperative,4069232,2328716,453437,1287079,0
+5,Shenandoah Valley Elec Coop,Cooperative,2397259,1192869,525096,679294,0
+ ,"Total sales, top five providers",,121739018,40410982,70453265,10589016,285755
+ ,Percent of total state sales,,88.19,89.26,89.51,76.87,100
+"Data Source: U.S. Energy Information Administration, Form EIA-861, Annual Electric Power Industry Report.",,,,,,,

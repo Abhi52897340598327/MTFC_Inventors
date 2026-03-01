@@ -1,0 +1,9 @@
+role,path,exists,rows,quality_flags,rationale
+stage1_cpu_primary,cleaned/google_cluster_utilization_2019_cellb_hourly_cleaned.csv,True,745,,Full hourly May-2019 CPU trace extracted from Google cluster data (cell b).
+stage3_temperature_primary,cleaned/ashburn_va_temperature_2019_cleaned.csv,True,8760,,Hourly local temperature aligned to 2019 timeline for PUE physics stage.
+stage5_carbon_primary,cleaned/pjm_grid_carbon_intensity_2019_full_cleaned.csv,True,52443,,Hourly PJM carbon intensity for carbon forecast target.
+power_optional_feature,cleaned/google_power_utilization_2019_cellb_hourly.csv,True,743,,Real power-utilization trace can be used for physics calibration and auxiliary features.
+joined_cpu_power_optional,cleaned/google_cluster_plus_power_2019_cellb_hourly.csv,True,743,,CPU-power joined view for learning CPU->power mapping and diagnostics.
+stage5_grid_exog_optional,cleaned/pjm_exogenous_hourly_2019_2024_cleaned.csv,True,52561,,"Hourly PJM demand, forecast, interchange, and fuel mix for carbon-intensity exogenous features."
+stage3_weather_exog_optional,cleaned/noaa_global_hourly_dulles_2019_2024_cleaned.csv,True,52608,,"Richer hourly weather signals (dew point, pressure, wind, visibility)."
+synthetic_reference_only,cleaned/semisynthetic_datacenter_power_2015_2024.csv,True,87672,synthetic_data,"Keep for stress testing and ablation, not for headline results."

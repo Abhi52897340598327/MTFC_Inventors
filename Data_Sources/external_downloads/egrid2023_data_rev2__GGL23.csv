@@ -1,0 +1,8 @@
+Data Year,"One of the three interconnect power grids in the U.S. (plus Alaska, Hawaii, and the entire U.S.)",Estimated losses (MWh),Total disposition (MWh) without exports,Direct use (MWh),Grid gross loss [Estimated losses/(Total disposition without exports - Direct use)]
+YEAR,REGION,ESTLOSS,TOTDISP,DIRCTUSE,GGRSLOSS
+2023,Alaska,266812,6717825,257915,0.041
+2023,ERCOT,18707069.8984063,477196420.049405,33326181.9688072,0.042
+2023,Eastern,121579324.419556,2973141900.65172,85205118.1830285,0.042
+2023,Hawaii,395363,9194164,196737,0.044
+2023,Western,30244892.4502106,746640041.471222,17788276.4053731,0.041
+2023,U.S.,171193461.768173,4212890351.17235,136774228.557209,0.042
