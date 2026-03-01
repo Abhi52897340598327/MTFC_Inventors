@@ -16,8 +16,8 @@ from pathlib import Path
 
 # Directory Configuration
 BASE_DIR = Path(__file__).parent.parent
-INPUT_DIR = BASE_DIR / 'REAL_FINAL_MODEL_SUBMISSION_MTFC_INVENTORS' / 'REAL FINAL DATA SOURCES'
-OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'prepared_data'
+INPUT_DIR = BASE_DIR / 'REAL FINAL DATA SOURCES'
+OUTPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES' / 'prepared_data'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Constants

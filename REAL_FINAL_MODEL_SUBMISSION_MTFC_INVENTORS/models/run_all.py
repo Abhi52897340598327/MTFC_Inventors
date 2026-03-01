@@ -19,8 +19,8 @@ from visualizations import plot_carbon
 from visualizations import plot_co2_breakdown
 from visualizations import plot_grid_stress
 
-BASE_DIR = Path(__file__).parent
-OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES'
+BASE_DIR = Path(__file__).parent.parent
+OUTPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES'
 
 def print_banner(phase_name):
     print("\n" + "="*70)

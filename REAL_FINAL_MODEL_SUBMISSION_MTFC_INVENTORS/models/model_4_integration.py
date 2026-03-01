@@ -18,8 +18,8 @@ from pathlib import Path
 
 # Directory Configuration
 BASE_DIR = Path(__file__).parent.parent
-INPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'model_forecasts'
-OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'model_forecasts'
+INPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES' / 'model_forecasts'
+OUTPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES' / 'model_forecasts'
 
 # Physical Constants — EPA lifecycle emission factors
 # Source: EPA eGRID 2022 (https://www.epa.gov/egrid)

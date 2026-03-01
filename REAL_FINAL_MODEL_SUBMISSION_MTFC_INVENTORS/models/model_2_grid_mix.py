@@ -17,8 +17,8 @@ warnings.filterwarnings('ignore')
 
 # Directory Configuration
 BASE_DIR = Path(__file__).parent.parent
-INPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'prepared_data'
-OUTPUT_DIR = BASE_DIR / 'REAL FINAL FILES' / 'model_forecasts'
+INPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES' / 'prepared_data'
+OUTPUT_DIR = BASE_DIR.parent / 'REAL FINAL FILES' / 'model_forecasts'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Model Constants
