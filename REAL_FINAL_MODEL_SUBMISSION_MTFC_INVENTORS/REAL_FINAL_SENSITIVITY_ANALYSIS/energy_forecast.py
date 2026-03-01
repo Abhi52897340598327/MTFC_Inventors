@@ -94,70 +94,16 @@ def project_scenarios() -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(scenario_rows), pd.DataFrame(cost_rows)
 
 
-# ── Figures ──────────────────────────────────────────────────────────────
-def plot_scenarios(scen_df: pd.DataFrame):
-    fig, axes = plt.subplots(2, 2, figsize=PLOT["figsize_wide"])
-
-    metrics = [
-        ("total_power_mw", "Total Facility Power (MW)"),
-        ("annual_energy_mwh", "Annual Energy (MWh)"),
-        ("annual_emissions_tons", "Annual Emissions (t CO₂)"),
-        ("cumulative_emissions", "Cumulative Emissions (t CO₂)"),
-    ]
-    colors = {"Conservative": "#27ae60", "Moderate": "#f39c12", "Aggressive": "#c0392b"}
-
-    for ax, (col, title) in zip(axes.ravel(), metrics):
-        for name, grp in scen_df.groupby("scenario"):
-            ax.plot(grp["year"], grp[col], marker="o", ms=5, lw=2,
-                    color=colors.get(name, "gray"), label=name)
-        ax.set_xlabel("Year", fontsize=11)
-        ax.set_ylabel(title, fontsize=11)
-        ax.set_title(title, fontsize=12, fontweight="bold")
-        ax.legend(fontsize=9)
-        ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "energy_forecast_scenarios.png",
-                dpi=PLOT["dpi"], bbox_inches="tight")
-    plt.close()
-
-
-def plot_cost_comparison(cost_df: pd.DataFrame):
-    fig, axes = plt.subplots(1, 2, figsize=PLOT["figsize_wide"])
-    colors = {"Conservative": "#27ae60", "Moderate": "#f39c12", "Aggressive": "#c0392b"}
-
-    ax = axes[0]
-    for name, grp in cost_df.groupby("scenario"):
-        ax.plot(grp["year"], grp["total_annual_cost"]/1e6, marker="o", ms=5,
-                lw=2, color=colors.get(name, "gray"), label=name)
-    ax.set_xlabel("Year"); ax.set_ylabel("Annual Cost ($M)")
-    ax.set_title("Total Annual Cost by Scenario", fontsize=12, fontweight="bold")
-    ax.legend(); ax.grid(True, alpha=0.3)
-
-    ax = axes[1]
-    for name, grp in cost_df.groupby("scenario"):
-        ax.plot(grp["year"], grp["cumulative_pv_cost"]/1e6, marker="s", ms=5,
-                lw=2, color=colors.get(name, "gray"), label=name)
-    ax.set_xlabel("Year"); ax.set_ylabel("Cumulative PV Cost ($M)")
-    ax.set_title("Cumulative Present-Value Cost", fontsize=12, fontweight="bold")
-    ax.legend(); ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "energy_forecast_cost_comparison.png",
-                dpi=PLOT["dpi"], bbox_inches="tight")
-    plt.close()
-
-
 # ── Entry Point ──────────────────────────────────────────────────────────
+# NOTE: Plot functions removed — energy/cost scenario visualisation is
+# handled by base_forecast.py and cba_figures.py to avoid duplicate figures.
+
 def run():
     print("  ▶ Running energy forecast & cost scenarios …")
     scen_df, cost_df = project_scenarios()
 
     scen_df.to_csv(OUTPUT_DIR / "energy_forecast_scenarios.csv", index=False)
     cost_df.to_csv(OUTPUT_DIR / "energy_forecast_costs.csv", index=False)
-
-    plot_scenarios(scen_df)
-    plot_cost_comparison(cost_df)
 
     for name in GROWTH_SCENARIOS:
         sub = cost_df[cost_df["scenario"] == name]

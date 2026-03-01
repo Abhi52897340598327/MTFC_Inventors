@@ -121,26 +121,41 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
 
 # ── Figures ──────────────────────────────────────────────────────────────
 def plot_emissions_distribution(df):
+    from scipy.stats import gaussian_kde
     fig, axes = plt.subplots(1, 2, figsize=PLOT["figsize_wide"])
 
-    ax = axes[0]
-    ax.hist(df["emissions_kg_per_h"], bins=120, color="#2b8c4e", alpha=0.85, edgecolor="white", linewidth=0.3)
-    for q, c in zip([0.95, 0.99], ["#e67e22", "#e74c3c"]):
-        v = df["emissions_kg_per_h"].quantile(q)
-        ax.axvline(v, color=c, ls="--", lw=2, label=f"VaR {int(q*100)}% = {v:,.0f} kg/h")
-    ax.set_xlabel("Hourly Emissions (kg CO₂)", fontsize=12)
-    ax.set_ylabel("Frequency", fontsize=12)
-    ax.set_title("Monte-Carlo: Hourly Emissions Distribution", fontsize=13, fontweight="bold")
-    ax.legend(fontsize=10)
+    for ax, col, xlabel, title in [
+        (axes[0], "emissions_kg_per_h", "Hourly Emissions (kg CO₂)",
+         "Monte-Carlo: Hourly Emissions Distribution"),
+        (axes[1], "annual_emissions_tons", "Annual Emissions (tons CO₂)",
+         "Monte-Carlo: Annual Emissions Distribution"),
+    ]:
+        vals = df[col].values
+        ax.hist(vals, bins=120, density=True, color="#2b8c4e" if "kg" in col else "#2980b9",
+                alpha=0.65, edgecolor="white", linewidth=0.3, label="Histogram (density)")
 
-    ax = axes[1]
-    ax.hist(df["annual_emissions_tons"], bins=120, color="#2980b9", alpha=0.85, edgecolor="white", linewidth=0.3)
-    for q, c in zip([0.95, 0.99], ["#e67e22", "#e74c3c"]):
-        v = df["annual_emissions_tons"].quantile(q)
-        ax.axvline(v, color=c, ls="--", lw=2, label=f"VaR {int(q*100)}% = {v:,.0f} t/yr")
-    ax.set_xlabel("Annual Emissions (tons CO₂)", fontsize=12)
-    ax.set_title("Monte-Carlo: Annual Emissions Distribution", fontsize=13, fontweight="bold")
-    ax.legend(fontsize=10)
+        # KDE overlay
+        kde = gaussian_kde(vals)
+        x_kde = np.linspace(vals.min(), vals.max(), 300)
+        ax.plot(x_kde, kde(x_kde), color="black", lw=2, label="KDE")
+
+        # VaR lines with value labels
+        for q, c, ls in [(0.95, "#e67e22", "--"), (0.99, "#e74c3c", "-.")]:
+            v = np.percentile(vals, q * 100)
+            ax.axvline(v, color=c, ls=ls, lw=2)
+            ax.text(v, ax.get_ylim()[1] * 0.92, f"VaR {int(q*100)}%\n{v:,.0f}",
+                    color=c, fontsize=9, ha="left", fontweight="bold")
+
+        # TVaR shading beyond VaR 95
+        var95 = np.percentile(vals, 95)
+        tvar95 = vals[vals >= var95].mean()
+        ax.axvspan(var95, vals.max(), alpha=0.08, color="#e74c3c", label=f"TVaR₉₅ region (E={tvar95:,.0f})")
+
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel("Probability Density", fontsize=12)
+        ax.set_title(title, fontsize=12, fontweight="bold")
+        ax.legend(fontsize=8, loc="upper right")
+        ax.grid(True, alpha=0.2)
 
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "monte_carlo_emissions_distribution.png", dpi=PLOT["dpi"], bbox_inches="tight")
@@ -149,28 +164,56 @@ def plot_emissions_distribution(df):
 
 def plot_financial_risk(df):
     fig, axes = plt.subplots(1, 2, figsize=PLOT["figsize_wide"])
+    from scipy.stats import gaussian_kde
 
+    # Left: Total annual cost with KDE and TVaR shading
     ax = axes[0]
-    vals = df["total_annual_cost"] / 1e6
-    ax.hist(vals, bins=120, color="#8e44ad", alpha=0.85, edgecolor="white", linewidth=0.3)
-    for q, c in zip([0.95, 0.99], ["#e67e22", "#e74c3c"]):
-        v = vals.quantile(q)
-        ax.axvline(v, color=c, ls="--", lw=2, label=f"VaR {int(q*100)}% = ${v:,.1f}M")
-    ax.set_xlabel("Total Annual Cost ($M)", fontsize=12)
-    ax.set_ylabel("Frequency", fontsize=12)
-    ax.set_title("Monte-Carlo: Total Annual Financial Risk", fontsize=13, fontweight="bold")
-    ax.legend(fontsize=10)
+    vals = df["total_annual_cost"].values / 1e6
+    ax.hist(vals, bins=120, density=True, color="#8e44ad", alpha=0.65, edgecolor="white", linewidth=0.3)
+    kde = gaussian_kde(vals)
+    x_kde = np.linspace(vals.min(), vals.max(), 300)
+    ax.plot(x_kde, kde(x_kde), color="black", lw=2, label="KDE")
 
+    for q, c, ls in [(0.95, "#e67e22", "--"), (0.99, "#e74c3c", "-.")]:
+        v = np.percentile(vals, q * 100)
+        ax.axvline(v, color=c, ls=ls, lw=2)
+        ax.text(v, ax.get_ylim()[1] * 0.85, f"VaR {int(q*100)}%\n${v:,.1f}M",
+                color=c, fontsize=9, ha="left", fontweight="bold")
+
+    var95 = np.percentile(vals, 95)
+    tvar95 = vals[vals >= var95].mean()
+    ax.axvspan(var95, vals.max(), alpha=0.08, color="#e74c3c",
+               label=f"TVaR₉₅ = ${tvar95:,.1f}M")
+    ax.set_xlabel("Total Annual Cost ($M)", fontsize=12)
+    ax.set_ylabel("Probability Density", fontsize=12)
+    ax.set_title("Total Annual Financial Risk", fontsize=12, fontweight="bold")
+    ax.legend(fontsize=9)
+    ax.grid(True, alpha=0.2)
+
+    # Right: 3 SCC scenarios as box/violin + strip
     ax = axes[1]
-    scenarios = {"Low ($95/t)": df["carbon_cost_low"]/1e6,
-                 "Central ($190/t)": df["carbon_cost_central"]/1e6,
-                 "High ($300/t)": df["carbon_cost_high"]/1e6}
-    colors = ["#27ae60", "#f39c12", "#c0392b"]
-    for (lbl, v), col in zip(scenarios.items(), colors):
-        ax.hist(v, bins=80, alpha=0.55, color=col, label=lbl, edgecolor="white", linewidth=0.3)
-    ax.set_xlabel("Annual Carbon Liability ($M)", fontsize=12)
-    ax.set_title("Carbon Liability Under Three SCC Scenarios", fontsize=13, fontweight="bold")
-    ax.legend(fontsize=10)
+    scenarios = {
+        "Low\n($95/t)": df["carbon_cost_low"].values / 1e6,
+        "Central\n(EPA $190/t)": df["carbon_cost_central"].values / 1e6,
+        "High\n($300/t)": df["carbon_cost_high"].values / 1e6,
+    }
+    positions = [1, 2, 3]
+    colors_box = ["#27ae60", "#f39c12", "#c0392b"]
+    bp = ax.boxplot(list(scenarios.values()), positions=positions, widths=0.5,
+                    patch_artist=True, showfliers=False, medianprops=dict(color="black", lw=2))
+    for patch, c in zip(bp["boxes"], colors_box):
+        patch.set_facecolor(c)
+        patch.set_alpha(0.6)
+    ax.set_xticks(positions)
+    ax.set_xticklabels(list(scenarios.keys()), fontsize=10)
+    # Annotate medians and 95th percentiles
+    for pos, (lbl, v) in zip(positions, scenarios.items()):
+        med = np.median(v)
+        p95 = np.percentile(v, 95)
+        ax.text(pos, p95 + 0.3, f"P95=${p95:.1f}M", ha="center", fontsize=8, fontweight="bold")
+    ax.set_ylabel("Annual Carbon Liability ($M)", fontsize=12)
+    ax.set_title("Carbon Liability by SCC Scenario", fontsize=12, fontweight="bold")
+    ax.grid(axis="y", alpha=0.3)
 
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "monte_carlo_financial_risk.png", dpi=PLOT["dpi"], bbox_inches="tight")
@@ -178,15 +221,60 @@ def plot_financial_risk(df):
 
 
 def plot_convergence(df):
-    """Show that the Monte-Carlo mean stabilises."""
-    fig, ax = plt.subplots(figsize=(10, 5))
-    cumm = df["emissions_kg_per_h"].expanding().mean()
-    ax.plot(cumm.values, color="#2b8c4e", lw=1.2)
-    ax.axhline(df["emissions_kg_per_h"].mean(), color="#e74c3c", ls="--", lw=1.5, label="Final mean")
-    ax.set_xlabel("Simulation #", fontsize=12)
-    ax.set_ylabel("Running Mean Emissions (kg/h)", fontsize=12)
-    ax.set_title("Monte-Carlo Convergence", fontsize=13, fontweight="bold")
-    ax.legend()
+    """Show convergence of both the mean AND tail quantiles (VaR₉₅, VaR₉₉)."""
+    fig, ax = plt.subplots(figsize=(12, 6))
+    vals = df["emissions_kg_per_h"].values
+    n = len(vals)
+
+    # Start from 500 to avoid early-stage noise dominating the plot
+    idx = np.arange(500, n)
+
+    running_mean = np.array([vals[:i+1].mean() for i in idx])
+    running_p95 = np.array([np.percentile(vals[:i+1], 95) for i in idx])
+    running_p99 = np.array([np.percentile(vals[:i+1], 99) for i in idx])
+
+    final_mean = vals.mean()
+    final_p95 = np.percentile(vals, 95)
+    final_p99 = np.percentile(vals, 99)
+
+    ax.plot(idx, running_mean, color="#2b8c4e", lw=1.5, label=f"Running Mean → {final_mean:,.0f}")
+    ax.plot(idx, running_p95, color="#e67e22", lw=1.5, label=f"Running VaR₉₅ → {final_p95:,.0f}")
+    ax.plot(idx, running_p99, color="#e74c3c", lw=1.5, label=f"Running VaR₉₉ → {final_p99:,.0f}")
+
+    # ±0.5% convergence band around final mean
+    band = 0.005
+    ax.fill_between(idx, final_mean * (1 - band), final_mean * (1 + band),
+                    alpha=0.15, color="#2b8c4e", label="±0.5% of final mean")
+    ax.fill_between(idx, final_p95 * (1 - band), final_p95 * (1 + band),
+                    alpha=0.10, color="#e67e22")
+    ax.fill_between(idx, final_p99 * (1 - band), final_p99 * (1 + band),
+                    alpha=0.10, color="#e74c3c")
+
+    # Final value dashed lines
+    ax.axhline(final_mean, color="#2b8c4e", ls=":", lw=1, alpha=0.5)
+    ax.axhline(final_p95, color="#e67e22", ls=":", lw=1, alpha=0.5)
+    ax.axhline(final_p99, color="#e74c3c", ls=":", lw=1, alpha=0.5)
+
+    ax.set_xlabel("Number of Simulations", fontsize=12)
+    ax.set_ylabel("Emissions (kg CO₂/h)", fontsize=12)
+    ax.set_title("Monte-Carlo Convergence: Mean, VaR₉₅, and VaR₉₉",
+                 fontsize=13, fontweight="bold")
+    ax.legend(fontsize=9, loc="center right")
+    ax.grid(True, alpha=0.2)
+
+    # Convergence statistics
+    # Find first index where running mean stays within ±0.5% of final
+    converged_at = n
+    for i in range(len(idx)):
+        if abs(running_mean[i] / final_mean - 1) < band:
+            if all(abs(running_mean[j] / final_mean - 1) < band for j in range(i, min(i+100, len(idx)))):
+                converged_at = idx[i]
+                break
+    ax.text(0.02, 0.02,
+            f"Mean converges (±0.5%) at n ≈ {converged_at:,}\nN = {n:,} total simulations",
+            transform=ax.transAxes, fontsize=9,
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8))
+
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "monte_carlo_convergence.png", dpi=PLOT["dpi"], bbox_inches="tight")
     plt.close()

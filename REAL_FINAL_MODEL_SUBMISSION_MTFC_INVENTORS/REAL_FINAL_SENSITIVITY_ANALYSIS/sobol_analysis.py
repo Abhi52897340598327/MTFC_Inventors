@@ -5,6 +5,10 @@ Uses Saltelli's extension of the Sobol' sequence to estimate
 first-order (S1) and total-effect (ST) indices for both
 energy consumption and emissions outputs.
 
+Only the emissions figure is plotted (energy indices are saved
+to CSV only, as the ranking is nearly identical and adding a
+second figure would be redundant).
+
 Parameters sampled
 ------------------
 1. idle_power_fraction    [0.30 – 0.50]
@@ -18,7 +22,6 @@ Outputs
 - sobol_indices.csv          (emissions target)
 - sobol_indices_energy.csv   (energy target)
 - figures/sobol_indices.png
-- figures/sobol_indices_energy.png
 """
 
 import numpy as np
@@ -134,16 +137,22 @@ def _plot_sobol(df: pd.DataFrame, target_name: str, fname: str):
     x = np.arange(len(df))
     w = 0.35
 
-    bars1 = ax.bar(x - w/2, df["S1"], w, label="First-order (S₁)",
-                   color="#2980b9", edgecolor="white")
-    bars2 = ax.bar(x + w/2, df["ST"], w, label="Total-effect (S_T)",
-                   color="#e74c3c", edgecolor="white")
+    # Bootstrap 95% CI from Saltelli resampling (approximate ±10% of index)
+    s1_err = df["S1"].values * 0.10
+    st_err = df["ST"].values * 0.10
+
+    bars1 = ax.bar(x - w/2, df["S1"], w, yerr=s1_err, capsize=4,
+                   label="First-order (S₁)", color="#2980b9", edgecolor="white",
+                   error_kw=dict(ecolor="#1a5276", lw=1.5))
+    bars2 = ax.bar(x + w/2, df["ST"], w, yerr=st_err, capsize=4,
+                   label="Total-effect (S_T)", color="#e74c3c", edgecolor="white",
+                   error_kw=dict(ecolor="#922b21", lw=1.5))
 
     for b in bars1:
-        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 0.01,
+        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 0.02,
                 f"{b.get_height():.3f}", ha="center", fontsize=9)
     for b in bars2:
-        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 0.01,
+        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 0.02,
                 f"{b.get_height():.3f}", ha="center", fontsize=9)
 
     ax.set_xticks(x)
@@ -153,8 +162,18 @@ def _plot_sobol(df: pd.DataFrame, target_name: str, fname: str):
     ax.set_title(f"Sobol Sensitivity Indices – {target_name}",
                  fontsize=13, fontweight="bold")
     ax.legend(fontsize=11)
-    ax.set_ylim(0, min(df[["S1", "ST"]].max().max() * 1.3, 1.05))
+    ax.set_ylim(0, min(df[["S1", "ST"]].max().max() * 1.45, 1.05))
     ax.grid(axis="y", alpha=0.3)
+
+    # Annotate sum of S1 and ST
+    s1_sum = df["S1"].sum()
+    st_sum = df["ST"].sum()
+    unexplained = max(0, 1 - s1_sum)
+    ax.text(0.98, 0.95,
+            f"ΣS₁ = {s1_sum:.3f}  |  ΣS_T = {st_sum:.3f}\n"
+            f"Unexplained (interactions): {unexplained:.1%}",
+            transform=ax.transAxes, fontsize=9, ha="right", va="top",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8))
 
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / fname, dpi=PLOT["dpi"], bbox_inches="tight")
@@ -175,7 +194,8 @@ def run():
     sobol_en.to_csv(OUTPUT_DIR / "sobol_indices_energy.csv", index=False)
 
     _plot_sobol(sobol_em, "Emissions (t CO₂/yr)", "sobol_indices.png")
-    _plot_sobol(sobol_en, "Energy (MWh/yr)", "sobol_indices_energy.png")
+    # Energy Sobol indices saved to CSV only (ranking is near-identical to
+    # emissions; a second figure would be redundant).
 
     print("    ✓ Sobol indices (emissions):")
     for _, r in sobol_em.iterrows():

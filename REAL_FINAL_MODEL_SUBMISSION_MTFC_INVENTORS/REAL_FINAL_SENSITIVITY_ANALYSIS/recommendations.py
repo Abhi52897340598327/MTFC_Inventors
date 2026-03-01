@@ -132,7 +132,7 @@ def plot_radar(mit_df: pd.DataFrame):
     angles = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(9, 9), subplot_kw=dict(polar=True))
     colors = ["#27ae60", "#2980b9", "#f39c12", "#8e44ad"]
 
     for i, (_, row) in enumerate(mit_df.iterrows()):
@@ -145,16 +145,26 @@ def plot_radar(mit_df: pd.DataFrame):
             min(1 / max(row["payback_years"], 0.1) / 2, 1.0),  # faster = higher
         ]
         vals += vals[:1]
-        ax.plot(angles, vals, "o-", lw=2, color=colors[i % len(colors)],
-                label=row["lever"])
-        ax.fill(angles, vals, alpha=0.1, color=colors[i % len(colors)])
+        ax.plot(angles, vals, "o-", lw=2.5, color=colors[i % len(colors)],
+                label=row["lever"], ms=6)
+        ax.fill(angles, vals, alpha=0.08, color=colors[i % len(colors)])
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=10)
+    ax.set_xticklabels(categories, fontsize=11)
+
+    # Add radial grid labels
+    ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels(["0.2", "0.4", "0.6", "0.8", "1.0"], fontsize=8, color="grey")
     ax.set_ylim(0, 1)
-    ax.set_title("Mitigation Lever Comparison", fontsize=13,
-                 fontweight="bold", pad=20)
+    ax.set_title("Mitigation Lever Comparison\n(Normalised scores: 0 = worst, 1 = best)",
+                 fontsize=13, fontweight="bold", pad=25)
     ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.1), fontsize=9)
+
+    # Annotation box explaining normalisation
+    fig.text(0.02, 0.02,
+             "Emission Reduction: % ÷ 50%  |  ROI: ×/120  |  "
+             "Feasibility & Impact: score/5  |  Speed: (1/payback)/2",
+             fontsize=7, style="italic", color="grey")
 
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "recommendation_radar.png",

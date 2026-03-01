@@ -228,59 +228,11 @@ def build_monetary_summary(scen_df, risk_df, mit_df) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-# ── Figures ──────────────────────────────────────────────────────────────
-def plot_mitigation(mit_df):
-    fig, axes = plt.subplots(1, 2, figsize=PLOT["figsize_wide"])
-
-    # NPV bar chart
-    ax = axes[0]
-    colors = ["#27ae60", "#2980b9", "#f39c12", "#8e44ad"]
-    ax.barh(mit_df["lever"], mit_df["npv_10yr_usd"]/1e6,
-            color=colors[:len(mit_df)], edgecolor="white", height=0.55)
-    for i, v in enumerate(mit_df["npv_10yr_usd"]):
-        ax.text(v/1e6 + 0.5, i, f"${v/1e6:,.1f}M", va="center", fontsize=10)
-    ax.set_xlabel("NPV 10-yr ($M)", fontsize=11)
-    ax.set_title("Mitigation Lever NPV", fontsize=12, fontweight="bold")
-
-    # ROI bar chart
-    ax = axes[1]
-    ax.barh(mit_df["lever"], mit_df["roi_x"],
-            color=colors[:len(mit_df)], edgecolor="white", height=0.55)
-    for i, v in enumerate(mit_df["roi_x"]):
-        ax.text(v + 0.5, i, f"{v:.1f}×", va="center", fontsize=10)
-    ax.set_xlabel("Return on Investment (×)", fontsize=11)
-    ax.set_title("Mitigation Lever ROI", fontsize=12, fontweight="bold")
-
-    plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "cost_benefit_mitigation.png",
-                dpi=PLOT["dpi"], bbox_inches="tight")
-    plt.close()
-
-
-def plot_scenario_waterfall(scen_df):
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    names = scen_df["scenario"].tolist()
-    npvs = scen_df["npv_10yr"].values / 1e6
-    colors = ["#3498db", "#27ae60", "#e74c3c", "#e67e22"]
-
-    bars = ax.bar(names, npvs, color=colors, edgecolor="white", width=0.55)
-    for bar, v in zip(bars, npvs):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
-                f"${v:,.0f}M", ha="center", fontsize=11, fontweight="bold")
-
-    ax.set_ylabel("10-Year NPV ($M)", fontsize=12)
-    ax.set_title("Scenario Monetisation: 10-Year Net Present Value",
-                 fontsize=13, fontweight="bold")
-    ax.grid(axis="y", alpha=0.3)
-
-    plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "scenario_monetization_waterfall.png",
-                dpi=PLOT["dpi"], bbox_inches="tight")
-    plt.close()
-
-
 # ── Entry Point ──────────────────────────────────────────────────────────
+# NOTE: Plot functions removed — mitigation and scenario NPV visualisation is
+# handled by cba_figures.py (cba_mitigation_roi, cba_risk_decomposition) to
+# avoid duplicate figures.
+
 def run():
     print("  ▶ Running cost-benefit analysis …")
 
@@ -295,9 +247,6 @@ def run():
     mit_df.to_csv(OUTPUT_DIR   / "mitigation_cost_benefit.csv", index=False)
     fin_df.to_csv(OUTPUT_DIR   / "financial_assumptions.csv",   index=False)
     money_df.to_csv(OUTPUT_DIR / "monetary_numbers.csv",        index=False)
-
-    plot_mitigation(mit_df)
-    plot_scenario_waterfall(scen_df)
 
     print("    ✓ 4 scenarios monetised")
     print(f"    ✓ Best lever: {mit_df.loc[mit_df['npv_10yr_usd'].idxmax(), 'lever']}"

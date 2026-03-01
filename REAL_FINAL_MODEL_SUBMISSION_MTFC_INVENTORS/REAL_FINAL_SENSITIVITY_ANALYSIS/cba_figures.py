@@ -63,6 +63,15 @@ def fig_data_sources_overview(data_bundle):
     va_en = data_bundle["va_energy"]
     ax.plot(va_en["Year"], va_en["total_bbtu"] / 1e6, color="#1565C0", linewidth=2)
     ax.fill_between(va_en["Year"], 0, va_en["total_bbtu"] / 1e6, alpha=0.15, color="#1565C0")
+    # Trend annotation
+    if len(va_en) > 3:
+        z_en = np.polyfit(va_en["Year"].astype(float), va_en["total_bbtu"].values / 1e6, 1)
+        ss_res = np.sum((va_en["total_bbtu"].values / 1e6 - np.polyval(z_en, va_en["Year"].astype(float))) ** 2)
+        ss_tot = np.sum((va_en["total_bbtu"].values / 1e6 - (va_en["total_bbtu"].values / 1e6).mean()) ** 2)
+        r2_en = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+        ax.text(0.05, 0.92, f"Trend: {z_en[0]:+.3f} M BBtu/yr\nR² = {r2_en:.3f}",
+                transform=ax.transAxes, fontsize=8, va="top",
+                bbox=dict(boxstyle="round,pad=0.3", fc="aliceblue", alpha=0.8))
     ax.set_title("Virginia Total Energy Consumption")
     ax.set_ylabel("Million BBtu")
     ax.grid(True, alpha=0.3)
@@ -113,6 +122,15 @@ def fig_data_sources_overview(data_bundle):
     emis_clean = emis.dropna(subset=["Total_co2_mmt"])
     ax.fill_between(emis_clean["Year"], 0, emis_clean["Total_co2_mmt"], alpha=0.3, color="#F44336")
     ax.plot(emis_clean["Year"], emis_clean["Total_co2_mmt"], color="#C62828", linewidth=2)
+    # Trend annotation
+    if len(emis_clean) > 3:
+        z_co2 = np.polyfit(emis_clean["Year"].astype(float), emis_clean["Total_co2_mmt"].values, 1)
+        ss_r = np.sum((emis_clean["Total_co2_mmt"].values - np.polyval(z_co2, emis_clean["Year"].astype(float))) ** 2)
+        ss_t = np.sum((emis_clean["Total_co2_mmt"].values - emis_clean["Total_co2_mmt"].values.mean()) ** 2)
+        r2_co2 = 1 - ss_r / ss_t if ss_t > 0 else 0
+        ax.text(0.05, 0.92, f"Trend: {z_co2[0]:+.2f} MMT/yr\nR² = {r2_co2:.3f}",
+                transform=ax.transAxes, fontsize=8, va="top",
+                bbox=dict(boxstyle="round,pad=0.3", fc="mistyrose", alpha=0.8))
     ax.set_title("Virginia Total CO₂ Emissions")
     ax.set_ylabel("MMT CO₂")
 
@@ -213,7 +231,7 @@ def fig_mitigation_roi(mit_df):
     ax1.set_title("Net Present Value of Mitigation Levers", fontweight="bold")
     ax1.grid(axis="x", alpha=0.3)
 
-    # Right: CO₂ Avoided
+    # Right: CO₂ Avoided with % reduction labels
     co2_vals = []
     for v in mit_df["total_co2_avoided_10yr_tonnes"]:
         try:
@@ -222,13 +240,34 @@ def fig_mitigation_roi(mit_df):
             co2_vals.append(0)
 
     bars2 = ax2.barh(y_pos, co2_vals, color=colors_mit, height=0.5, edgecolor="white")
+    max_co2 = max(co2_vals) if co2_vals else 1
     for i, (bar, val) in enumerate(zip(bars2, co2_vals)):
-        ax2.text(val + max(co2_vals) * 0.02, i, f"{val:,.0f}K t", va="center", fontsize=11, fontweight="bold")
+        # % of baseline avoided
+        pct_label = ""
+        try:
+            pct_r = float(mit_df["co2_reduction_pct"].iloc[i]) * 100
+            pct_label = f" ({pct_r:.0f}% reduction)"
+        except Exception:
+            pass
+        ax2.text(val + max_co2 * 0.02, i, f"{val:,.0f}K t{pct_label}",
+                 va="center", fontsize=10, fontweight="bold")
     ax2.set_yticks(y_pos)
     ax2.set_yticklabels(levers, fontsize=11)
     ax2.set_xlabel("10-Year CO₂ Avoided (Thousand Tonnes)", fontsize=12)
     ax2.set_title("Cumulative CO₂ Reduction by Lever", fontweight="bold")
     ax2.grid(axis="x", alpha=0.3)
+
+    # Break-even carbon price annotation
+    try:
+        total_cost = float(mit_df[mit_df["lever"] == "Combined Portfolio"]["npv_cost_usd"].values[0])
+        total_co2 = float(mit_df[mit_df["lever"] == "Combined Portfolio"]["total_co2_avoided_10yr_tonnes"].values[0])
+        if total_co2 > 0:
+            breakeven = total_cost / total_co2
+            fig.text(0.5, -0.02,
+                     f"Combined Portfolio break-even carbon price: ${breakeven:,.0f}/tonne CO₂",
+                     ha="center", fontsize=11, fontweight="bold", color="#6A1B9A")
+    except Exception:
+        pass
 
     plt.tight_layout()
     _save(fig, "cba_mitigation_roi.png")
@@ -312,6 +351,17 @@ def fig_risk_decomposition(cost_df):
             vals.append(row[col].values[0] / 1e6 if len(row) > 0 else 0)
         vals = np.array(vals)
         ax.bar(x, vals, width, bottom=bottom, label=label, color=color, edgecolor="white", linewidth=0.5)
+        # % labels on segments >= 10% of total
+        for j in range(len(vals)):
+            total_j = sum(yr10[yr10["scenario"] == scenarios[j]][c].values[0] / 1e6
+                          for c, _, _ in component_cols
+                          if len(yr10[yr10["scenario"] == scenarios[j]]) > 0)
+            if total_j > 0:
+                pct_seg = vals[j] / total_j * 100
+                if pct_seg >= 10:
+                    ax.text(x[j], bottom[j] + vals[j] / 2,
+                            f"{pct_seg:.0f}%", ha="center", va="center",
+                            fontsize=7, fontweight="bold", color="white")
         bottom += vals
 
     # Total labels on top
@@ -388,19 +438,20 @@ def fig_growth_evidence(data_bundle):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def generate_all_figures(data_bundle, proj_df, cost_df, mit_df, risk_df):
-    """Generate all 6 publication-quality figures (no PJM, no waterfall)."""
+    """Generate 5 publication-quality figures (scenario emissions removed —
+    redundant with base_forecast CO₂ and loss_characterization trajectories)."""
     print("\n" + "=" * 72)
     print("  SECTION 5: GENERATING PUBLICATION FIGURES")
     print("=" * 72 + "\n")
 
     fig_data_sources_overview(data_bundle)
-    fig_scenario_emissions(proj_df, risk_df)
+    # fig_scenario_emissions removed — story told by other figures
     fig_mitigation_roi(mit_df)
     fig_carbon_price_sensitivity(proj_df)
     fig_risk_decomposition(cost_df)
     fig_growth_evidence(data_bundle)
 
-    print(f"\n✓ All 6 figures saved to {FIGURE_DIR}/")
+    print(f"\n✓ All 5 figures saved to {FIGURE_DIR}/")
 
 
 # ─────────────────────────────────────────────────────────────────────────

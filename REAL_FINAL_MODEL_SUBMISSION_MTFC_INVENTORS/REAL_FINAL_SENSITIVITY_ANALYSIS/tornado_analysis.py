@@ -5,12 +5,14 @@ Perturbs each parameter ±20 % from its baseline value while
 holding all others constant. Records absolute and percentage
 change in both emissions and energy outputs.
 
+Only the emissions tornado is plotted (energy is saved to CSV
+only, as it tells a nearly identical ranking story).
+
 Outputs
 -------
 - tornado_oat.csv            (emissions target)
 - tornado_oat_energy.csv     (energy target)
 - figures/tornado_oat.png
-- figures/tornado_oat_energy.png
 """
 
 import numpy as np
@@ -120,24 +122,33 @@ def _plot_tornado(df: pd.DataFrame, target: str, fname: str):
     ax.barh(y, high_delta, height=0.6, color="#e74c3c", label="+20% perturbation",
             edgecolor="white", linewidth=0.5)
 
-    # Annotations
+    # Annotations with elasticity (% output change / % input change = delta/20)
     for i in range(len(df)):
         if abs(low_delta[i]) > 0.5:
-            ax.text(low_delta[i] - 0.3, i, f"{low_delta[i]:+.1f}%",
-                    va="center", ha="right", fontsize=9, color="#2980b9")
+            elast = low_delta[i] / (-SWING * 100)
+            ax.text(low_delta[i] - 0.3, i, f"{low_delta[i]:+.1f}% (ε={elast:.2f})",
+                    va="center", ha="right", fontsize=8, color="#2980b9")
         if abs(high_delta[i]) > 0.5:
-            ax.text(high_delta[i] + 0.3, i, f"{high_delta[i]:+.1f}%",
-                    va="center", ha="left", fontsize=9, color="#e74c3c")
+            elast = high_delta[i] / (SWING * 100)
+            ax.text(high_delta[i] + 0.3, i, f"{high_delta[i]:+.1f}% (ε={elast:.2f})",
+                    va="center", ha="left", fontsize=8, color="#e74c3c")
 
     ax.set_yticks(y)
     ax.set_yticklabels([p.replace("_", " ").title() for p in df["parameter"]],
                        fontsize=10)
     ax.axvline(0, color="black", lw=1)
     ax.set_xlabel("% Change from Baseline", fontsize=12)
-    ax.set_title(f"Tornado Sensitivity – {target}",
+    ax.set_title(f"Tornado Sensitivity (Local OAT, ±20%) – {target}",
                  fontsize=13, fontweight="bold")
     ax.legend(loc="lower right", fontsize=10)
     ax.grid(axis="x", alpha=0.3)
+
+    # Base value annotation
+    ax.text(0.02, 0.98,
+            f"Base case: {base_val:,.0f}\nε = elasticity = Δ%output / Δ%input\n"
+            f"Note: OAT — no interaction effects captured",
+            transform=ax.transAxes, fontsize=8, va="top",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8))
 
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / fname, dpi=PLOT["dpi"], bbox_inches="tight")
@@ -153,7 +164,7 @@ def run():
     en_df.to_csv(OUTPUT_DIR / "tornado_oat_energy.csv", index=False)
 
     _plot_tornado(em_df, "Annual Emissions (t CO₂)", "tornado_oat.png")
-    _plot_tornado(en_df, "Annual Energy (MWh)", "tornado_oat_energy.png")
+    # Energy tornado saved to CSV only (ranking is near-identical).
 
     print("    ✓ Tornado (emissions) – top driver:")
     top = em_df.iloc[-1]
