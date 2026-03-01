@@ -70,17 +70,18 @@ def build_scenario_recommendations() -> pd.DataFrame:
 
 # ── Mitigation recommendation table ─────────────────────────────────────
 def build_mitigation_recommendations() -> pd.DataFrame:
-    base_cost = (DC_PARAMS["it_capacity_mw"] * DC_PARAMS["pue_baseline"]
-                 * 8760 * FINANCE["energy_price_usd_per_mwh"]
-                 + DC_PARAMS["it_capacity_mw"] * DC_PARAMS["pue_baseline"]
-                 * GRID["carbon_intensity_mean"] * 8760 / 1000
-                 * FINANCE["scc_usd_per_ton"])
+    base_mw = DC_PARAMS["it_capacity_mw"] * DC_PARAMS["pue_baseline"]
+    base_energy_cost = base_mw * 8760 * FINANCE["energy_price_usd_per_mwh"]
+    base_carbon_cost = (base_mw * GRID["carbon_intensity_mean"] * 8760 / 1000
+                        * FINANCE["scc_usd_per_ton"])
 
     rows = []
     for name, lev in MITIGATION_LEVERS.items():
-        red = lev["emission_reduction_pct"] / 100
+        co2_red = lev["emission_reduction_pct"] / 100
+        nrg_red = lev.get("energy_saving_pct", 0.0) / 100
         capex = lev["capex_usd"]
-        annual_sav = base_cost * red
+        # Emission reduction avoids carbon cost; energy saving avoids energy cost
+        annual_sav = base_carbon_cost * co2_red + base_energy_cost * nrg_red
         npv = sum(annual_sav / (1 + FINANCE["discount_rate"])**y
                   for y in range(1, FINANCE["horizon_years"]+1)) - capex
         roi = npv / capex if capex > 0 else 0
@@ -97,11 +98,11 @@ def build_mitigation_recommendations() -> pd.DataFrame:
             feasibility = 2
 
         # Impact score (1-5)
-        if red >= 0.35:
+        if co2_red >= 0.35:
             impact = 5
-        elif red >= 0.20:
+        elif co2_red >= 0.20:
             impact = 4
-        elif red >= 0.10:
+        elif co2_red >= 0.10:
             impact = 3
         else:
             impact = 2

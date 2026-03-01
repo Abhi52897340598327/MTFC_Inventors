@@ -1,7 +1,7 @@
 metric,value,unit,context
 Baseline Annual Cost,56512582.0,USD,"30 MW DC, PUE 1.30, grid avg"
-Baseline 10-yr NPV,379204025.0,USD,Discounted at 8%
-High-Growth 10-yr NPV,379204025.0,USD,30% CAGR
+Baseline 10-yr NPV,485597447.0,USD,Discounted at 8%
+High-Growth 10-yr NPV,1798428215.0,USD,30% CAGR
 Risk Premium (annual),5903012.0,USD,Composite volatility mark-up
-Best Mitigation NPV,116920777.0,USD,Combined Portfolio
-Best Mitigation ROI,352.2,x,Cleaner Grid Contracts
+Best Mitigation NPV,64268194.0,USD,Combined Portfolio
+Best Mitigation ROI,167.3,x,Cleaner Grid Contracts

@@ -1,0 +1,5 @@
+scenario,npv_mean_usd_m,npv_std_usd_m,npv_var_90_usd_m,npv_var_95_usd_m,npv_var_99_usd_m,npv_cvar_95_usd_m,coefficient_of_variation,n_simulations
+Baseline,127.4,37.2,176.24,193.05,227.11,213.43,0.292,10000
+DC Boom,286.79,80.46,391.92,425.36,497.49,468.66,0.281,10000
+Efficient Transition,250.75,71.98,345.79,377.27,437.98,413.57,0.287,10000
+Climate Stress,346.15,89.16,462.4,502.14,576.15,547.67,0.258,10000

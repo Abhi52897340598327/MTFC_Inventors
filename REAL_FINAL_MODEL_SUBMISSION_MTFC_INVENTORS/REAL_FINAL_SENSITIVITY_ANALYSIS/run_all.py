@@ -32,41 +32,51 @@ def main():
     print(f"  Figures → {FIGURE_DIR}\n")
 
     # ── 1. Monte-Carlo ───────────────────────────────────────────────
-    banner("1 / 7  Monte-Carlo Simulation")
+    banner("1 / 9  Monte-Carlo Simulation")
     import monte_carlo
     mc_df, mc_summary = monte_carlo.run()
 
     # ── 2. Copula ────────────────────────────────────────────────────
-    banner("2 / 7  Copula Tail-Dependency Analysis")
+    banner("2 / 9  Copula Tail-Dependency Analysis")
     import copula_analysis
     cop_dep, cop_curves = copula_analysis.run()
 
-    # ── 3. Energy Forecast ───────────────────────────────────────────
-    banner("3 / 7  Energy Forecast & Cost Scenarios")
+    # ── 3. Base Forecast ─────────────────────────────────────────────
+    banner("3 / 9  Base Forecasting (Energy, CO₂, AI CapEx, Grid Stress)")
+    import base_forecast
+    fc_energy, fc_co2, fc_spend, fc_stress, fc_dash = base_forecast.run()
+
+    # ── 4. Energy Forecast ───────────────────────────────────────────
+    banner("4 / 9  Energy Forecast & Cost Scenarios")
     import energy_forecast
     scen_df, cost_df = energy_forecast.run()
 
-    # ── 4. Cost-Benefit Analysis ─────────────────────────────────────
-    banner("4 / 7  Cost-Benefit & Scenario Monetisation")
+    # ── 5. Cost-Benefit Analysis ─────────────────────────────────────
+    banner("5 / 9  Cost-Benefit & Scenario Monetisation")
     import cost_benefit
     cba_scen, cba_risk, cba_mit, cba_fin, cba_money = cost_benefit.run()
 
-    # ── 5. Sobol Indices ─────────────────────────────────────────────
-    banner("5 / 7  Sobol Sensitivity Indices")
+    # ── 6. Sobol Indices ─────────────────────────────────────────────
+    banner("6 / 9  Sobol Sensitivity Indices")
     import sobol_analysis
     sob_em, sob_en = sobol_analysis.run()
 
-    # ── 6. Tornado / OAT ─────────────────────────────────────────────
-    banner("6 / 7  Tornado / OAT Sensitivity")
+    # ── 7. Tornado / OAT ─────────────────────────────────────────────
+    banner("7 / 9  Tornado / OAT Sensitivity")
     import tornado_analysis
     torn_em, torn_en = tornado_analysis.run()
 
-    # ── 7. Carbon Heatmap ────────────────────────────────────────────
-    banner("7 / 7  Carbon Intensity Heatmap")
+    # ── 8. Carbon Heatmap ────────────────────────────────────────────
+    banner("8 / 9  Carbon Intensity Heatmap")
     import carbon_heatmap
     heatmap_df = carbon_heatmap.run()
 
-    # ── 8. Recommendations ───────────────────────────────────────────
+    # ── 9. Loss Characterisation ──────────────────────────────────────
+    banner("9 / 9  Actuarial Loss Characterisation")
+    import loss_characterization
+    lc_dist, lc_exc, lc_base, lc_lev, lc_impact = loss_characterization.run(mc_df=mc_df)
+
+    # ── 9. Recommendations ───────────────────────────────────────────
     banner("BONUS  Recommendation Strategies")
     import recommendations
     rec_scen, rec_mit = recommendations.run()
