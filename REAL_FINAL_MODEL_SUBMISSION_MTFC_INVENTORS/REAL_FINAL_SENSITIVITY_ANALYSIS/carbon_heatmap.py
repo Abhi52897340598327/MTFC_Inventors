@@ -77,6 +77,7 @@ def plot_heatmap(df: pd.DataFrame):
 
     month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    hour_labels = [f"{h % 12 or 12} {'AM' if h < 12 else 'PM'}" for h in range(24)]
 
     fig, ax = plt.subplots(figsize=(14, 10))
 
@@ -85,20 +86,27 @@ def plot_heatmap(df: pd.DataFrame):
                    vmin=pivot.values.min() - 5,
                    vmax=pivot.values.max() + 5)
 
-    # Annotate each cell with integer (all black text)
+    # Annotate only cells in top/bottom 20% to reduce clutter
+    ci_min, ci_max = pivot.values.min(), pivot.values.max()
+    ci_range = ci_max - ci_min
+    low_thresh = ci_min + ci_range * 0.20
+    high_thresh = ci_max - ci_range * 0.20
     for i in range(24):
         for j in range(12):
-            val = int(round(pivot.values[i, j]))
-            ax.text(j, i, str(val), ha="center", va="center",
-                    fontsize=8, fontweight="bold", color="black")
+            val = pivot.values[i, j]
+            if val <= low_thresh or val >= high_thresh:
+                color = "white" if val >= high_thresh else "black"
+                ax.text(j, i, f"{int(round(val))}", ha="center", va="center",
+                        fontsize=7, fontweight="bold", color=color)
 
     ax.set_xticks(range(12))
     ax.set_xticklabels(month_labels, fontsize=11)
     ax.set_yticks(range(24))
-    ax.set_yticklabels(range(24), fontsize=10)
+    ax.set_yticklabels(hour_labels, fontsize=9)
     ax.set_xlabel("Month", fontsize=13, fontweight="bold")
     ax.set_ylabel("Hour of Day", fontsize=13, fontweight="bold")
-    ax.set_title("Average Carbon Intensity by Hour and Month (kg CO₂/MWh)",
+    ax.set_title("Average Carbon Intensity by Hour and Month (kg CO₂/MWh)\n"
+                 f"Range: {ci_min:.0f} – {ci_max:.0f} kg/MWh  |  Mean: {pivot.values.mean():.0f}",
                  fontsize=14, fontweight="bold", pad=12)
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.04)

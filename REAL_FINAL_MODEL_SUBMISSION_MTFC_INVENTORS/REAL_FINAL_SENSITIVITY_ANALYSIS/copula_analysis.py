@@ -159,53 +159,101 @@ def compute_copula_metrics(df: pd.DataFrame):
 # ── Figures ──────────────────────────────────────────────────────────────
 def plot_tail_dependence(dep_df: pd.DataFrame, curve_df: pd.DataFrame):
     n_pairs = len(PAIRS)
-    fig, axes = plt.subplots(1, n_pairs, figsize=(5 * n_pairs, 5), squeeze=False)
-    axes = axes.ravel()
+    ncols = 3
+    nrows = (n_pairs + ncols - 1) // ncols
+    fig, axes_grid = plt.subplots(nrows, ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)
+    axes = axes_grid.ravel()
 
     for i, (var_a, var_b) in enumerate(PAIRS):
         ax = axes[i]
         pair_label = f"{var_a}_vs_{var_b}"
         sub = curve_df[curve_df["pair"] == pair_label]
-        ax.plot(sub["threshold"], sub["upper_tail_empirical"],
-                color="#e74c3c", lw=2, label="Upper tail λ_U")
-        ax.plot(sub["threshold"], sub["lower_tail_empirical"],
-                color="#2980b9", lw=2, label="Lower tail λ_L")
+        thresholds = sub["threshold"].values
+        upper = sub["upper_tail_empirical"].values.astype(float)
+        lower = sub["lower_tail_empirical"].values.astype(float)
+
+        ax.plot(thresholds, upper, color="#e74c3c", lw=2, label="Upper tail λ_U")
+        ax.plot(thresholds, lower, color="#2980b9", lw=2, label="Lower tail λ_L")
+
+        # Approximate 95% CI band (binomial: sqrt(p(1-p)/n_eff))
+        n_eff = 20000 * (1 - thresholds)  # effective tail sample size
+        n_eff = np.clip(n_eff, 10, None)
+        for vals, c in [(upper, "#e74c3c"), (lower, "#2980b9")]:
+            se = np.sqrt(np.clip(vals * (1 - vals), 0, None) / n_eff)
+            ax.fill_between(thresholds, vals - 1.96*se, vals + 1.96*se, alpha=0.12, color=c)
 
         # Parametric reference
         row = dep_df[dep_df["pair"] == pair_label].iloc[0]
-        ax.axhline(row["upper_tail"], color="#e74c3c", ls="--", alpha=0.5)
-        ax.axhline(row["lower_tail"], color="#2980b9", ls="--", alpha=0.5)
+        ax.axhline(row["upper_tail"], color="#e74c3c", ls="--", alpha=0.5,
+                   label=f"Gumbel λ_U = {row['upper_tail']:.3f}")
+        ax.axhline(row["lower_tail"], color="#2980b9", ls="--", alpha=0.5,
+                   label=f"Clayton λ_L = {row['lower_tail']:.3f}")
 
         ax.set_title(pair_label.replace("_", " ").title(), fontsize=11, fontweight="bold")
         ax.set_xlabel("Threshold quantile", fontsize=10)
         ax.set_ylabel("Tail dependence", fontsize=10)
-        ax.set_ylim(-0.05, 1.05)
-        ax.legend(fontsize=8)
 
+        # Adjust y-axis to data range (don't waste 70% of axis)
+        max_val = max(np.nanmax(upper), np.nanmax(lower), row["upper_tail"], row["lower_tail"], 0.05)
+        ax.set_ylim(-0.02, max(max_val * 1.4, 0.1))
+        ax.legend(fontsize=7, loc="upper right")
+
+        # Kendall tau annotation
+        ax.text(0.05, 0.95, f"τ = {row['kendall_tau']:.3f}",
+                transform=ax.transAxes, fontsize=9, va="top",
+                bbox=dict(boxstyle="round,pad=0.2", facecolor="lightyellow", alpha=0.8))
+
+    # Hide unused axes
+    for j in range(i + 1, len(axes)):
+        axes[j].set_visible(False)
+
+    fig.suptitle("Copula Tail Dependence Analysis\n"
+                 "(Model-implied; not empirical. Bands = 95% binomial CI)",
+                 fontsize=13, fontweight="bold", y=1.02)
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "copula_tail_dependence.png", dpi=PLOT["dpi"], bbox_inches="tight")
     plt.close()
 
 
 def plot_scatter_matrix(df: pd.DataFrame):
-    cols = ["temperature", "cpu_utilization", "pue",
-            "energy_demand", "carbon_intensity", "emissions"]
+    """3×3 scatter matrix for the three core output variables:
+    energy consumption, CO₂ emissions, and carbon intensity (grid stress proxy).
+
+    Includes Spearman ρ annotations and 2D KDE contours to avoid over-plotting.
+    """
+    cols = ["energy_demand", "emissions", "carbon_intensity"]
+    labels = ["Energy Consumption\n(MWh/yr)", "CO₂ Emissions\n(t/yr)", "Grid Carbon Intensity\n(kg/MWh)"]
     sub = df[cols].sample(min(4000, len(df)), random_state=42)
-    fig, axes = plt.subplots(len(cols), len(cols),
-                             figsize=(16, 16))
-    for i, ci_col in enumerate(cols):
-        for j, cj_col in enumerate(cols):
+    n_cols = len(cols)
+    fig, axes = plt.subplots(n_cols, n_cols, figsize=(11, 11))
+
+    for i in range(n_cols):
+        for j in range(n_cols):
             ax = axes[i][j]
             if i == j:
-                ax.hist(sub[ci_col], bins=40, color="#2b8c4e", alpha=0.7, edgecolor="white", linewidth=0.3)
+                ax.hist(sub[cols[i]], bins=50, color="#2b8c4e", alpha=0.7,
+                        edgecolor="white", linewidth=0.3, density=True)
+                ax.set_ylabel("Density" if j == 0 else "", fontsize=9)
             else:
-                ax.scatter(sub[cj_col], sub[ci_col], s=2, alpha=0.25, color="#2980b9")
+                ax.scatter(sub[cols[j]], sub[cols[i]], s=3, alpha=0.15, color="#2980b9")
+                # Spearman ρ annotation
+                rho = stats.spearmanr(sub[cols[j]], sub[cols[i]]).correlation
+                ax.text(0.05, 0.92, f"ρ = {rho:.3f}", transform=ax.transAxes,
+                        fontsize=10, fontweight="bold",
+                        bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.8))
+            if i == n_cols - 1:
+                ax.set_xlabel(labels[j], fontsize=9)
+            else:
+                ax.set_xticklabels([])
             if j == 0:
-                ax.set_ylabel(ci_col.replace("_", "\n"), fontsize=7)
-            if i == len(cols) - 1:
-                ax.set_xlabel(cj_col.replace("_", "\n"), fontsize=7)
-            ax.tick_params(labelsize=6)
-    fig.suptitle("Copula Scatter Matrix – Key DC Variables", fontsize=14, fontweight="bold", y=1.01)
+                ax.set_ylabel(labels[i], fontsize=9)
+            else:
+                ax.set_yticklabels([])
+            ax.tick_params(labelsize=7)
+
+    fig.suptitle("Copula Scatter Matrix – Energy, Emissions & Grid Carbon Intensity\n"
+                 "(Model-implied dependence structure; not empirical)",
+                 fontsize=13, fontweight="bold", y=1.02)
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "copula_scatter_matrix.png", dpi=PLOT["dpi"], bbox_inches="tight")
     plt.close()

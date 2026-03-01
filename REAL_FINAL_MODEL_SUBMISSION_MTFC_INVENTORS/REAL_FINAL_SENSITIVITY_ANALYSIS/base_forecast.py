@@ -389,10 +389,34 @@ def _style_ax(ax, xlabel, ylabel, title):
 
 def plot_energy(df: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(12, 6))
+    # Historical data anchor point
+    hist_en = _load_historical_energy()
+    if not hist_en.empty:
+        # Convert BBtu to GWh (1 BBtu = 293.07 GWh — but DC fraction is tiny;
+        # show as separate axis annotation only)
+        last_hist = hist_en.iloc[-1]
+        ax.axvline(_BASE_YEAR, color="grey", ls=":", alpha=0.5, lw=1)
+        ax.text(_BASE_YEAR - 0.3, ax.get_ylim()[0] if ax.get_ylim()[0] != 0 else 0,
+                f"← Historical\n   data ends", fontsize=8, color="grey",
+                ha="right", va="bottom")
+    # B&W-safe line styles
+    dashes = {"Conservative": (5, 2), "Moderate": (), "Aggressive": (2, 2)}
+    markers = {"Conservative": "o", "Moderate": "s", "Aggressive": "D"}
     for name in GROWTH_SCENARIOS:
         sub = df[df["scenario"] == name]
-        ax.plot(sub["year"], sub["annual_energy_gwh"],
-                "o-", lw=2.5, ms=6, color=_COLORS[name], label=name)
+        line, = ax.plot(sub["year"], sub["annual_energy_gwh"],
+                        marker=markers.get(name, "o"), lw=2.5, ms=6,
+                        color=_COLORS[name], label=name)
+        if dashes.get(name):
+            line.set_dashes(dashes[name])
+    # Annotate year-10 values
+    for name in GROWTH_SCENARIOS:
+        sub = df[df["scenario"] == name]
+        y10 = sub[sub["year"] == _YEARS[-1]]["annual_energy_gwh"].values
+        if len(y10):
+            ax.annotate(f"{y10[0]:,.0f}", xy=(_YEARS[-1], y10[0]),
+                        fontsize=8, fontweight="bold", color=_COLORS[name],
+                        xytext=(5, 0), textcoords="offset points")
     _style_ax(ax, "Year", "Annual Energy (GWh)",
               "Datacenter Energy Consumption Forecast (10yr)")
     plt.tight_layout()
@@ -422,11 +446,31 @@ def plot_ai_spending(df: pd.DataFrame):
     if not hist.empty:
         ax.bar(hist["year"], hist["ai_capex_B"], color="#bdc3c7",
                width=0.6, label="Historical (US Census)", zorder=3)
-    # Projections
+        # Mark last historical year if potentially incomplete
+        last_yr = int(hist["year"].max())
+        if last_yr >= 2025:
+            ax.annotate("⚠ Partial year", xy=(last_yr, hist[hist["year"] == last_yr]["ai_capex_B"].values[0]),
+                        fontsize=8, color="#e67e22", fontweight="bold",
+                        xytext=(0, 10), textcoords="offset points", ha="center")
+    # Projections with B&W-safe styles
+    markers = {"Conservative": "o", "Moderate": "s", "Aggressive": "D"}
+    dashes  = {"Conservative": (5, 2), "Moderate": (3, 1, 1, 1), "Aggressive": (2, 2)}
     for name in _AI_SPEND:
         sub = df[df["scenario"] == name]
-        ax.plot(sub["year"], sub["ai_capex_B"],
-                "D--", lw=2, ms=6, color=_COLORS[name], label=f"{name} Forecast")
+        line, = ax.plot(sub["year"], sub["ai_capex_B"],
+                        marker=markers.get(name, "D"), lw=2, ms=6,
+                        color=_COLORS[name], label=f"{name} ({_AI_SPEND[name]['cagr']:.0%} CAGR)")
+        if dashes.get(name):
+            line.set_dashes(dashes[name])
+    # Reality check annotation on Aggressive
+    agg = df[(df["scenario"] == "Aggressive") & (df["year"] == _YEARS[-1])]
+    if not agg.empty:
+        val = agg["ai_capex_B"].values[0]
+        ax.annotate(f"${val:,.0f}B — exceeds\ncurrent US GDP share",
+                    xy=(_YEARS[-1], val), fontsize=8, color="#e74c3c",
+                    xytext=(-60, 15), textcoords="offset points",
+                    arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1),
+                    fontweight="bold", ha="center")
     _style_ax(ax, "Year", "Annual AI Datacenter CapEx ($B)",
               "US AI Datacenter Capital Spending Forecast")
     plt.tight_layout()
@@ -436,21 +480,30 @@ def plot_ai_spending(df: pd.DataFrame):
 
 
 def plot_grid_stress(df: pd.DataFrame):
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(13, 7))
+    markers = {"Conservative": "o", "Moderate": "s", "Aggressive": "^"}
     for name in GROWTH_SCENARIOS:
         sub = df[df["scenario"] == name]
         ax.plot(sub["year"], sub["grid_stress_index"],
-                "^-", lw=2.5, ms=7, color=_COLORS[name], label=name)
-    # Critical threshold
+                marker=markers.get(name, "^"), lw=2.5, ms=7,
+                color=_COLORS[name], label=name)
+    # Colour-coded threshold zones
+    ax.axhspan(70, 100, alpha=0.08, color="#c0392b")
+    ax.axhspan(45, 70, alpha=0.05, color="#f39c12")
     ax.axhline(70, color="#c0392b", ls="--", lw=2, alpha=0.7)
-    ax.text(_YEARS[-1] + 0.2, 71, "Critical (70)", color="#c0392b",
-            fontsize=10, va="bottom")
+    ax.text(_YEARS[-1] + 0.3, 72, "Critical (>70)\nGrid investment needed",
+            color="#c0392b", fontsize=9, va="bottom")
     ax.axhline(45, color="#f39c12", ls=":", lw=1.5, alpha=0.7)
-    ax.text(_YEARS[-1] + 0.2, 46, "Elevated (45)", color="#f39c12",
-            fontsize=10, va="bottom")
+    ax.text(_YEARS[-1] + 0.3, 47, "Elevated (45-70)\nDemand mgmt required",
+            color="#f39c12", fontsize=9, va="bottom")
     ax.set_ylim(0, 100)
     _style_ax(ax, "Year", "Grid Stress Index (0-100)",
               "Grid Stress Index Forecast – Virginia / PJM-DOM Zone")
+    # Weight sensitivity footnote
+    ax.text(0.01, -0.10,
+            "Index weights: 40% demand-to-capacity, 35% peak-breach prob, 25% renewable shortfall. "
+            "Threshold levels are author-defined.",
+            transform=ax.transAxes, fontsize=8, color="grey", style="italic")
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "forecast_grid_stress.png",
                 dpi=PLOT["dpi"], bbox_inches="tight")
@@ -512,12 +565,11 @@ def run():
     stress_df.to_csv(OUTPUT_DIR / "forecast_grid_stress.csv", index=False)
     dash_df.to_csv(OUTPUT_DIR / "forecast_combined_dashboard.csv", index=False)
 
-    # Figures
+    # Figures (CO₂ plot removed — covered by CBA scenario emissions;
+    #          dashboard removed — redundant with individual panels)
     plot_energy(energy_df)
-    plot_co2(co2_df)
     plot_ai_spending(spend_df)
     plot_grid_stress(stress_df)
-    plot_dashboard(dash_df)
 
     # Console summary
     print("    ✓ Energy consumption forecast (3 scenarios × 10 yr)")

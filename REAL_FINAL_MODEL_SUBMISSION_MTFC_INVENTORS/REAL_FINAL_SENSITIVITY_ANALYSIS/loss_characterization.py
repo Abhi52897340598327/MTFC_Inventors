@@ -319,19 +319,28 @@ def build_impact_summary(baseline_df: pd.DataFrame,
 # ═════════════════════════════════════════════════════════════════════════
 
 def plot_loss_exceedance(exc_df: pd.DataFrame):
-    """S-curve: P(cost > threshold) vs threshold."""
-    fig, ax = plt.subplots(figsize=(11, 6))
+    """S-curve: P(cost > threshold) vs threshold, with return-period axis."""
+    fig, ax = plt.subplots(figsize=(12, 7))
     x = exc_df["threshold_usd_millions"]
     y = exc_df["prob_exceedance"]
     ax.plot(x, y, "o-", color="#8e44ad", lw=2.5, ms=5, zorder=5)
     ax.fill_between(x, y, alpha=0.12, color="#8e44ad")
 
-    # Annotate key quantiles
-    for q, c, ls in [(0.10, "#e74c3c", "--"), (0.05, "#e67e22", "-."),
-                      (0.01, "#c0392b", ":")]:
+    # Annotate key quantiles with VaR intersection lines
+    for q, c, ls, label in [
+        (0.10, "#e74c3c", "--", "VaR₉₀"),
+        (0.05, "#e67e22", "-.", "VaR₉₅"),
+        (0.01, "#c0392b", ":", "VaR₉₉"),
+    ]:
         ax.axhline(q, color=c, ls=ls, lw=1.5, alpha=0.7)
-        ax.text(x.iloc[-1] * 0.97, q + 0.008, f"p = {q:.0%}",
-                fontsize=9, color=c, ha="right")
+        # Find the threshold at this exceedance probability
+        idx_close = np.argmin(np.abs(y.values - q))
+        threshold_val = x.values[idx_close]
+        ax.plot(threshold_val, q, "D", color=c, ms=8, zorder=10)
+        ax.vlines(threshold_val, 0, q, color=c, ls=":", alpha=0.5)
+        ax.text(threshold_val + 0.3, q + 0.015,
+                f"{label} = ${threshold_val:.1f}M\np = {q:.0%}",
+                fontsize=9, color=c, fontweight="bold")
 
     ax.set_xlabel("Total Annual Cost Threshold ($M)", fontsize=12)
     ax.set_ylabel("Probability of Exceedance", fontsize=12)
@@ -339,71 +348,95 @@ def plot_loss_exceedance(exc_df: pd.DataFrame):
                  fontsize=13, fontweight="bold")
     ax.set_ylim(-0.02, max(y) * 1.08)
     ax.grid(True, alpha=0.3)
+
+    # Return period secondary axis
+    ax2 = ax.twinx()
+    ax2.set_ylim(ax.get_ylim())
+    yticks = [0.5, 0.2, 0.1, 0.05, 0.02, 0.01]
+    ax2.set_yticks(yticks)
+    ax2.set_yticklabels([f"1-in-{1/p:.0f} yr" for p in yticks], fontsize=8, color="grey")
+    ax2.set_ylabel("Return Period", fontsize=10, color="grey")
+
     plt.tight_layout()
     fig.savefig(FIGURE_DIR / "loss_exceedance_curve.png",
                 dpi=PLOT["dpi"], bbox_inches="tight")
     plt.close()
 
 
-def plot_emissions_trajectory(baseline_df: pd.DataFrame,
-                              lever_df: pd.DataFrame):
-    """Before/after emissions line chart for every lever."""
-    fig, ax = plt.subplots(figsize=(12, 6))
+def plot_mitigation_trajectories(baseline_df: pd.DataFrame,
+                                  lever_df: pd.DataFrame):
+    """Combined 1×2 panel: emissions (left) and cost (right) before/after mitigation."""
+    fig, (ax_em, ax_cost) = plt.subplots(1, 2, figsize=(18, 7))
     yrs = baseline_df["year"]
-    ax.plot(yrs, baseline_df["emissions_tons_before"] / 1000,
-            "k-o", lw=2.5, ms=7, label="No Action (Baseline)", zorder=5)
-
     colors = ["#27ae60", "#2980b9", "#f39c12", "#8e44ad"]
+    dashes = [(5, 2), (3, 2, 1, 2), (1, 1), (8, 3)]
+
+    # ── Left panel: Emissions ──
+    ax_em.plot(yrs, baseline_df["emissions_tons_before"] / 1000,
+               "k-o", lw=2.5, ms=7, label="No Action (Baseline)", zorder=5)
     for i, (name, _) in enumerate(MITIGATION_LEVERS.items()):
         sub = lever_df[lever_df["lever"] == name]
-        ax.plot(sub["year"], sub["emissions_tons_after"] / 1000,
-                "s--", lw=2, ms=6, color=colors[i % len(colors)],
-                label=f"After: {name}", alpha=0.85)
+        ax_em.plot(sub["year"], sub["emissions_tons_after"] / 1000,
+                   "s-", lw=2, ms=6, color=colors[i % len(colors)],
+                   dashes=dashes[i % len(dashes)],
+                   label=f"After: {name}", alpha=0.85)
+    # Annotate final-year % reduction for Combined Portfolio
+    comb_em = lever_df[lever_df["lever"] == "Combined Portfolio"]
+    if not comb_em.empty:
+        last_base = baseline_df["emissions_tons_before"].iloc[-1]
+        last_mit = comb_em["emissions_tons_after"].iloc[-1]
+        pct = (last_base - last_mit) / last_base * 100
+        ax_em.annotate(f"–{pct:.0f}%", xy=(yrs.iloc[-1], last_mit / 1000),
+                       fontsize=11, fontweight="bold", color="#8e44ad",
+                       xytext=(5, 10), textcoords="offset points")
+    ax_em.set_xlabel("Year", fontsize=12)
+    ax_em.set_ylabel("Annual Emissions (thousand tonnes CO₂)", fontsize=12)
+    ax_em.set_title("(a) Emissions Trajectory", fontsize=13, fontweight="bold")
+    ax_em.legend(fontsize=8, loc="upper left")
+    ax_em.grid(True, alpha=0.3)
 
-    ax.set_xlabel("Year", fontsize=12)
-    ax.set_ylabel("Annual Emissions (thousand tonnes CO₂)", fontsize=12)
-    ax.set_title("Projected Emissions: Before vs After Mitigation (Moderate Growth)",
-                 fontsize=13, fontweight="bold")
-    ax.legend(fontsize=9, loc="upper left")
-    ax.grid(True, alpha=0.3)
-    plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "mitigation_emissions_trajectory.png",
-                dpi=PLOT["dpi"], bbox_inches="tight")
-    plt.close()
-
-
-def plot_cost_trajectory(baseline_df: pd.DataFrame,
-                         lever_df: pd.DataFrame):
-    """Before/after total cost line chart."""
-    fig, ax = plt.subplots(figsize=(12, 6))
-    yrs = baseline_df["year"]
-    ax.plot(yrs, baseline_df["total_cost_before"] / 1e6,
-            "k-o", lw=2.5, ms=7, label="No Action (Baseline)", zorder=5)
-
-    colors = ["#27ae60", "#2980b9", "#f39c12", "#8e44ad"]
+    # ── Right panel: Cost ──
+    ax_cost.plot(yrs, baseline_df["total_cost_before"] / 1e6,
+                 "k-o", lw=2.5, ms=7, label="No Action (Baseline)", zorder=5)
     for i, (name, _) in enumerate(MITIGATION_LEVERS.items()):
         sub = lever_df[lever_df["lever"] == name]
-        ax.plot(sub["year"], sub["total_cost_after"] / 1e6,
-                "s--", lw=2, ms=6, color=colors[i % len(colors)],
-                label=f"After: {name}", alpha=0.85)
+        ax_cost.plot(sub["year"], sub["total_cost_after"] / 1e6,
+                     "s-", lw=2, ms=6, color=colors[i % len(colors)],
+                     dashes=dashes[i % len(dashes)],
+                     label=f"After: {name}", alpha=0.85)
+    # Annotate final-year % savings for Combined Portfolio
+    comb_cost = lever_df[lever_df["lever"] == "Combined Portfolio"]
+    if not comb_cost.empty:
+        last_base_c = baseline_df["total_cost_before"].iloc[-1]
+        last_mit_c = comb_cost["total_cost_after"].iloc[-1]
+        pct_c = (last_base_c - last_mit_c) / last_base_c * 100
+        ax_cost.annotate(f"–{pct_c:.0f}%", xy=(yrs.iloc[-1], last_mit_c / 1e6),
+                         fontsize=11, fontweight="bold", color="#8e44ad",
+                         xytext=(5, 10), textcoords="offset points")
+    ax_cost.set_xlabel("Year", fontsize=12)
+    ax_cost.set_ylabel("Total Annual Cost ($M)", fontsize=12)
+    ax_cost.set_title("(b) Cost Trajectory", fontsize=13, fontweight="bold")
+    ax_cost.legend(fontsize=8, loc="upper left")
+    ax_cost.grid(True, alpha=0.3)
 
-    ax.set_xlabel("Year", fontsize=12)
-    ax.set_ylabel("Total Annual Cost ($M)", fontsize=12)
-    ax.set_title("Projected Cost: Before vs After Mitigation (Moderate Growth)",
-                 fontsize=13, fontweight="bold")
-    ax.legend(fontsize=9, loc="upper left")
-    ax.grid(True, alpha=0.3)
+    plt.suptitle("Projected Emissions & Cost: Before vs After Mitigation (Moderate Growth)",
+                 fontsize=14, fontweight="bold", y=1.02)
     plt.tight_layout()
-    fig.savefig(FIGURE_DIR / "mitigation_cost_trajectory.png",
+    fig.savefig(FIGURE_DIR / "mitigation_emissions_and_cost.png",
                 dpi=PLOT["dpi"], bbox_inches="tight")
     plt.close()
 
 
 def plot_cost_components(baseline_df: pd.DataFrame,
                          lever_df: pd.DataFrame):
-    """Side-by-side stacked bar: cost components before vs Combined Portfolio."""
+    """Side-by-side stacked bar: cost components before vs Combined Portfolio.
+    Each bar segment shows its % share of total cost for that year."""
     combined = lever_df[lever_df["lever"] == "Combined Portfolio"]
     fig, axes = plt.subplots(1, 2, figsize=(16, 7), sharey=True)
+
+    comp_colors = {"Energy": "#3498db", "Carbon (SCC)": "#e74c3c",
+                   "Demand Charges": "#f39c12", "Cooling/Maint": "#95a5a6",
+                   "Peak Breach": "#e67e22"}
 
     for ax, df_src, title, suffix in [
         (axes[0], baseline_df, "Before Mitigation (Baseline)", "before"),
@@ -419,21 +452,38 @@ def plot_cost_components(baseline_df: pd.DataFrame,
         cl = df_src["cooling_maint"].values / 1e6
         pk = df_src["peak_penalty"].values / 1e6
 
-        ax.bar(yrs, e, color="#3498db", label="Energy", width=0.6)
-        ax.bar(yrs, c, bottom=e, color="#e74c3c", label="Carbon (SCC)", width=0.6)
-        ax.bar(yrs, d_vals, bottom=e + c, color="#f39c12",
+        totals = e + c + d_vals + cl + pk
+
+        ax.bar(yrs, e, color=comp_colors["Energy"], label="Energy", width=0.6)
+        ax.bar(yrs, c, bottom=e, color=comp_colors["Carbon (SCC)"],
+               label="Carbon (SCC)", width=0.6)
+        ax.bar(yrs, d_vals, bottom=e + c, color=comp_colors["Demand Charges"],
                label="Demand Charges", width=0.6)
-        ax.bar(yrs, cl, bottom=e + c + d_vals, color="#95a5a6",
+        ax.bar(yrs, cl, bottom=e + c + d_vals, color=comp_colors["Cooling/Maint"],
                label="Cooling/Maint", width=0.6)
-        ax.bar(yrs, pk, bottom=e + c + d_vals + cl, color="#e67e22",
-               label="Peak Breach", width=0.6)
+        ax.bar(yrs, pk, bottom=e + c + d_vals + cl,
+               color=comp_colors["Peak Breach"], label="Peak Breach", width=0.6)
+
+        # Add % labels on the two largest components for first & last years
+        for yi in [0, len(yrs) - 1]:
+            comps = [e[yi], c[yi], d_vals[yi], cl[yi], pk[yi]]
+            bottoms = [0, e[yi], e[yi] + c[yi],
+                       e[yi] + c[yi] + d_vals[yi],
+                       e[yi] + c[yi] + d_vals[yi] + cl[yi]]
+            for ci_idx in range(len(comps)):
+                pct = comps[ci_idx] / totals[yi] * 100 if totals[yi] > 0 else 0
+                if pct >= 15:  # Only label segments ≥ 15%
+                    mid_y = bottoms[ci_idx] + comps[ci_idx] / 2
+                    ax.text(yrs[yi], mid_y, f"{pct:.0f}%",
+                            ha="center", va="center", fontsize=7,
+                            fontweight="bold", color="white")
 
         ax.set_xlabel("Year", fontsize=11)
         ax.set_title(title, fontsize=12, fontweight="bold")
         ax.grid(axis="y", alpha=0.3)
+        ax.legend(fontsize=8, loc="upper left")
 
     axes[0].set_ylabel("Annual Cost ($M)", fontsize=12)
-    axes[0].legend(fontsize=9, loc="upper left")
     plt.suptitle("Cost Component Breakdown: Before vs After Mitigation",
                  fontsize=14, fontweight="bold", y=1.02)
     plt.tight_layout()
@@ -477,8 +527,7 @@ def run(mc_df: pd.DataFrame | None = None):
 
     # Figures
     plot_loss_exceedance(loss_exc)
-    plot_emissions_trajectory(baseline_df, lever_df)
-    plot_cost_trajectory(baseline_df, lever_df)
+    plot_mitigation_trajectories(baseline_df, lever_df)
     plot_cost_components(baseline_df, lever_df)
 
     # Console summary
