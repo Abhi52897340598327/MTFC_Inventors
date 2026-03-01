@@ -441,23 +441,17 @@ def plot_co2(df: pd.DataFrame):
 
 def plot_ai_spending(df: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(12, 6))
-    # Historical
-    hist = df[df["scenario"] == "Historical"]
-    if not hist.empty:
-        ax.bar(hist["year"], hist["ai_capex_B"], color="#bdc3c7",
-               width=0.6, label="Historical (US Census)", zorder=3)
-        # Mark last historical year if potentially incomplete
-        last_yr = int(hist["year"].max())
-        if last_yr >= 2025:
-            ax.annotate("⚠ Partial year", xy=(last_yr, hist[hist["year"] == last_yr]["ai_capex_B"].values[0]),
-                        fontsize=8, color="#e67e22", fontweight="bold",
-                        xytext=(0, 10), textcoords="offset points", ha="center")
+    # Build historical segment (shared by all scenarios)
+    hist = df[df["scenario"] == "Historical"].sort_values("year")
     # Projections with B&W-safe styles
     markers = {"Conservative": "o", "Moderate": "s", "Aggressive": "D"}
     dashes  = {"Conservative": (5, 2), "Moderate": (3, 1, 1, 1), "Aggressive": (2, 2)}
     for name in _AI_SPEND:
-        sub = df[df["scenario"] == name]
-        line, = ax.plot(sub["year"], sub["ai_capex_B"],
+        proj = df[df["scenario"] == name].sort_values("year")
+        # Prepend historical points so line runs from 2019 through 2035
+        combined = pd.concat([hist[["year", "ai_capex_B"]], proj[["year", "ai_capex_B"]]])
+        combined = combined.sort_values("year")
+        line, = ax.plot(combined["year"], combined["ai_capex_B"],
                         marker=markers.get(name, "D"), lw=2, ms=6,
                         color=_COLORS[name], label=f"{name} ({_AI_SPEND[name]['cagr']:.0%} CAGR)")
         if dashes.get(name):

@@ -239,6 +239,6 @@ def project_scenarios(p):
 
 # ─────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    from data_ingestion import ingest_all
+    from data_ingestion_real import ingest_all
     data = ingest_all()
     project_scenarios(data["params"])

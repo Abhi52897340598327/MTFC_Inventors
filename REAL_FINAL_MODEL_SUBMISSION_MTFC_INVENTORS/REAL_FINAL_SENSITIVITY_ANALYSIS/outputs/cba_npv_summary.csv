@@ -1,6 +1,6 @@
 scenario,npv_total_cost_usd_m,cumulative_co2_tonnes,cumulative_co2_mmt,cumulative_energy_gwh,final_year_cost_usd_m,cost_cagr
-Baseline,186.61,128442.0,0.1284,2568.8,31.12,0.0228
-DC Boom,418.03,306432.0,0.3064,6128.6,130.07,0.1807
-Efficient Transition,369.88,193376.0,0.1934,5525.0,108.07,0.1616
-Climate Stress,481.84,829162.0,0.8292,6279.5,164.56,0.2115
-DC Boom + Combined Mitigation,271.72,178037.0,0.178,4902.9,84.55,0.1536
+Baseline,177.08,120787.0,0.1208,2415.7,28.01,0.012
+DC Boom,363.82,264061.0,0.2641,5281.2,103.58,0.1538
+Efficient Transition,322.97,167185.0,0.1672,4776.7,86.1,0.1353
+Climate Stress,418.47,707609.0,0.7076,5412.2,131.76,0.1846
+DC Boom + Combined Mitigation,236.48,153419.0,0.1534,4225.0,67.33,0.1307

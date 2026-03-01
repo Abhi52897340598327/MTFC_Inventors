@@ -19,7 +19,7 @@ import sys, time, pathlib
 # Ensure we're running from the script's directory
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from data_ingestion import ingest_all
+from data_ingestion_real import ingest_all
 from cba_scenarios import project_scenarios
 from cba_full_analysis import run_full_cba
 from cba_figures import generate_all_figures
