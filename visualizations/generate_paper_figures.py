@@ -707,14 +707,11 @@ def fig09_sensitivity_tornado():
                 fontsize=7.5, color=C['red'])
 
     ax.axvline(base_cum, color=C['black'], linewidth=1.5, zorder=5)
-    ax.text(base_cum, len(scenarios) - 0.1,
-            f'Base: {base_cum:.0f} Mt', ha='center', va='bottom',
-            fontsize=8.5, fontweight='bold')
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels([s[0] for s in scenarios], fontsize=8.5)
-    ax.set_xlabel('Cumulative CO\u2082 Emissions 2025\u20132038 (Million Metric Tons)')
-    ax.set_title('Figure 9.  Parameter Sensitivity \u2014 Cumulative CO\u2082')
+    ax.set_xlabel('Cumulative CO$_2$ Emissions 2025\u20132038 (Million Metric Tons)')
+    ax.set_title('Figure 9.  Parameter Sensitivity \u2014 Cumulative CO$_2$')
     ax.invert_yaxis()
 
     # Legend
